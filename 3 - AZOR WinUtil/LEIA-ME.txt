@@ -1,0 +1,26 @@
+AZOR WINUTIL - COMO ABRIR
+=========================
+
+1. Extraia o ZIP inteiro (botão direito no arquivo > Extrair tudo...).
+2. Abra a pasta extraída e dê dois cliques em "Abrir-AzorWinUtil.cmd".
+3. Clique em "Sim" no aviso de administrador do Windows.
+   O Azor WinUtil abre junto com uma janela de terminal.
+   Não feche o terminal enquanto estiver usando o app (fechar o terminal fecha o app).
+
+Se aparecer "O Windows protegeu o computador":
+clique em "Mais informações" > "Executar assim mesmo".
+
+ANTES DE APLICAR AJUSTES
+- Os ajustes alteram registro, serviços e aplicativos do Windows.
+- Crie um ponto de restauração antes (botão "Ponto de restauração" no Painel).
+  Se a Restauração do Sistema estiver desativada no PC, o ponto não é criado e o app avisa.
+- Quase tudo pode ser desfeito em Otimizar > "Desfazer Ajustes Selecionados".
+
+OUTROS APPS AZOR
+- No Painel, os botões "AZOR Rate" e "AZOR Optimization" abrem esses apps.
+  Eles funcionam quando as pastas "4 - AZOR Rate" e "2 - AZOR Optimization Obsidian
+  (completo)" estão ao lado da pasta do Azor WinUtil, como na pasta de entrega AZOR.
+
+Logs de cada sessão: %LocalAppData%\azorwinutil\logs
+
+Baseado no WinUtil de Chris Titus Tech (licença MIT).

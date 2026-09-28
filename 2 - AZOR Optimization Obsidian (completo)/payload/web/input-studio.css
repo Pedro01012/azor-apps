@@ -1,0 +1,277 @@
+/* Input Studio: periféricos em vetor sobre a mesma superfície do app.
+   Sem blur e sem glow por filtro nas peças vivas: tecla pressionada troca só
+   preenchimento e posição, o que mantém o repaint pequeno enquanto o input
+   chega a 144 Hz. Gradientes estáticos (corpo, reflexo) não repintam.
+   O acento vem da identidade AZOR (applyAccent); fabricante nenhum recolore a UI. */
+.periph-panel,.periph-tabs,.device-card,.device-stage{--accent:var(--brand);--accent-rgb:var(--brand-rgb)}
+.device-card[style],.device-stage[style]{--accent:var(--brand)!important;--accent-rgb:var(--brand-rgb)!important}
+
+/* ---- abas ------------------------------------------------------------------ */
+.periph-tabs{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:4px;width:fit-content;max-width:100%;margin:0 0 20px;padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg-raised)}
+.periph-tab{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;height:40px;padding:0 18px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--muted);box-shadow:none;transform:none;cursor:pointer;transition:background-color .15s ease,color .15s ease}
+.periph-tab:hover{border-color:transparent;background:rgba(255,255,255,.045);color:var(--text);transform:none}
+.periph-tab b{font:600 13.5px/1 var(--font-ui);letter-spacing:0}
+.periph-tab-icon{font-size:15px;opacity:1;color:var(--soft)}
+.periph-tab.active{border-color:var(--line-strong);background:var(--panel3);color:#fff;box-shadow:inset 0 -2px 0 var(--accent)}
+.periph-tab.active .periph-tab-icon{color:var(--accent-soft);text-shadow:none}
+.periph-dot{width:6px;height:6px;background:#3b3b46}
+.periph-dot.on,.periph-live.on{background:var(--green);box-shadow:0 0 0 3px rgba(99,214,164,.16);animation:none}
+
+/* ---- painel ------------------------------------------------------------------ */
+.periph-panel{padding:24px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--panel);box-shadow:none}
+.periph-head{gap:16px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.periph-status{gap:12px;margin-right:auto;min-width:0}
+.periph-live{width:10px;height:10px;flex:0 0 auto;background:#3b3b46}
+.periph-status b{font:600 16px/1.3 var(--font-title)}
+.periph-status small{max-width:420px;margin-top:4px;font-size:12.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:0}
+.periph-note{max-width:560px;margin:8px 0 0;padding:8px 10px;border-left:2px solid var(--accent-line);border-radius:0 8px 8px 0;background:rgba(var(--accent-rgb),.06);font-size:12px;line-height:1.55;color:var(--muted)}
+.pad-device-picker{display:grid;gap:6px;font-size:10.5px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.pad-device-picker select{min-width:150px;min-height:36px;padding-top:6px;padding-bottom:6px;font-size:13px;letter-spacing:0;text-transform:none}
+.skin-switch{gap:10px}
+.skin-label{font-size:10.5px;letter-spacing:.1em;color:var(--soft)}
+.skin-switch>div{display:flex;flex-wrap:wrap;gap:3px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--field)}
+.skin-btn{padding:7px 14px;border:1px solid transparent;border-radius:7px;color:var(--muted);font:600 12.5px/1 var(--font-ui);box-shadow:none}
+.skin-btn:hover{color:var(--text)}
+.skin-btn.active{border-color:var(--line-strong);background:var(--panel3);color:#fff;box-shadow:none}
+.skin-note{margin:12px 0 0;font-size:12px;line-height:1.55;color:var(--soft)}
+
+/* ---- palco --------------------------------------------------------------------- */
+.periph-stage-grid{grid-template-columns:minmax(0,1fr) 240px;grid-template-rows:1fr 1fr;gap:14px 16px;align-items:stretch;margin-top:20px}
+.periph-stage-grid>.periph-stage{grid-column:1;grid-row:1/span 2}
+.periph-stage-grid>.periph-side:first-child{grid-column:2;grid-row:1}
+.periph-stage-grid>.periph-side:last-child{grid-column:2;grid-row:2}
+.periph-side{gap:12px;grid-auto-flow:row}
+.side-card{display:flex;flex-direction:column;justify-content:center;min-height:84px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);box-shadow:none}
+.side-card .eyebrow{font-size:10.5px;letter-spacing:.1em;color:var(--soft)}
+.side-readout{margin-top:8px;font:600 16px/1.2 var(--font-display);color:var(--text);font-variant-numeric:tabular-nums}
+.side-readout.hot{color:var(--accent-soft);text-shadow:none}
+.side-card small{margin-top:6px;font-size:12px;line-height:1.5;color:var(--muted)}
+.periph-stage{min-height:360px;max-height:560px;padding:54px 24px 24px;overflow:hidden;border:1px solid var(--line);border-radius:14px;box-shadow:none;background-color:#0b0b0f;background-image:radial-gradient(rgba(255,255,255,.07) .8px,transparent .8px);background-size:22px 22px}
+.periph-stage::after{display:none}
+.periph-live-top{top:16px;left:18px;right:18px;gap:10px}
+.periph-live-top .two-badge{padding:4px 8px;border:1px solid var(--line-strong);border-radius:999px;background:var(--panel2);color:var(--muted);font-size:10.5px;letter-spacing:.1em;box-shadow:none}
+.periph-live-top .input-live-text{font-size:12px;font-weight:600;line-height:1.5;white-space:normal;color:var(--muted)}
+.periph-stage.live-active .input-live-dot{background:var(--green);box-shadow:0 0 0 3px rgba(99,214,164,.18)}
+.periph-stage .input-svg{max-height:420px;overflow:visible;filter:none}
+.periph-stage .input-svg [filter]{filter:none!important}
+.periph-stage .input-svg .pressable{cursor:pointer}
+/* O styles.css antigo empurra e escurece a peça pressionada com transform e
+   drop-shadow. Aqui isso fica desligado: numa tecla o transform do CSS apagaria
+   a posição dela (atributo transform) e a mandaria para o canto do desenho, e o
+   drop-shadow repinta a área inteira a cada tecla. */
+.periph-stage .input-svg .pressable.pressed{filter:none;transform:none}
+
+/* ---- controle: layout com os dois radares ao lado do desenho ------------------------ */
+.pad-layout{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;gap:14px;align-items:stretch;margin-top:20px}
+.pad-stage{min-height:380px;padding-left:12px;padding-right:12px}
+.stick-card{display:flex;flex-direction:column;gap:10px;min-width:0;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.stick-card-head{display:flex;flex-direction:column;gap:2px}
+.stick-card-head .eyebrow{font-size:10.5px;letter-spacing:.1em;color:var(--soft)}
+.stick-card-head .side-readout{margin-top:2px;font-size:14px}
+.stick-radar{display:block;width:100%;max-width:176px;aspect-ratio:1;margin:0 auto;border-radius:50%}
+.stick-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0}
+.stick-stats>div{min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--field)}
+.stick-stats>div.wide{grid-column:1/-1}
+.stick-stats dt{font-size:10px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.stick-stats dd{margin:3px 0 0;font:600 15px/1.2 var(--font-mono);color:var(--text);font-variant-numeric:tabular-nums}
+.stick-stats dd.bad{color:var(--amber)}
+.stick-stats small{display:block;margin-top:4px;font-size:11.5px;line-height:1.45;color:var(--muted)}
+
+/* desenho do controle */
+.periph-stage .controller-svg{width:min(100%,780px)}
+.controller-svg .shell-main{stroke:#3c3c47;stroke-width:1.5}
+.controller-svg .shell-bevel{fill:none;stroke:rgba(255,255,255,.06);stroke-width:1.5;pointer-events:none}
+.controller-svg .pad-tag{font:700 12px var(--font-ui);letter-spacing:.06em;fill:#8f8a99;pointer-events:none}
+.controller-svg .trigger-ghost rect{fill:#1d1d24;stroke:#4a4a56;stroke-width:1.4}
+.controller-svg .trigger-ghost.bumper rect{fill:#24242c}
+.controller-svg .trigger-ghost.pressed rect{stroke:var(--accent);stroke-width:2}
+.controller-svg .trigger-ghost.bumper.pressed rect{fill:var(--accent);stroke:#ffd3f1}
+.controller-svg .trigger-ghost.bumper.pressed+.pad-tag{fill:#1a0714}
+.controller-svg .trigger-fill{fill:var(--accent);opacity:.88;pointer-events:none}
+.controller-svg .analog-ring{fill:#121217;stroke:#4a4a56;stroke-width:2}
+.controller-svg .analog-ring.pressed{stroke:var(--accent)}
+.controller-svg .analog-well{fill:#0a0a0e;stroke:rgba(255,255,255,.05);pointer-events:none}
+.controller-svg .analog-core{transition:none;will-change:transform}
+.controller-svg .analog-core .cap-skirt{fill:#26262e;stroke:#5c5c68;stroke-width:1.4}
+.controller-svg .analog-core .cap-top{fill:#1a1a20;stroke:rgba(255,255,255,.07)}
+.controller-svg .analog-core .cap-dot{fill:var(--accent);opacity:.75}
+.controller-svg .analog-core.pressed .cap-skirt,.controller-svg .analog-core.pressed .cap-top{fill:var(--accent);stroke:#ffd3f1}
+.controller-svg .analog-core.pressed .cap-dot{fill:#1a0714}
+.controller-svg .dpad-base{fill:#0f0f14;stroke:rgba(255,255,255,.05)}
+.controller-svg .dpad-group .pressable rect{fill:#24242c;stroke:#4a4a56;stroke-width:1.2}
+.controller-svg .dpad-group .pressed rect{fill:var(--accent);stroke:#ffd3f1}
+.controller-svg .dpad-hub{fill:#1b1b22;pointer-events:none}
+.controller-svg .face-well{fill:#0f0f14;stroke:rgba(255,255,255,.05)}
+.controller-svg .face-btn>circle:first-child{fill:#22222a;stroke:#4a4a56;stroke-width:1.4}
+.controller-svg .face-btn .face-rim{fill:none;stroke:rgba(255,255,255,.06)}
+.controller-svg .face-btn text{font:700 19px var(--font-display);fill:var(--accent-soft)}
+.controller-svg .face-btn .face-glyph path,.controller-svg .face-btn .face-glyph circle,.controller-svg .face-btn .face-glyph rect{fill:none;stroke:var(--accent-soft);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.controller-svg .face-btn.pressed>circle:first-child{fill:var(--accent);stroke:#ffd3f1}
+.controller-svg .face-btn.pressed text{fill:#1a0714}
+.controller-svg .face-btn.pressed .face-glyph path,.controller-svg .face-btn.pressed .face-glyph circle,.controller-svg .face-btn.pressed .face-glyph rect{stroke:#1a0714}
+.controller-svg .center-btn rect{fill:#1a1a21;stroke:#4a4a56}
+.controller-svg .center-btn .btn-glyph{fill:none;stroke:#8f8a99;stroke-width:1.6;stroke-linecap:round;pointer-events:none}
+.controller-svg .center-btn.pressed rect{fill:var(--accent);stroke:#ffd3f1}
+.controller-svg .center-btn.pressed .btn-glyph{stroke:#1a0714}
+.controller-svg .guide-btn circle:first-child{fill:#0e0e13;stroke:#4a4a56;stroke-width:2}
+.controller-svg .guide-btn .guide-ring{fill:none;stroke:var(--accent);stroke-width:2.4;opacity:.7}
+.controller-svg .guide-btn.pressed circle:first-child{fill:var(--accent)}
+.controller-svg .guide-btn.pressed .guide-ring{stroke:#1a0714;opacity:1}
+.controller-svg .touchpad{fill:#101015;stroke:#35353f}
+.controller-svg .profile-badges rect{fill:rgba(8,8,11,.92);stroke:#35353f}
+.controller-svg .pad-badge-main{font:700 13px var(--font-ui);letter-spacing:.08em;fill:var(--text)}
+.controller-svg .pad-badge-sub{font-size:12px;fill:var(--muted)}
+
+/* gatilhos, botões e barra de testes */
+.pad-lower{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:14px;margin-top:14px}
+.periph-trigger-readouts{display:grid;grid-template-columns:1fr;gap:12px;margin:0;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.trigger-readout{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+.trigger-readout>span{min-width:22px;font-weight:700;letter-spacing:.06em}
+.trigger-readout b{min-width:44px;text-align:right;font:600 13px/1 var(--font-display);color:var(--accent-soft);font-variant-numeric:tabular-nums}
+.trigger-readout em{min-width:64px;font-style:normal;font-size:11.5px;color:var(--soft);font-variant-numeric:tabular-nums}
+.trigger-track{flex:1;height:6px;overflow:hidden;border-radius:6px;background:rgba(255,255,255,.07)}
+.trigger-track i{display:block;width:0;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent-strong),var(--accent))}
+.periph-trigger-readouts>small{font-size:12px;line-height:1.5;color:var(--soft)}
+.pad-buttons-card{display:flex;flex-direction:column;gap:12px;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.pad-buttons-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;font-size:12px;color:var(--muted)}
+.pad-buttons-head .eyebrow{font-size:10.5px;letter-spacing:.1em;color:var(--soft)}
+.pad-buttons-head .side-readout{margin:0 0 0 6px;font-size:13px}
+.pad-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pad-chip{min-width:34px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--field);text-align:center;font:600 12px/1 var(--font-ui);color:var(--soft)}
+.pad-chip.on{border-color:#ffd3f1;background:var(--accent);color:#1a0714}
+.pad-tests-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-top:14px;padding:12px 16px;border:1px dashed var(--line-strong);border-radius:12px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.btn.small{min-height:32px;padding:0 12px;font-size:11.5px}
+
+/* ---- teclado ---------------------------------------------------------------------- */
+.periph-stage.keyboard-stage{min-height:300px;margin-top:20px;padding:52px 24px 22px}
+.keyboard-svg .shell-main{stroke:#3c3c47;stroke-width:1.5}
+.keyboard-svg .shell-plate{fill:#0a0a0d;stroke:rgba(255,255,255,.04)}
+.keyboard-svg .kb-strip{opacity:.75}
+.keyboard-svg .kb-base{fill:#050507;stroke:#050507;stroke-width:1;stroke-linejoin:round}
+.keyboard-svg .kb-top{fill:#202028;stroke:#3a3a45;stroke-width:1;stroke-linejoin:round}
+.periph-stage .keyboard-svg .kb-key rect,.periph-stage .keyboard-svg .kb-key path,.periph-stage .keyboard-svg .kb-key text{transform:none;filter:none;transition:none}
+.keyboard-svg .kb-cap{transition:none}
+.keyboard-svg .kb-cap text{font:600 12px var(--font-ui);fill:#d7d3dd;pointer-events:none}
+.keyboard-svg .kb-cap text.kb-small{font-size:10.5px}
+.keyboard-svg .kb-led{fill:var(--accent);opacity:.8}
+.keyboard-svg .kb-lit .kb-top{fill:#2a1826;stroke:rgba(var(--accent-rgb),.55)}
+.keyboard-svg .kb-lit text{fill:#ffc6ee}
+.periph-stage .keyboard-svg .kb-key.pressed .kb-cap{transform:translateY(2px)}
+.keyboard-svg .kb-key.pressed .kb-top{fill:var(--accent);stroke:#ffd3f1}
+.keyboard-svg .kb-key.pressed text{fill:#1a0714}
+.keyboard-svg .kb-foot{font-size:12px;fill:var(--soft)}
+
+/* ---- mouse -------------------------------------------------------------------------- */
+.periph-stage .mouse-svg{max-height:420px;transition:none}
+.mouse-svg .shell-main{stroke:none}
+.mouse-svg .shell-edge{fill:none;stroke:#3c3c47;stroke-width:1.5;pointer-events:none}
+.mouse-svg .mouse-left,.mouse-svg .mouse-right{fill:#22222a;stroke:#3c3c47;stroke-width:1}
+.mouse-svg .mouse-left.pressed,.mouse-svg .mouse-right.pressed{fill:var(--accent)}
+.mouse-svg .mouse-grip{fill:#0d0d11;opacity:.9;pointer-events:none}
+.mouse-svg .mouse-seam{fill:none;stroke:#050507;stroke-width:3;pointer-events:none}
+.mouse-svg .mouse-wheel{fill:#0a0a10;stroke:#4a4a56;stroke-width:2}
+.mouse-svg .mouse-wheel.pressed{fill:var(--accent);stroke:#ffd3f1}
+.mouse-svg .wheel-ridges rect{fill:#3a3a45;pointer-events:none}
+.mouse-svg .wheel-arrow{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;pointer-events:none}
+.mouse-svg.wheel-up .wheel-arrow-up,.mouse-svg.wheel-down .wheel-arrow-down{opacity:1}
+.mouse-svg.wheel-up .wheel-ridges rect,.mouse-svg.wheel-down .wheel-ridges rect{fill:var(--accent-soft)}
+.mouse-svg .mouse-dpi,.mouse-svg .side-btn{fill:#22222a;stroke:#4a4a56}
+.mouse-svg .mouse-dpi.pressed,.mouse-svg .side-btn.pressed{fill:var(--accent);stroke:#ffd3f1}
+.mouse-svg .mouse-led{fill:none;stroke:var(--accent);stroke-width:5;stroke-linecap:round;opacity:.7;pointer-events:none}
+.mouse-svg .mouse-vector{pointer-events:none}
+.mouse-svg .vector-ring{fill:rgba(0,0,0,.25);stroke:rgba(255,255,255,.08)}
+.mouse-svg .vector-cross{stroke:rgba(255,255,255,.06)}
+.mouse-svg .vector-line{stroke:var(--accent);stroke-width:4;stroke-linecap:round}
+.mouse-svg .vector-dot{fill:var(--accent-soft)}
+.mouse-svg .ms-badge rect{fill:rgba(8,8,11,.92);stroke:#35353f}
+.mouse-svg .ms-badge-main{font:700 13px var(--font-ui);letter-spacing:.08em;fill:var(--text)}
+.mouse-svg .ms-badge-sub{font-size:12px;fill:var(--muted)}
+
+/* ---- cartões de teste (mouse e teclado) ---------------------------------------------- */
+.lab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.lab-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.lab-card{display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+.lab-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lab-head .eyebrow{font-size:10.5px;letter-spacing:.1em;color:var(--soft)}
+.lab-head>b{font:600 15px var(--font-display);color:var(--accent-soft);font-variant-numeric:tabular-nums}
+.lab-reads{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lab-reads.single{grid-template-columns:1fr}
+.lab-reads>div,.click-grid>div{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--field)}
+.lab-reads b{display:block;font:600 24px/1.1 var(--font-display);color:var(--text);font-variant-numeric:tabular-nums}
+.lab-reads small,.click-grid small{font-size:11.5px;color:var(--muted)}
+.lab-note{margin:0;font-size:12px;line-height:1.55;color:var(--muted)}
+.lab-note.bad{color:var(--amber)}
+.click-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:8px}
+.click-grid b{display:block;font:600 20px/1.2 var(--font-display);color:var(--text);font-variant-numeric:tabular-nums}
+.click-grid b.bad{color:var(--red)}
+.click-cps{display:flex;align-items:baseline;gap:10px;font-size:12px;color:var(--muted)}
+.click-cps b{font:600 20px var(--font-display);color:var(--accent-soft);font-variant-numeric:tabular-nums}
+.click-cps small{margin-left:auto;color:var(--soft)}
+.rhythm-bar{display:flex;height:12px;overflow:hidden;border-radius:6px;background:rgba(255,255,255,.06)}
+.rhythm-bar i{display:block;width:0;height:100%}
+.rhythm-bar i.on,.rhythm-legend i.on{background:var(--green)}
+.rhythm-bar i.early,.rhythm-legend i.early{background:#8f7dff}
+.rhythm-bar i.late,.rhythm-legend i.late{background:var(--amber)}
+.rhythm-bar i.gaps,.rhythm-legend i.gaps{background:var(--red)}
+.rhythm-legend{display:grid;gap:6px;margin:0;padding:0;list-style:none;font-size:12px;color:var(--muted)}
+.rhythm-legend li{display:flex;align-items:center;gap:8px}
+.rhythm-legend li i{width:9px;height:9px;border-radius:3px}
+.rhythm-legend b{margin-left:auto;font:600 12.5px var(--font-mono);color:var(--text)}
+
+/* ---- métricas reais, perfis e remapeamento ------------------------------------------ */
+.periph-panel .metric-real{padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);box-shadow:none}
+.periph-panel .metric-real.good{border-color:rgba(var(--accent-rgb),.36);box-shadow:none}
+.periph-panel .metric-real small{font-size:10.5px;color:var(--soft)}
+.periph-panel .metric-real b{font:600 26px/1 var(--font-display);color:var(--text);text-shadow:none}
+.periph-panel .metric-real.good b{color:var(--accent-soft)}
+.periph-panel .metric-real.off b,.periph-panel .metric-real b.metric-id{font:600 15px/1.3 var(--font-ui)}
+.periph-panel .metric-real span{font-size:12.5px;line-height:1.6;color:var(--muted)}
+.periph-panel .periph-presets,.periph-panel .remap-card{padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);box-shadow:none}
+.periph-panel .remap-icon{width:48px;height:48px;border-color:rgba(var(--accent-rgb),.28);border-radius:14px;background:rgba(var(--accent-rgb),.1);color:var(--accent-soft);box-shadow:none}
+.periph-panel .remap-card p,.periph-panel .remap-warn span,.periph-panel .preset-truth{font-size:12.5px;line-height:1.6}
+.remap-count{color:var(--accent-soft)}
+.remap-btn{border-radius:10px;color:var(--text)}
+.remap-btn i{color:var(--soft)}
+.remap-btn.mapped{border-color:var(--accent-line);background:rgba(var(--accent-rgb),.1)}
+.remap-btn.mapped i,.remap-modal .remap-help b,.remap-target>span b{color:var(--accent-soft)}
+.preset-truth{border-left-color:rgba(var(--accent-rgb),.45);color:var(--muted)}
+
+/* ---- responsivo ------------------------------------------------------------------------ */
+@media(max-width:1350px){
+ .pad-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .pad-layout>.pad-stage{grid-column:1/-1;grid-row:1}
+ .stick-card{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:14px}
+ .stick-card-head{grid-column:1/-1}
+ .stick-radar{max-width:150px}
+}
+@media(max-width:1250px){
+ .periph-stage-grid{grid-template-columns:minmax(0,1fr) 200px}
+ .periph-stage-grid>.periph-side{display:grid;grid-template-columns:1fr;grid-auto-flow:row}
+ .side-card{min-height:80px;padding:13px}
+ .periph-stage{min-height:320px;padding-left:12px;padding-right:12px}
+ .lab-grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .lab-grid.three>.lab-card:first-child{grid-column:1/-1}
+}
+@media(max-width:1000px){
+ .pad-layout{grid-template-columns:minmax(0,1fr)}
+ .pad-lower{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:900px){
+ .periph-panel{padding:16px}
+ .periph-stage-grid{display:flex;flex-wrap:wrap}
+ .periph-stage-grid>.periph-stage{order:0;flex:1 0 100%;min-height:280px}
+ .periph-stage-grid>.periph-side{order:1;flex:1 1 180px;grid-template-columns:1fr 1fr}
+ .side-card{min-width:0}
+ .periph-status{width:100%}
+ .periph-trigger-readouts{gap:12px;padding:14px}
+ .periph-tab{min-width:0;padding:0 14px}
+ .periph-stage.keyboard-stage{min-height:220px;padding:48px 10px 15px}
+ .periph-stage.mouse-stage{min-height:340px}
+ .lab-grid,.lab-grid.three{grid-template-columns:minmax(0,1fr)}
+ .lab-grid.three>.lab-card:first-child{grid-column:auto}
+}
+@media(max-width:560px){
+ .stick-card{display:flex}
+ .stick-radar{max-width:176px}
+}
+@media(prefers-reduced-motion:reduce){.periph-panel *,.periph-tabs *{animation:none!important;transition:none!important}}

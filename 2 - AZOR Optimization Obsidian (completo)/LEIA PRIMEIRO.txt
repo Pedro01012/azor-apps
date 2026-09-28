@@ -1,0 +1,118 @@
+AZOR OPTIMIZATION
+
+COMO ABRIR
+1. Extraia a pasta inteira antes de executar.
+2. Abra "AZOR Optimization.bat" como administrador para permitir os ajustes do Windows que exigem elevacao.
+3. O AZOR Memory Engine agora e interno ao aplicativo. Nao e necessario instalar ou adicionar ISLC.exe.
+
+TELA INICIAL: UM BOTAO
+4. A tela Inicio tem um unico botao (BOOST) e dois modos de desempenho:
+   - MAXIMO (recomendado): aplica tudo que tem efeito comprovado e reversao testada.
+     E o modo padrao. Serve para o dia a dia, inclusive em notebook na bateria.
+   - AGRESSIVO: soma os ajustes que a auditoria tinha deixado de fora por custo de
+     estabilidade (timer global, Nagle, placa de rede sem moderacao, NVMe sempre
+     ativo, spooler, NTFS, compressao de memoria e outros). Itens que so valem como
+     teste A/B - CPU sem repouso, quantum do agendador, MPO, TdrDelay, agrupamento de
+     svchost, prioridade MMCSS, SysMain e Prefetcher desligados - ficam fora dos dois
+     modos: num i5-13400F medido, a CPU sem repouso prendeu o processador no turbo de
+     todos os nucleos. Eles continuam em Avancado > Todos os ajustes, um a um.
+     Exige confirmacao
+     na tela, porque aumenta consumo, calor e chance de conflito com driver, e a
+     tela cheia exclusiva global pode esconder o overlay do Discord e do OBS.
+   Nos dois modos, o BOOST primeiro conserta o que outros otimizadores quebraram:
+   TRIM ou cache de escrita desligados, firewall ou Protecao do Sistema desligados,
+   servicos essenciais desabilitados, HPET forcado no boot, auto-ajuste TCP quebrado.
+   Num PC intacto essa etapa nao encontra nada e nao muda nada.
+   O que cada modo aplica e o que ele preserva continua listado item por item em
+   Avancado > Otimizacao, antes de qualquer alteracao.
+5. Desfazer: o botao "Desfazer ultima otimizacao" volta os valores gravados antes da
+   aplicacao. O AZOR salva o estado original na primeira vez e nunca o sobrescreve.
+   Consertos nao entram no Desfazer: voltar atras seria religar o defeito.
+
+REAPLICAR SOZINHO AO ENTRAR NO WINDOWS
+6. Em Ajustes > Desempenho automatico voce pode deixar o AZOR reaplicar o modo escolhido
+   toda vez que voce entra no Windows, inclusive na bateria. Quando voce liga essa opcao:
+   - O AZOR cria a tarefa agendada "AZOR Optimization - Desempenho no login".
+   - O AZOR copia o aplicativo para "C:\Program Files\AZOR Optimization\logon". A copia
+     e necessaria: uma tarefa com privilegio de administrador apontando para a pasta de
+     Downloads permitiria que qualquer programa trocasse o arquivo e ganhasse
+     administrador no login seguinte.
+   - A tarefa roda 45 segundos depois do login, sem abrir janela, aplica o modo salvo e sai.
+   Desligar a opcao remove a tarefa e a copia. Essa opcao vem desligada.
+
+PERFIS DE OTIMIZACAO (AVANCADO)
+7. Alem dos dois modos, continuam disponiveis os perfis, e eles nao sao versoes um do outro:
+   - SAFE: preserva energia e apps em segundo plano.
+   - COMPETITIVO: mais mudancas verificaveis, foco em latencia e FPS.
+   - CAMPANHA: para jogos de historia. Mantem a gravacao de video ligada e nao rebaixa
+     os efeitos visuais do Windows, porque quem joga campanha costuma querer salvar
+     momentos e nao quer perder qualidade de imagem.
+   - JOGO + LIVE: preserva os apps de transmissao.
+
+TELAS PRINCIPAIS
+8. O menu tem quatro destinos: Inicio, Avancado, Perifericos e Ajustes. Tudo que existia
+   antes continua la, agrupado em abas dentro de Avancado.
+9. Hardware & BIOS: componentes, temperatura, saude dos discos, TRIM, idade dos drivers
+   e o que abre junto com o Windows. Cada item de inicializacao so e desativado com um
+   clique seu; o AZOR nunca desliga tudo de uma vez.
+10. BIOS Copiloto: o AZOR detecta a sua placa-mae e mostra o caminho exato do menu do seu
+    fabricante (ASUS, MSI, Gigabyte, ASRock ou generico). Voce marca o que ja alterou,
+    reinicia, e o AZOR rele o Windows para confirmar se a mudanca realmente pegou.
+    O AZOR nao grava firmware. Um valor de BIOS errado pode impedir o PC de ligar, e
+    nenhum ganho de FPS justifica esse risco.
+11. Input Lab: mouse, teclado e controle acendem na tela conforme voce usa, mesmo com a
+    janela do AZOR fora de foco. Nessa tela o AZOR tambem mede a taxa real de envio do seu
+    mouse contando os relatorios que o dispositivo manda, em vez de repetir o numero da caixa.
+    O AZOR mostra quem fabricou cada aparelho pelo codigo USB: um controle de outra marca em
+    modo XInput aparece com o nome do fabricante, nao como "Xbox 360" (que e so o modo que ele
+    emula para os jogos). Na aba Controle: radar de cada analogico com rastro, teste de deriva
+    parado (comparado com a zona morta do perfil), teste de circularidade, curso maximo dos
+    gatilhos, taxa de envio medida pelo XInput e bateria. Na aba Mouse: teste de clique que acusa
+    clique duplo sozinho (switch com defeito), ritmo do polling e velocidade do sensor. Na aba
+    Teclado: desenho ABNT2 ou ANSI com as legendas do seu layout e teste de quantas teclas o
+    Windows recebe ao mesmo tempo.
+    Controle em 4K/8K travando o jogo: na aba Controle, "MEDIR AGORA" mostra em qual nucleo
+    as interrupcoes do USB estao caindo, e "MANDAR PARA OS NUCLEOS E" as tira do nucleo do
+    jogo (so em CPU com nucleos P e E; vale depois de reiniciar; DESFAZER volta ao padrao).
+    PRIVACIDADE: essa tela mostra apenas qual tecla ou botao esta pressionado agora, para
+    desenhar o periferico. O AZOR nao guarda sequencia de teclas, nao grava o que voce
+    digita, nao salva nada em disco e o monitor para sozinho quando voce sai da tela.
+12. Fortnite: "GPU ALTO DESEMPENHO" usa o executavel real detectado e so confirma depois de
+    reler a preferencia grafica do Windows.
+13. Outros Jogos: escolha o .exe real de qualquer jogo para definir Alto desempenho. O AZOR
+    salva o estado original para permitir restauracao individual.
+14. Monitoramento do PC tem acesso direto ao Monitor de Jogo para coleta Antes x Depois,
+    agora com a distribuicao real de frametime e os picos marcados na linha do tempo.
+
+AZOR WINDOWS (MOTOR DE SISTEMA)
+15. Se o motor do AZOR Windows estiver instalado em C:\AZOR, os botoes da tela Hardware
+    chamam exatamente as rotinas de la, usando o AppContract.json publicado pelo proprio
+    motor. Assim o app e o sistema nunca aplicam ajustes diferentes. Se o motor nao
+    estiver instalado, o app avisa e continua funcionando com as otimizacoes nativas.
+16. O AZOR otimiza a licenca do Windows que voce ja tem instalada. Ele nao distribui nem
+    modifica imagem de instalacao do Windows.
+
+O QUE O AZOR NAO FAZ
+17. Nao promete "zerar ping" nem FPS garantido. Ele mede e mostra o real.
+18. Nao escreve BIOS, overclock, voltagem ou timings de memoria.
+19. Nao le nem escreve memoria do processo do jogo e nao mexe nos pacotes de rede do jogo.
+    A otimizacao fica no sistema, driver, adaptador de rede e nos arquivos de configuracao
+    que o proprio jogo expoe.
+20. Nao desliga a Integridade de Memoria do Windows, nao cria exclusoes no Defender e nao
+    forca modo de interrupcao (MSI) de GPU, USB ou armazenamento. Os tres ultimos podem
+    deixar o PC sem imagem no proximo boot, e nenhum ganho justifica esse risco num
+    aplicativo de um clique. Nem o modo Agressivo faz isso.
+21. Nao cria VBS nem autocopia escondida. A unica copia e a de "Desempenho automatico"
+    descrita no item 6, que voce liga e desliga quando quiser.
+22. Quando o Windows nao responde um valor, o AZOR escreve "nao reportado" em vez de
+    estimar um numero para preencher a tela.
+
+ANTIVIRUS
+23. Aplicativos portateis nao assinados costumam gerar alerta de heuristica do antivirus ou
+    do SmartScreen do Windows. Isso e comportamento comum desse tipo de empacotamento, nao
+    e sinal de problema no AZOR. Se aparecer, libere a pasta antes de executar. Ligar o
+    "Desempenho automatico" cria tarefa agendada e copia arquivos para Program Files, duas
+    acoes que alguns antivirus tambem sinalizam.
+
+O AZOR valida as alteracoes que consegue reler. Ganho de FPS, frametime e latencia dependem
+do hardware, do jogo e do cenario, e por isso sao medidos no PC real em vez de prometidos.
