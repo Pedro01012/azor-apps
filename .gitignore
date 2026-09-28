@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+# dados de execução (no Windows ficam em %LOCALAPPDATA%)
+AZOR Optimization/app/data/

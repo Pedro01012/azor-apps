@@ -1,0 +1,67 @@
+AZOR OPTIMIZATION
+=================
+
+Um app só para deixar o PC no máximo para jogar: mais FPS, menos delay,
+menos travadinha e Windows leve. Tudo o que ele muda pode ser desfeito.
+
+
+COMO ABRIR
+----------
+1. Extraia o ZIP inteiro numa pasta (não abra de dentro do ZIP).
+2. Dê dois cliques em  ABRIR AZOR.bat
+3. O Windows pede permissão uma vez: clique em SIM.
+
+
+COMO USAR (3 CLIQUES)
+---------------------
+1. INÍCIO  ->  escolha RECOMENDADO (qualquer PC) ou EXTREMO (PC só para jogar).
+2. Clique no botão BOOST e espere terminar.
+3. Reinicie o PC quando ele pedir.
+
+Pronto. O resto das telas é para quem quer ir além:
+
+  DIAGNÓSTICO    A nota do PC e o que falta fazer, em ordem, com um botão em cada passo.
+                 Mostra também se Valorant, CS2, Fortnite e CoD vão abrir (anti-cheat).
+  TWEAKS         Todos os ajustes, separados por: Mais FPS, Menos delay, Sem travadinhas,
+                 Internet e ping, Windows leve... Aplique ou desfaça um por um.
+  APPS           Remove o lixo que vem com o Windows e instala programas oficiais.
+  LIMPEZA        Apaga arquivos inúteis e tira do boot o que não precisa abrir sozinho.
+  JOGOS          Monitor na taxa máxima (Hz), placa de vídeo forte em cada jogo,
+                 teste de FPS ANTES e DEPOIS para mostrar ao cliente, preset do Fortnite.
+  PERIFÉRICOS    Teste ao vivo: polling do mouse, clique duplo fantasma, teclas
+                 fantasma do teclado, drift do controle.
+  HARDWARE       Memória em canal único, XMP desligado, calor, disco cheio e o
+                 caminho exato na BIOS da sua placa-mãe.
+  REPARAR        "Desfazer tudo", ponto de restauração e consertos oficiais do Windows
+                 (Windows corrompido, internet, Windows Update, jogo antigo).
+  AJUSTES        Nome do cliente, relatório para entregar, abrir com o Windows.
+
+
+RECOMENDADO x EXTREMO
+---------------------
+RECOMENDADO  Tudo que dá desempenho sem tirar nada que você usa. Serve para qualquer PC.
+EXTREMO      Também desliga o que um PC só de jogo não precisa (impressão, Bluetooth
+             ocioso, launchers abrindo com o Windows, efeitos visuais...). Custa conforto,
+             nunca estabilidade.
+
+
+MODO TURBO
+----------
+Liga o timer do Windows em 0,5 ms, prioridade alta automática no jogo e a limpeza
+de memória em espera. Funciona com o AZOR aberto na bandeja (perto do relógio).
+
+
+É SEGURO?
+---------
+- Antes de mexer, o AZOR cria um ponto de restauração do Windows.
+- Cada ajuste é gravado, relido e só conta se o Windows confirmar.
+- O valor de antes fica guardado: REPARAR > DESFAZER TUDO volta o PC como estava.
+- Não mexe na BIOS sozinho, não instala nada escondido, não coleta dados.
+- Não desliga Windows Defender, Firewall, Windows Update nem nada que anti-cheat exige.
+
+
+ONDE FICAM OS DADOS
+-------------------
+%LOCALAPPDATA%\AzorOptimization  (configurações, histórico para desfazer, relatórios)
+
+A lista completa de ajustes está em TWEAKS.md.
