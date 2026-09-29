@@ -2498,6 +2498,8 @@ def load_settings() -> Dict[str, Any]:
         # Modo do BOOST e da reaplicação no login: "auto" (pré-set do hardware, padrão),
         # "maximo" (Recomendado) ou "agressivo" (Extremo).
         "performance_mode": "auto",
+        # Como o cliente joga: "competitivo", "aaa" (jogos pesados) ou "live". Muda o pré-set.
+        "usage_profile": "competitivo",
         # Modo Turbo: timer 0,5 ms + prioridade do jogo + motor de memória, vivos com o AZOR na bandeja.
         "turbo": False,
         # Quem faz live: preserva overlay (sem tela cheia exclusiva) e a reserva de CPU do encoder.

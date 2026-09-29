@@ -2,7 +2,7 @@
 
 Lista gerada do catálogo real do app (`tools/gen_tweaks_md.py`). Cada ajuste é gravado, relido e só conta como aplicado se o Windows confirmar; o valor de antes fica guardado para desfazer.
 
-Total: **108** ajustes.
+Total: **115** ajustes.
 
 | Selo | Significa |
 |---|---|
@@ -27,6 +27,7 @@ Tira do caminho o que segura o desempenho da placa de vídeo e do processador.
 | **Prioridade alta automática para o jogo**<br>Enquanto o AZOR estiver aberto, o jogo sobe para prioridade Alta sozinho. | `+FPS` `-STUTTER` | — | não | sim |
 | **Sem economia forçada de CPU**<br>Impede o Windows de colocar o jogo e o Discord em modo econômico. | `+FPS` | Recomendado + Extremo | não | sim |
 | **Sem gravação escondida da Xbox Game Bar**<br>Para a Game Bar de gravar a partida o tempo todo em segundo plano. | `+FPS` | Recomendado + Extremo | não | sim |
+| **Windows Update não troca o driver de vídeo**<br>Impede o Windows de instalar por cima um driver de vídeo mais velho que o seu. | `+FPS` `DRIVER` | Só Extremo | não | sim |
 | **Bloqueio da gravação para todos os usuários**<br>Garante que a gravação escondida não volte sozinha, nem em outro usuário. | `+FPS` | Recomendado + Extremo | não | sim |
 | **Efeitos visuais no modo desempenho**<br>Desliga animações e sombras do Windows. A área de trabalho responde na hora. | `+LEVE` `-DELAY` | Recomendado + Extremo | não | sim |
 | **Sem transparência no Windows**<br>Tira o efeito de vidro da barra e do menu. Alivia a placa de vídeo fora do jogo. | `+LEVE` | Recomendado + Extremo | não | sim |
@@ -41,6 +42,7 @@ Clique, tecla e movimento chegam mais rápido na tela (menos input lag).
 | **Jogos em janela otimizados (VRR)**<br>Jogo em janela sem borda passa a ter o mesmo caminho rápido da tela cheia. | `-DELAY` `+FPS` | Recomendado + Extremo | não | sim |
 | **Portas USB sem economia de energia**<br>O Windows para de desligar as portas USB da placa-mãe para economizar. | `-DELAY` | Recomendado + Extremo | não | sim |
 | **Sem pop-up das Teclas de Aderência**<br>Apertar Shift 5 vezes no jogo não abre mais aquela janela que tira o foco. | `SEM POP-UP` | Recomendado + Extremo | não | sim |
+| **Som do jogo não abaixa em call**<br>O Windows para de abaixar em 80% o som do jogo quando você entra no Discord. | `SOM` `CALL` | Recomendado + Extremo | não | sim |
 | **Tela cheia exclusiva de verdade**<br>Tira o Windows do meio do caminho entre o quadro pronto e o monitor. Overlays podem sumir. | `-DELAY` `+FPS` | Só Extremo | não | sim |
 | **Tela cheia exclusiva só no Fortnite**<br>Mesmo ganho de delay, só dentro do Fortnite. O resto do PC não muda. | `-DELAY` | Recomendado + Extremo | não | sim |
 | **Timer do Windows em 0,5 ms**<br>O relógio interno do Windows passa a acordar mais vezes: comandos processados mais rápido. | `-DELAY` | — | não | sim |
@@ -58,6 +60,7 @@ Frametime estável: menos engasgos, quedas de 1% low e congeladas no meio da par
 | **Antivírus fora das pastas de jogo**<br>O Defender para de verificar cada arquivo que o jogo carrega. Carregamento e shader mais rápidos. | `-STUTTER` `LOADING` | Só Extremo | não | sim |
 | **Mais processador para o jogo**<br>O Windows reserva menos CPU para tarefas de fundo enquanto você joga. | `+FPS` `-STUTTER` | Recomendado + Extremo | não | sim |
 | **Motor de memória AZOR**<br>Libera a memória em espera só quando ela está acabando (o que o ISLC faz), sem jogar cache fora à toa. | `-STUTTER` `RAM` | — | não | sim |
+| **Windows Update sem reiniciar sozinho**<br>Acabou o 'reiniciando em 15 minutos' no meio da partida. | `ESTÁVEL` | Recomendado + Extremo | não | sim |
 | **Desligar de verdade (sem Inicialização Rápida)**<br>Faz o 'reiniciar' e o 'desligar' limparem o Windows de verdade. Ajustes e drivers pegam. | `ESTÁVEL` | Recomendado + Extremo | não | sim |
 | **Disco sem anotar cada leitura**<br>Cada arquivo que o jogo lê deixa de gerar uma escrita extra no disco. | `-STUTTER` `DISCO` | Recomendado + Extremo | não | sim |
 | **Núcleo do Windows sempre na RAM**<br>Impede o Windows de mandar partes dele para o disco no meio do jogo (só com 16 GB+). | `-STUTTER` | Só Extremo | sim | sim |
@@ -91,17 +94,21 @@ Menos processos, serviços e tarefas rodando escondidos gastando CPU, RAM e disc
 | **Desligar o serviço de telemetria**<br>O serviço que coleta e envia dados de uso para a Microsoft para de rodar. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Edge sem rodar escondido**<br>O Edge para de abrir sozinho no boot e de ficar na memória depois de fechado. | `+LEVE` `RAM` | Recomendado + Extremo | não | sim |
 | **Menu Iniciar sem Bing**<br>Pesquisar no menu Iniciar fica só no PC: mais rápido e sem internet. | `+LEVE` | Recomendado + Extremo | não | sim |
+| **Tirar do boot diagnóstico, telefonia e NFC**<br>Mais serviços que um PC de jogo não usa saem da memória. | `+LEVE` `RAM` | Só Extremo | não | sim |
 | **Tirar serviços inúteis do boot**<br>Mapas, atualizadores do Edge/Google/Adobe, arquivos offline e outros saem do boot. | `+LEVE` `RAM` | Recomendado + Extremo | não | sim |
+| **Assistência Remota desligada**<br>Uma porta a menos aberta. AnyDesk e TeamViewer continuam funcionando. | `+LEVE` `SEGURANÇA` | Recomendado + Extremo | não | sim |
 | **Desligar a hibernação**<br>Libera vários GB no disco (arquivo hiberfil.sys). Só em desktop. | `+ESPAÇO` | Recomendado + Extremo | não | sim |
 | **Desligar indexador de pesquisa**<br>O indexador para de ler o disco inteiro de tempos em tempos. A busca fica mais lenta. | `+LEVE` `DISCO` | Só Extremo | não | sim |
 | **Desligar o serviço de impressão**<br>Só aparece se o PC não tem nenhuma impressora. Um processo a menos. | `+LEVE` | Só Extremo | não | sim |
 | **Esconder Widgets**<br>Tira o painel de notícias e clima da barra, que ficava carregando conteúdo. | `+LEVE` | Recomendado + Extremo | não | sim |
+| **Explorador sem propaganda**<br>Some a propaganda do OneDrive e do Microsoft 365 no Explorador e no Iniciar. | `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Pesquisa sem destaques da internet**<br>A caixa de pesquisa para de buscar desenhos e notícias na internet. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Programas do boot sem espera**<br>O Windows para de esperar 10 segundos antes de abrir os programas de inicialização. | `BOOT` | Recomendado + Extremo | não | sim |
 | **Sem 'Termine de configurar seu PC'**<br>Some a tela cheia que aparece depois das atualizações empurrando OneDrive e Microsoft 365. | `+LEVE` `POP-UP` | Recomendado + Extremo | não | sim |
 | **Sem Spotlight na tela de bloqueio**<br>O Windows para de baixar imagens e propaganda para a tela de bloqueio. | `+LEVE` `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Sem apps de fabricante automáticos**<br>Conectar um aparelho novo não baixa mais programas de propaganda. | `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Sem nomes curtos antigos (8.3)**<br>O disco para de criar um segundo nome estilo DOS para cada arquivo novo. | `DISCO` | Só Extremo | não | sim |
+| **Sem procurar aparelhos por perto**<br>O Windows para de varrer Bluetooth e Wi-Fi atrás de celular para 'continuar no PC'. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Sem relatório de erros do Windows**<br>Depois de um crash o Windows não fica juntando e enviando relatório em segundo plano. | `+LEVE` `DISCO` | Recomendado + Extremo | não | sim |
 | **Sem sugestões e propagandas do Windows**<br>Tira anúncios e 'dicas' do menu Iniciar e das Configurações. | `SEM LIXO` | Recomendado + Extremo | não | sim |
 

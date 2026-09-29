@@ -5,7 +5,7 @@
   let monitorTimer = 0;
   let mode = 'auto';
   const MODE_NAME = {auto: 'AUTOMÁTICO', maximo: 'RECOMENDADO', agressivo: 'EXTREMO'};
-  const DIM_ICON = {form: 'hardware', cpu: 'cpu', gpu: 'gpu', ram: 'ram', disk: 'disk', os: 'apps', net: 'ping'};
+  const DIM_ICON = {form: 'hardware', cpu: 'cpu', gpu: 'gpu', ram: 'ram', disk: 'disk', os: 'apps', net: 'ping', display: 'monitor', use: 'games', board: 'plan'};
 
   const MODE_TEXT = {
     auto: '<b>Automático:</b> o AZOR reconhece processador, placa de vídeo, memória, disco e formato e aplica o pré-set mais forte que ESTE PC aguenta: base Extremo, sem o que esta peça não suporta, mais os extras que ela pede.',
@@ -127,6 +127,9 @@
         <h3 style="margin-top:6px">${esc(p.name)}</h3></div>
         <button class="btn sm" data-act="preset">${icon('wand')} Ver o que muda</button></div>
       <div class="row" style="margin-top:12px;gap:8px">${(p.chips || []).filter(c => c.label).map(c => `<span class="pill" title="${esc(c.detail)}">${icon(DIM_ICON[c.dim] || 'info')} ${esc(c.label)}</span>`).join('')}</div>
+      <div class="row" style="margin-top:14px;gap:10px"><span class="soft" style="font-size:12.5px">Como você joga:</span>
+        <div class="seg">${[['competitivo', 'COMPETITIVO'], ['aaa', 'JOGOS PESADOS'], ['live', 'JOGO + LIVE']].map(([id, l]) =>
+          `<button data-act="usage" data-u="${id}" class="${(p.use || 'competitivo') === id ? 'active' : ''}">${l}</button>`).join('')}</div></div>
       <div class="row soft" style="margin-top:10px;font-size:12.5px;gap:16px">
         <span>${icon('bolt', 'good')} ${Object.keys(p.add || {}).length} ajuste(s) a mais para este hardware</span>
         <span>${icon('shield', 'good')} ${Object.keys(p.skip || {}).length} protegido(s) (esta peça piora com eles)</span>
@@ -243,6 +246,13 @@
         loadPreset();
       },
       preset: () => { if (AZ.state.preset?.ok) presetModal(AZ.state.preset); },
+      usage: async el => {
+        AZ.$$('[data-act="usage"]').forEach(b => b.classList.toggle('active', b === el));
+        await AZ.post('/api/settings', {usage_profile: el.dataset.u});
+        AZ.toast('Pré-set recalculado para ' + el.textContent.toLowerCase() + '.');
+        AZ.state.preset = null;
+        loadPreset();
+      },
       turbo: async el => {
         const on = !el.classList.contains('on');
         el.disabled = true;

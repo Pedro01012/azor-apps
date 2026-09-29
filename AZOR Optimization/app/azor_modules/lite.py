@@ -286,6 +286,107 @@ SPECS = [
         metric="Pop-ups e telas cheias depois de atualizações",
         tags=("background", "gaming"),
     ),
+    RegSpec(
+        id="audio_ducking_off",
+        name="Som do jogo não abaixa quando entra call",
+        category="Leve / Som",
+        profiles=("competitive",),
+        values=[V("HKCU", r"Software\Microsoft\Multimedia\Audio", "UserDuckingPreference", 3)],
+        description="Por padrão o Windows abaixa em até 80% o som de tudo quando detecta uma chamada "
+                    "(Discord, Teams, WhatsApp). No jogo isso é passo e tiro sumindo no meio da call.",
+        source="Painel de Som > Comunicações > 'Não fazer nada' (UserDuckingPreference = 3).",
+        trade_off="Nenhum para quem joga: o volume de cada app continua no mixer.",
+        metric="Volume do jogo durante chamadas",
+        tags=("gaming", "audio"),
+    ),
+    RegSpec(
+        id="update_no_reboot",
+        name="Windows Update não reinicia o PC sozinho",
+        category="Leve / Windows Update",
+        profiles=("competitive",),
+        values=[
+            V("HKLM", POLICIES + r"\Windows\WindowsUpdate\AU", "NoAutoRebootWithLoggedOnUsers", 1),
+            V("HKLM", r"SOFTWARE\Microsoft\WindowsUpdate\UX\Settings", "SmartActiveHoursState", 0),
+            V("HKLM", r"SOFTWARE\Microsoft\WindowsUpdate\UX\Settings", "ActiveHoursStart", 8),
+            V("HKLM", r"SOFTWARE\Microsoft\WindowsUpdate\UX\Settings", "ActiveHoursEnd", 2),
+        ],
+        compatible=_admin,
+        description="Com alguém logado, o Windows não reinicia sozinho para instalar atualização, e o "
+                    "horário ativo vira 8h às 2h. Acabou o 'reiniciando em 15 minutos' no meio da ranqueada.",
+        source="Política NoAutoRebootWithLoggedOnUsers (Windows Update > Gerenciar a experiência do "
+               "usuário final) e o Horário Ativo de Configurações > Windows Update.",
+        trade_off="As atualizações continuam baixando e instalando; só o reinício espera você mandar.",
+        metric="Reinícios automáticos",
+        tags=("gaming", "policy"),
+    ),
+    RegSpec(
+        id="wu_drivers_off",
+        name="Windows Update não troca o driver de vídeo",
+        category="Leve / Windows Update",
+        profiles=("competitive",),
+        values=[
+            V("HKLM", POLICIES + r"\Windows\WindowsUpdate", "ExcludeWUDriversInQualityUpdate", 1),
+            V("HKLM", r"SOFTWARE\Microsoft\Windows\CurrentVersion\DriverSearching", "SearchOrderConfig", 0),
+        ],
+        compatible=_admin,
+        description="O Windows Update às vezes instala por cima um driver de vídeo mais velho que o seu, "
+                    "e o FPS cai do nada. Com isto, driver só muda quando você instalar pelo site oficial.",
+        source="Política 'Não incluir drivers nas Atualizações do Windows' e a busca de drivers do "
+               "Windows Update (Sistema > Configurações avançadas > Hardware).",
+        trade_off="Drivers passam a ser atualizados por você (Hardware > Drivers mostra os links oficiais). "
+                  "Atualizações de segurança do Windows continuam normais.",
+        metric="Troca de driver sem aviso",
+        tags=("gpu", "policy"),
+    ),
+    RegSpec(
+        id="explorer_ads_off",
+        name="Explorador sem propaganda do OneDrive e do Microsoft 365",
+        category="Leve / Propaganda",
+        profiles=("competitive",),
+        values=[
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "ShowSyncProviderNotifications", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_IrisRecommendations", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced", "Start_AccountNotifications", 0),
+        ],
+        description="Some a faixa de 'experimente o OneDrive/Microsoft 365' no Explorador e os avisos de "
+                    "conta e 'novidades' no menu Iniciar.",
+        source="Opções de Pasta > 'Mostrar notificações do provedor de sincronização' e Configurações > "
+               "Personalização > Iniciar (mesmos valores do registro).",
+        trade_off="Nenhum.",
+        metric="Propaganda no Explorador e no Iniciar",
+        tags=("ui", "background"),
+    ),
+    RegSpec(
+        id="remote_assistance_off",
+        name="Desligar a Assistência Remota",
+        category="Leve / Segurança",
+        profiles=("competitive",),
+        values=[V("HKLM", r"SYSTEM\CurrentControlSet\Control\Remote Assistance", "fAllowToGetHelp", 0)],
+        compatible=_admin,
+        description="Ninguém consegue pedir para ver ou controlar este PC pela Assistência Remota antiga do "
+                    "Windows. Uma porta a menos aberta, um serviço a menos esperando.",
+        source="Sistema > Configurações remotas > 'Permitir conexões de Assistência Remota'.",
+        trade_off="AnyDesk, TeamViewer, Parsec e Assistência Rápida continuam funcionando normalmente.",
+        metric="Superfície de acesso remoto",
+        tags=("security", "background"),
+    ),
+    RegSpec(
+        id="shared_experiences_off",
+        name="Sem 'Continuar no PC' e compartilhamento por proximidade",
+        category="Leve / Dispositivos conectados",
+        profiles=("competitive",),
+        values=[
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\CDP", "RomeSdkChannelUserAuthzPolicy", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\CDP", "CdpSessionUserAuthzPolicy", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\CDP", "NearShareChannelUserAuthzPolicy", 0),
+        ],
+        description="Para o Windows de ficar procurando celulares e outros PCs por perto para 'continuar de "
+                    "onde parou' e compartilhar arquivos por Bluetooth/Wi-Fi.",
+        source="Configurações > Sistema > Compartilhamento por proximidade e Experiências compartilhadas.",
+        trade_off="Compartilhamento por proximidade e 'Continuar no PC' deixam de funcionar.",
+        metric="Varredura de rede e Bluetooth em segundo plano",
+        tags=("background",),
+    ),
 ]
 
 TASKS, KEYS = compile_specs(MODULE["id"], SPECS)
@@ -318,6 +419,20 @@ LITE_SERVICES: Tuple[Tuple[str, str], ...] = (
     ("WMPNetworkSvc", "Compartilhamento do Windows Media Player"),
 )
 
+# Diagnóstico e recursos que quase ninguém usa; em Manual o Windows ainda os
+# inicia se a solução de problemas ou o recurso for aberto.
+MORE_SERVICES: Tuple[Tuple[str, str], ...] = (
+    ("DPS", "Serviço de Política de Diagnóstico"),
+    ("WdiServiceHost", "Host do Serviço de Diagnóstico"),
+    ("WdiSystemHost", "Host do Sistema de Diagnóstico"),
+    ("TroubleshootingSvc", "Solução de problemas recomendada"),
+    ("diagsvc", "Execução de diagnóstico"),
+    ("PhoneSvc", "Serviço de telefonia"),
+    ("SEMgrSvc", "Pagamentos e NFC"),
+    ("wisvc", "Programa Windows Insider"),
+    ("SCardSvr", "Cartão inteligente"),
+)
+
 EXTREME_SERVICES: Tuple[Tuple[str, str], ...] = (
     ("WSearch", "Indexador da Pesquisa do Windows"),
     ("CDPSvc", "Plataforma de Dispositivos Conectados"),
@@ -330,6 +445,7 @@ def _service_keys(rows) -> List[Tuple[str, str, str]]:
 
 KEYS["services_lite"] = _service_keys(LITE_SERVICES)
 KEYS["services_extreme"] = _service_keys(EXTREME_SERVICES)
+KEYS["services_more"] = _service_keys(MORE_SERVICES)
 
 
 def _service_task(task_id: str, name: str, rows, description: str, trade_off: str, extreme: bool):
@@ -549,5 +665,12 @@ def tasks():
             "A busca de arquivos no menu Iniciar e no Explorador fica mais lenta (continua "
             "funcionando, sem índice). O Vincular ao Celular e o compartilhamento por proximidade "
             "podem parar.",
+            extreme=True),
+        _service_task(
+            "services_more", "Tirar do boot diagnóstico, telefonia, NFC e Insider", MORE_SERVICES,
+            "Os serviços de diagnóstico ficam observando o PC o tempo todo para sugerir soluções; "
+            "telefonia, pagamentos por NFC, cartão inteligente e Insider não servem a um PC de jogo. "
+            "Em Manual eles saem do boot e só sobem se o recurso for aberto.",
+            "A solução de problemas automática do Windows demora um pouco mais para abrir.",
             extreme=True),
     ]

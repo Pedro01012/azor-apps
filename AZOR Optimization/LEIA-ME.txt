@@ -1,4 +1,4 @@
-AZOR OPTIMIZATION 3.1
+AZOR OPTIMIZATION 3.2
 =====================
 
 Um app só para deixar o PC no máximo para jogar: mais FPS, menos delay,
@@ -15,7 +15,8 @@ COMO ABRIR
 
 COMO USAR (3 CLIQUES)
 ---------------------
-1. INÍCIO  ->  deixe em AUTOMÁTICO (o padrão).
+1. INÍCIO  ->  deixe em AUTOMÁTICO (o padrão) e escolha como o cliente joga:
+   COMPETITIVO, JOGOS PESADOS ou JOGO + LIVE.
 2. Clique no botão BOOST e espere terminar.
 3. Reinicie o PC quando ele pedir.
 
@@ -30,7 +31,10 @@ Pronto. O resto das telas é para quem quer ir além:
   LIMPEZA        Apaga arquivos inúteis e tira do boot o que não precisa abrir sozinho,
                  inclusive outros "otimizadores" que brigam com o AZOR.
   JOGOS          Monitor na taxa máxima (Hz), placa de vídeo forte em cada jogo,
-                 teste de FPS ANTES e DEPOIS para mostrar ao cliente, preset do Fortnite.
+                 teste de FPS ANTES e DEPOIS para mostrar ao cliente, preset do Fortnite
+                 e a configuração ideal de 14 jogos (CS2, Valorant, Fortnite, Apex, CoD,
+                 LoL, Dota 2, Minecraft, Roblox, GTA V, Free Fire, Rocket League,
+                 Overwatch 2, PUBG) com opções de inicialização para copiar.
   PERIFÉRICOS    Teste ao vivo: polling do mouse, clique duplo fantasma, teclas
                  fantasma do teclado, drift do controle.
   HARDWARE       Memória em canal único, XMP desligado, calor, disco cheio e o
@@ -52,7 +56,9 @@ Nos três modos o pré-set protege o que a sua peça não aguenta.
 
 O QUE O BOOST FAZ
 -----------------
-  - Até 76 ajustes do Windows (conforme o hardware), cada um gravado e relido.
+  - Até 83 ajustes do Windows (conforme o hardware), cada um gravado e relido.
+    Inclui: som do jogo não abaixa em call, Windows Update sem reiniciar sozinho
+    e sem trocar o driver de vídeo, e mais serviços fora do boot.
   - Remove até 61 apps inúteis que vêm com o Windows (voltam pela Microsoft Store).
   - Tira do boot os inúteis, os outros otimizadores e (no Automático/Extremo) os
     lançadores: Steam, Epic e Discord abrem quando você for jogar.
@@ -64,9 +70,10 @@ O QUE O BOOST FAZ
 
 PRÉ-SETS POR HARDWARE
 ---------------------
-O AZOR lê o processador, a placa de vídeo, a memória, o disco, a rede, o Windows e
-se é notebook ou desktop, encaixa cada peça numa família e junta as regras daquela
-combinação (mais de 1,8 milhão de combinações cobertas). Exemplos:
+O AZOR lê processador, placa de vídeo, memória, disco, rede, Windows, monitor,
+placa-mãe e se é notebook ou desktop, soma como o cliente joga, encaixa cada coisa
+numa família e junta as regras daquela combinação (mais de 3,5 bilhões de
+combinações cobertas). Exemplos:
 
   Intel 12ª geração ou mais nova  Mantém a economia do Windows que manda Discord,
                                   navegador e updates para os núcleos E.
@@ -79,6 +86,12 @@ combinação (mais de 1,8 milhão de combinações cobertas). Exemplos:
                                   USB sempre ligados, e mantém a hibernação.
   8 GB de RAM ou menos            Mantém a compressão de memória; com 32 GB+ desliga.
   Windows em HD mecânico          Desliga o indexador de pesquisa.
+  Intel 13ª/14ª geração           Avisa para atualizar a BIOS (microcódigo).
+  Intel Arc                       Avisa que o Resizable BAR é obrigatório.
+  4 pentes DDR5                   Avisa que a velocidade cai; 2 pentes rendem mais.
+  Processador x placa             Mostra quem é o gargalo e o que fazer.
+  Jogos pesados                   Sem tela cheia exclusiva forçada (HDR e alt-tab).
+  Jogo + live                     Preserva overlay e encoder; indica NVENC/AMF.
 
 O pré-set reconhecido fica guardado: quando o mesmo PC volta, o AZOR já sabe quem
 ele é; se uma peça muda, o pré-set é recalculado. Veja em Início > "Ver o que muda".

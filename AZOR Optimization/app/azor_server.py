@@ -58,7 +58,7 @@ DATA = core.DATA_DIR
 RUNTIME_FILE = DATA / "server_runtime.json"
 STARTUP_LOG = DATA / "server_startup.log"
 BUILD_ID_FILE = ROOT / "BUILD_ID.txt"
-VERSION = "3.1"
+VERSION = "3.2"
 
 
 def _build_id():
@@ -282,6 +282,7 @@ def overview_payload():
         "mode": current_mode(),
         "streamer": bool(st.get("streamer")),
         "technician": bool(st.get("technician")),
+        "usage": st.get("usage_profile") or "competitivo",
         "reduce_motion": bool(st.get("reduce_motion")),
         "customer": st.get("customer_name") or "",
         "last_boost": st.get("last_boost"),
@@ -523,7 +524,7 @@ READ_ONLY_ACTIONS = {"open_link", "open_folder", "open_report", "open_panel", "g
                      "input_stop", "ping", "export_report"}
 
 SETTINGS_KEYS = {"streamer": bool, "start_minimized": bool, "technician": bool, "reduce_motion": bool,
-                 "performance_mode": str, "customer_name": str}
+                 "performance_mode": str, "customer_name": str, "usage_profile": str}
 
 
 # ---------------------------------------------------------------------------
@@ -784,6 +785,12 @@ class Handler(SimpleHTTPRequestHandler):
                         settings[key] = typ(data[key]) if typ is not bool else bool(data[key])
                 if settings.get("performance_mode") not in ("auto", "maximo", "agressivo"):
                     settings["performance_mode"] = "auto"
+                if settings.get("usage_profile") not in ("competitivo", "aaa", "live"):
+                    settings["usage_profile"] = "competitivo"
+                if "usage_profile" in data:
+                    settings["streamer"] = settings["usage_profile"] == "live"
+                elif "streamer" in data:
+                    settings["usage_profile"] = "live" if settings["streamer"] else "competitivo"
                 if "start_with_windows" in data:
                     core.set_start_with_windows(bool(data["start_with_windows"]))
                 settings["start_with_windows"] = core.get_start_with_windows()

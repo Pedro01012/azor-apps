@@ -43,6 +43,9 @@ RECOMENDADO = frozenset((
     'services_lite', 'telemetry_tasks_off', 'diagtrack_off', 'background_apps', 'edge_background_off',
     'copilot_recall_off', 'consumer_features_off', 'widgets', 'search_highlights_off', 'bing_search_off',
     'device_metadata_off', 'windows_suggestions', 'startup_delay_off', 'wer_off', 'spotlight_off', 'tips_setup_off',
+    'explorer_ads_off', 'shared_experiences_off', 'remote_assistance_off',
+    # Sem susto no meio da partida
+    'audio_ducking_off', 'update_no_reboot',
     # Privacidade que também tira processo e rede do fundo
     'telemetry_policy_min', 'telemetry_full_off', 'activity_history_off',
 ))
@@ -50,7 +53,7 @@ RECOMENDADO = frozenset((
 EXTREMO = RECOMENDADO | frozenset((
     'global_timer_resolution', 'kernel_no_paging', 'fullscreen_exclusive', 'spooler_off', 'nvme_idle_never',
     'nagle_off', 'nic_interrupt_moderation_off', 'gpu_interrupt_priority', 'ntfs_short_names_off',
-    'memory_compression_off', 'services_extreme', 'defender_game_exclusions',
+    'memory_compression_off', 'services_extreme', 'defender_game_exclusions', 'services_more', 'wu_drivers_off',
 ))
 
 # Nomes internos preservados: os estados salvos e a tarefa de login usam estes ids.

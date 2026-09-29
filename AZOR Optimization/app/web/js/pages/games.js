@@ -128,12 +128,57 @@
       </div>`;
   }
 
+  /* Configuração ideal por jogo: o que muda FPS e delay DENTRO do jogo (o Windows já é com o BOOST). */
+  const GAME_TIPS = [
+    {id: 'cs2', name: 'Counter-Strike 2', match: ['counter-strike', 'cs2'], launch: '-novid -fullscreen +fps_max 0',
+      tips: ['NVIDIA Reflex: Ligado + Boost', 'Aumentar contraste dos jogadores: Ligado', 'Sombras, texturas e partículas: Baixo', 'MSAA: 2x ou Nenhum; FidelityFX: Desligado', 'Modo de exibição: Tela cheia']},
+    {id: 'valorant', name: 'Valorant', match: ['valorant'], launch: '',
+      tips: ['NVIDIA Reflex: Ligado + Boost', 'Qualidade de material, textura e detalhe: Baixa', 'Anti-aliasing: MSAA 2x ou Nenhum', 'V-Sync desligado; limite de FPS desligado (ou 3x a taxa do monitor)', 'Buffer de entrada bruta (Raw Input Buffer): Ligado']},
+    {id: 'fortnite', name: 'Fortnite', match: ['fortnite'], launch: '-d3d12 -FeatureLevelEs31',
+      tips: ['Modo de renderização: Desempenho (o argumento acima liga)', 'Resolução 3D 100% (baixe para 85% em PC fraco)', 'Distância de visão: Média; resto no mínimo', 'NVIDIA Reflex: Ligado + Boost', 'Use o preset competitivo do AZOR abaixo']},
+    {id: 'apex', name: 'Apex Legends', match: ['apex'], launch: '-novid +fps_max 0 -dev',
+      tips: ['NVIDIA Reflex: Ligado + Boost', 'Orçamento de textura: metade da sua VRAM', 'Sombras do sol e dinâmicas: Desligado', 'Detalhe de modelo: Baixo; efeitos: Baixo', 'V-Sync desligado']},
+    {id: 'cod', name: 'Call of Duty / Warzone', match: ['call of duty', 'warzone', 'cod'], launch: '',
+      tips: ['Streaming de texturas sob demanda: Desligado (menos stutter, usa disco)', 'NVIDIA Reflex: Ligado + Boost', 'DLSS/FSR: Qualidade ou Equilibrado', 'Oclusão de ambiente e reflexos: Desligado', 'Profundidade de campo e desfoque de movimento: Desligado']},
+    {id: 'lol', name: 'League of Legends', match: ['league of legends'], launch: '',
+      tips: ['Modo de janela: Tela cheia', 'Taxa de quadros: Sem limite (ou 240)', 'Sombras: Desligado; efeitos: Médio', 'Aguardar sincronização vertical: Desligado', 'Anti-aliasing: Desligado']},
+    {id: 'dota2', name: 'Dota 2', match: ['dota'], launch: '-novid',
+      tips: ['API: Vulkan em Radeon, DirectX 11 em NVIDIA (teste as duas)', 'Qualidade de renderização: 100%', 'Sombras e efeitos de água: Desligado', 'Limite de FPS: igual ou acima da taxa do monitor']},
+    {id: 'minecraft', name: 'Minecraft Java', match: ['minecraft'], launch: '-Xmx4G -Xms4G',
+      tips: ['Instale Fabric + Sodium: 2x a 3x mais FPS', 'Memória: 4 GB no argumento acima (6 GB com shaders); nunca mais que metade da RAM', 'Distância de renderização: 8 a 12 chunks', 'Nuvens e partículas: Mínimo']},
+    {id: 'roblox', name: 'Roblox', match: ['roblox'], launch: '',
+      tips: ['Configurações > Taxa máxima de quadros: 240 (ou a do monitor)', 'Modo gráfico: Manual, qualidade 3 a 5', 'Feche o navegador: o Roblox usa bem um núcleo só']},
+    {id: 'gta5', name: 'GTA V', match: ['gta'], launch: '',
+      tips: ['MSAA e FXAA: Desligado', 'Grama: Normal (a mais pesada do jogo)', 'Distância estendida: 0; população: metade', 'Qualidade de pós-processamento: Normal', 'DirectX 11']},
+    {id: 'freefire', name: 'Free Fire (emulador)', match: ['bluestacks', 'ldplayer', 'gameloop', 'free fire'], launch: '',
+      tips: ['BIOS: virtualização (VT-x / SVM) LIGADA — sem ela o emulador roda muito lento', 'Emulador: 4 núcleos e 4 GB de RAM; 120 FPS e Alta taxa de quadros ligados', 'Renderização: DirectX em NVIDIA, Vulkan/OpenGL em Radeon (teste)', 'Placa de vídeo: Alto desempenho (Jogos > placa forte)']},
+    {id: 'rocketleague', name: 'Rocket League', match: ['rocket league'], launch: '-nomovie',
+      tips: ['Qualidade de renderização: Alto desempenho', 'V-Sync desligado; FPS sem limite', 'Detalhe de mundo: Desempenho', 'Efeitos pesados (dinâmicos): Desligado']},
+    {id: 'overwatch', name: 'Overwatch 2', match: ['overwatch'], launch: '',
+      tips: ['NVIDIA Reflex: Ligado + Boost', 'Escala de renderização: 100%', 'Qualidade de sombras e reflexos: Baixo', 'Limite de FPS: personalizado, acima da taxa do monitor']},
+    {id: 'pubg', name: 'PUBG', match: ['pubg'], launch: '',
+      tips: ['Anti-aliasing: Ultra (ajuda a ver inimigo) e o resto no Muito Baixo', 'Textura: Médio; visão a distância: Médio', 'Escala de tela: 100', 'NVIDIA Reflex: Ligado + Boost']},
+  ];
+
+  function tipsCard(d) {
+    const names = (d.installed || []).map(g => String(g.name || '').toLowerCase()).join(' | ');
+    const mine = GAME_TIPS.filter(g => g.match.some(m => names.includes(m)));
+    const list = S.allTips ? GAME_TIPS : (mine.length ? mine : GAME_TIPS.slice(0, 6));
+    return `${AZ.sectionTitle('games', 'Configuração ideal por jogo', mine.length ? `${mine.length} jogo(s) seu(s) com guia. O Windows já é com o BOOST; isto é o que muda FPS e delay dentro do jogo.` : 'O Windows já é com o BOOST; isto é o que muda FPS e delay dentro do jogo.')}
+      <div class="grid g2">${list.map(g => `<div class="card tight"><div class="spread"><b>${esc(g.name)}</b>${mine.includes(g) ? '<span class="pill ok"><i></i>Instalado</span>' : ''}</div>
+        <ul style="margin:8px 0 0;padding-left:18px;font-size:13px">${g.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
+        ${g.launch ? `<div class="row" style="margin-top:10px;flex-wrap:nowrap"><code class="path" style="flex:1;padding:6px 10px">${esc(g.launch)}</code>
+          <button class="btn sm" data-act="copy" data-t="${esc(g.launch)}">Copiar</button></div>
+          <div class="soft" style="font-size:11.5px;margin-top:4px">Opções de inicialização: Steam/Epic > propriedades do jogo.</div>` : ''}</div>`).join('')}</div>
+      <div class="row" style="margin-top:8px"><button class="linkbtn" data-act="alltips">${S.allTips ? 'Mostrar só os meus' : `Ver os ${GAME_TIPS.length} jogos`}</button></div>`;
+  }
+
   function paint() {
     const d = S.data;
     const body = AZ.$('#gmBody');
     if (!body) return;
     if (!d) { body.innerHTML = AZ.skeleton(5); return; }
-    body.innerHTML = `${monitorCard(d)}${gpuCard(d)}<div style="margin-top:12px">${priorityCard(d)}</div>${testCard()}${fortniteCard(d)}`;
+    body.innerHTML = `${monitorCard(d)}${gpuCard(d)}<div style="margin-top:12px">${priorityCard(d)}</div>${testCard()}${tipsCard(d)}${fortniteCard(d)}`;
   }
 
   function paintTest() {
@@ -176,6 +221,11 @@
     },
     leave() { clearTimeout(S.poll); },
     actions: {
+      alltips: () => { S.allTips = !S.allTips; paint(); },
+      copy: async el => {
+        try { await navigator.clipboard.writeText(el.dataset.t); AZ.toast('Copiado. Cole nas opções de inicialização do jogo.'); }
+        catch (e) { AZ.toast('Selecione o texto e copie com Ctrl+C.', false); }
+      },
       hz: async el => {
         el.disabled = true;
         const r = await AZ.action('refresh_max', {hz: Number(el.dataset.hz)}).catch(e => ({ok: false, detail: e.message}));
