@@ -16,7 +16,40 @@ DEFAULT_PROFILES=[
  {'id':'minecraft','name':'Minecraft Java','exe':'javaw.exe','path_contains':'.minecraft','priority':'normal','power_guid':None},
 ]
 PRIORITIES={'normal':0x20,'above_normal':0x8000,'high':0x80}
+# Jogos que o AZOR reconhece sem configurar nada (além dos perfis acima e dos jogos
+# achados nas pastas da Steam/Epic/Riot). Todos sobem para Acima do normal - "Alta"
+# rouba tempo do áudio e do mouse e alguns anti-cheats reclamam.
+KNOWN_GAMES={
+ 'fortniteclient-win64-shipping.exe':'Fortnite','valorant-win64-shipping.exe':'Valorant','cs2.exe':'Counter-Strike 2',
+ 'csgo.exe':'CS:GO','r5apex.exe':'Apex Legends','r5apex_dx12.exe':'Apex Legends','cod.exe':'Call of Duty',
+ 'league of legends.exe':'League of Legends','dota2.exe':'Dota 2','overwatch.exe':'Overwatch 2',
+ 'rainbowsix.exe':'Rainbow Six Siege','rocketleague.exe':'Rocket League','tslgame.exe':'PUBG',
+ 'gta5.exe':'GTA V','gta5_enhanced.exe':'GTA V','eldenring.exe':'Elden Ring','robloxplayerbeta.exe':'Roblox',
+ 'fc25.exe':'EA FC 25','fc24.exe':'EA FC 24','bf2042.exe':'Battlefield 2042','destiny2.exe':'Destiny 2',
+ 'discovery.exe':'The Finals','marvel-win64-shipping.exe':'Marvel Rivals','pathofexile_x64.exe':'Path of Exile',
+ 'pathofexile.exe':'Path of Exile','wow.exe':'World of Warcraft','diablo iv.exe':'Diablo IV',
+ 'escapefromtarkov.exe':'Escape from Tarkov','rustclient.exe':'Rust','dayz_x64.exe':'DayZ','cyberpunk2077.exe':'Cyberpunk 2077',
+ 'witcher3.exe':'The Witcher 3','rdr2.exe':'Red Dead Redemption 2','starfield.exe':'Starfield',
+ 'forzahorizon5.exe':'Forza Horizon 5','haloinfinite.exe':'Halo Infinite','paladins.exe':'Paladins',
+ 'brawlhalla.exe':'Brawlhalla','osu!.exe':'osu!','lostark.exe':'Lost Ark','warframe.x64.exe':'Warframe',
+ 'genshinimpact.exe':'Genshin Impact','starrail.exe':'Honkai: Star Rail','zenlesszonezero.exe':'Zenless Zone Zero',
+ 'huntgame.exe':'Hunt: Showdown','deadlock.exe':'Deadlock','hd-player.exe':'BlueStacks (Free Fire)',
+ 'dnplayer.exe':'LDPlayer (Free Fire)','aow_exe.exe':'GameLoop (Free Fire/PUBG Mobile)',
+ 'valheim.exe':'Valheim','terraria.exe':'Terraria','smite.exe':'Smite','pointblank.exe':'Point Blank',
+ 'crossfire.exe':'CrossFire','tibia.exe':'Tibia','metin2client.exe':'Metin2','ragnarok.exe':'Ragnarok',
+}
 OPTIONAL_BACKGROUND=frozenset(('discord.exe','spotify.exe','ms-teams.exe','teams.exe','onedrive.exe'))
+# Durante o jogo estes ficam SEMPRE em prioridade Abaixo do normal: navegador,
+# lançadores e atualizadores não têm por que disputar processador com a partida.
+# Chat de voz e música (acima) só descem quando o processador passa de 80%, para
+# a voz no Discord não picotar.
+ALWAYS_BACKGROUND=frozenset((
+ 'chrome.exe','msedge.exe','firefox.exe','opera.exe','opera_gx.exe','brave.exe','vivaldi.exe',
+ 'steamwebhelper.exe','epicgameslauncher.exe','epicwebhelper.exe','battle.net.exe','eadesktop.exe','origin.exe',
+ 'upc.exe','galaxyclient.exe','riotclientux.exe','riotclientuxrender.exe','overwolf.exe','medal.exe',
+ 'googledrivefs.exe','dropbox.exe','megasync.exe','icloudservices.exe','onedrive.exe','whatsapp.exe','telegram.exe',
+ 'microsoftedgeupdate.exe','googleupdate.exe','adobearm.exe','ccxprocess.exe',
+))
 PROTECTED=frozenset(('system','registry','smss.exe','csrss.exe','wininit.exe','winlogon.exe','services.exe','lsass.exe','dwm.exe','explorer.exe','svchost.exe','audiodg.exe','msmpeng.exe','nissrv.exe','securityhealthservice.exe','vgc.exe','vgtray.exe','easyanticheat.exe','easyanticheat_eos.exe','beservice.exe','nvcontainer.exe','nvidia share.exe','rzsynapse.exe','lghub.exe','icue.exe','azor optimization completo.exe'))
 
 class GameProcessManager:
@@ -40,7 +73,7 @@ class GameProcessManager:
     def running(self):return bool(self._thread and self._thread.is_alive())
     def profiles(self):
         try:config=read(self.profile_file)
-        except FileNotFoundError:config={'profiles':copy.deepcopy(DEFAULT_PROFILES),'background':[]}
+        except FileNotFoundError:config={'profiles':copy.deepcopy(DEFAULT_PROFILES),'background':sorted(OPTIONAL_BACKGROUND)}
         if not isinstance(config,dict) or not isinstance(config.get('profiles'),list):raise ValueError('GAME_PROFILES_UNREADABLE')
         return config
     def configure(self,profiles,background):
@@ -77,7 +110,7 @@ class GameProcessManager:
     def _change(self,info,target,role):
         if self._protected(info) or info['priority']==target:return
         if info['pid'] in self._owned:return
-        if role=='background' and info['priority']!=0x20:return
+        if role.startswith('background') and info['priority']!=0x20:return
         if role=='game' and info['priority'] in (0x80,0x100):return
         entry={**info,'target':target,'role':role}
         self._owned[info['pid']]=entry
@@ -141,11 +174,28 @@ class GameProcessManager:
         with self._lock:
             ok=self._restore_all();self.last_status='Sessão encerrada e estado anterior restaurado.' if ok else 'Restauração ainda precisa de atenção.'
         return ok,self.last_status
+    def _auto_profiles(self,config):
+        """Perfis do usuário + jogos conhecidos + jogos achados nas pastas dos lançadores."""
+        known={str(p.get('exe','')).lower() for p in config['profiles']}
+        extra=[]
+        now=time.time()
+        if now-getattr(self,'_installed_at',0)>600:
+            try:self._installed=[g for g in (self.core.detect_installed_games() or []) if g.get('exe')]
+            except Exception:self._installed=[]
+            self._installed_at=now
+        for exe,name in KNOWN_GAMES.items():
+            if exe not in known:
+                known.add(exe);extra.append({'id':'k_'+re.sub(r'[^a-z0-9]','',exe)[:40],'name':name,'exe':exe,'priority':'above_normal','power_guid':None})
+        for g in getattr(self,'_installed',[]):
+            exe=re.split(r'[\\/]',str(g['exe']))[-1].lower()
+            if exe and exe not in known and exe not in PROTECTED:
+                known.add(exe);extra.append({'id':'i_'+re.sub(r'[^a-z0-9]','',exe)[:40],'name':str(g.get('name') or exe),'exe':exe,'priority':'above_normal','power_guid':None})
+        return config['profiles']+extra
     def tick(self):
         config=self.profiles();processes=list(self.core._process_list());games=[]
         candidates={str(name).lower():[] for name,pid in processes}
         for name,pid in processes:candidates[str(name).lower()].append(pid)
-        for profile in config['profiles']:
+        for profile in self._auto_profiles(config):
             for pid in candidates.get(profile['exe'].lower(),[]):
                 info=self.core.process_snapshot(pid)
                 if not info or self._protected(info):continue
@@ -174,6 +224,13 @@ class GameProcessManager:
             if not result['ok']:
                 self.last_status=result.get('detail','POWER_SESSION_FAILED')
                 if (result.get('rollback') or {}).get('ok'):self._power=None
+        game_names={str(g.get('name','')).lower() for g in games}
+        for name in ALWAYS_BACKGROUND:
+            if name in game_names:continue
+            for pid in candidates.get(name,[]):
+                if pid in self._owned:continue
+                info=self.core.process_snapshot(pid)
+                if info:self._change(info,0x4000,'background_always')
         if isinstance(cpu,(int,float)) and cpu>=80:
             for name in config.get('background',[]):
                 for pid in candidates.get(name,[]):

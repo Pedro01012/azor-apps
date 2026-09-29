@@ -18,18 +18,30 @@ import time
 import uuid
 from typing import Any, Callable, Dict, Optional
 
-from . import engine, debloat, startup, cleanup
-from .policy import MODE_LABELS
+from . import engine, debloat, startup, cleanup, presets, processes
+from .policy import MODE_LABELS, USER_MODES
 
-DEFAULTS = {"debloat": True, "startup": True, "cleanup": True, "keep_on_logon": True}
+DEFAULTS = {"debloat": True, "startup": True, "processes": True, "cleanup": True, "keep_on_logon": True}
 
 
 def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
         progress: Optional[Callable[[str, str, str], None]] = None) -> Dict[str, Any]:
-    mode = mode if mode in ("maximo", "agressivo") else "maximo"
+    mode = mode if mode in USER_MODES else "auto"
     opts = {**DEFAULTS, **{k: bool(v) for k, v in (options or {}).items() if k in DEFAULTS}}
     say = progress or (lambda *a: None)
     started = time.time()
+
+    # O pré-set do hardware vale em todos os modos (protege o que esta peça não
+    # aguenta); no Automático ele também escolhe a base e os itens a mais.
+    say("Reconhecendo o PC", "reading", "Processador, placa de vídeo, memória, disco e formato.")
+    try:
+        preset = presets.resolve(core, mode, force=True)
+        known = preset["memory"]["known"]
+        say("Pré-set do PC", "completed", ("Reconhecido da memória do AZOR: " if known else "Novo PC: ") + preset["name"])
+    except Exception as exc:
+        preset = None
+        say("Pré-set do PC", "failed", f"Hardware não reconhecido ({exc}); usando só as regras do modo.")
+    base = (preset or {}).get("base") or ("agressivo" if mode == "auto" else mode)
 
     say("Medindo o PC", "reading", "Processos, RAM e CPU antes do BOOST.")
     try:
@@ -37,7 +49,7 @@ def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
     except Exception as exc:
         before = {"available": False, "detail": str(exc)}
 
-    results = engine.execute(mode, progress=say)
+    results = engine.execute(base, progress=say, preset=presets.engine_view(preset))
     backup = next((r for r in results if r.get("name") == "Backup / Restore"), {})
     if backup.get("status") != "completed":
         return {"ok": False, "mode": mode, "results": results,
@@ -69,9 +81,17 @@ def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
     startup_out: Dict[str, Any] = {"disabled": []}
     if opts["startup"]:
         try:
-            startup_out = startup.boost_disable(core, extreme=(mode == "agressivo"), progress=say)
+            extreme = bool((preset or {}).get("startup_extreme")) if preset else mode != "maximo"
+            startup_out = startup.boost_disable(core, extreme=extreme, progress=say)
         except Exception as exc:
             say("Inicialização", "failed", str(exc))
+
+    proc_out: Dict[str, Any] = {"closed": [], "freed_mb": 0}
+    if opts["processes"]:
+        try:
+            proc_out = processes.close_useless(core, progress=say)
+        except Exception as exc:
+            say("Processos inúteis", "failed", str(exc))
 
     cleanup_out: Dict[str, Any] = {"freed_mb": 0}
     if opts["cleanup"]:
@@ -99,6 +119,9 @@ def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
         "version": 2, "id": report_id, "time": time.time(), "duration_s": round(time.time() - started, 1),
         "mode": mode, "mode_label": MODE_LABELS.get(mode, mode), "ok": not failed_items,
         "restart": summary["restart"],
+        "preset": ({"name": preset["name"], "key": preset["key"], "skip": len(preset["skip"]), "add": len(preset["add"]),
+                    "notes": [n["title"] for n in preset["notes"]]} if preset else None),
+        "processes": proc_out,
         "tweaks": summary, "apps": apps_out,
         "startup": {"disabled": startup_out.get("disabled", [])},
         "cleanup": {"freed_mb": cleanup_out.get("freed_mb", 0)},
@@ -111,6 +134,7 @@ def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
         f"{summary['changed']} ajuste(s) novo(s), {summary['already']} já estavam no lugar"
         + (f", {apps_out['removed']} app(s) removido(s)" if apps_out["removed"] else "")
         + (f", {len(report['startup']['disabled'])} programa(s) fora do boot" if report["startup"]["disabled"] else "")
+        + (f", {len(proc_out['closed'])} processo(s) inútil(eis) fechado(s)" if proc_out.get("closed") else "")
         + (f", {report['cleanup']['freed_mb']:.0f} MB liberados" if report["cleanup"]["freed_mb"] else "")
         + (f", {summary['failed']} falha(s)" if summary["failed"] else "") + "."
     )
@@ -125,5 +149,8 @@ def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
     settings["last_boost"] = {"time": report["time"], "mode": mode, "report_id": report.get("report_id"),
                               "detail": report["detail"]}
     core.save_settings(settings)
-    core.journal("boost", mode=mode, report_id=report_id, changed=summary["changed"], failed=summary["failed"])
+    if preset:
+        presets.remember(core, preset, applied=True)
+    core.journal("boost", mode=mode, report_id=report_id, changed=summary["changed"], failed=summary["failed"],
+                 preset=(preset or {}).get("key"))
     return report

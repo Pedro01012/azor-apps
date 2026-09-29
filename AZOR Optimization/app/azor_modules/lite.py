@@ -227,6 +227,65 @@ SPECS = [
         metric="Perda de foco no meio da partida",
         tags=("gaming", "input"),
     ),
+    RegSpec(
+        id="wer_off",
+        name="Sem relatório de erros do Windows",
+        category="Leve / Relatórios",
+        profiles=("competitive",),
+        values=[
+            V("HKLM", r"SOFTWARE\Microsoft\Windows\Windows Error Reporting", "Disabled", 1),
+            V("HKLM", POLICIES + r"\Windows\Windows Error Reporting", "Disabled", 1),
+        ],
+        compatible=_admin,
+        description="Quando um programa trava, o Windows deixa de juntar e enviar relatório para a Microsoft. "
+                    "Some o WerFault que fica rodando e gravando no disco logo depois de um crash.",
+        source="Valor Disabled em Windows Error Reporting e a política equivalente "
+               "(Componentes do Windows > Relatório de Erros do Windows).",
+        trade_off="A Microsoft deixa de receber os relatórios de travamento deste PC. O Visualizador de "
+                  "Eventos continua registrando tudo.",
+        metric="Uso de disco e CPU depois de travamentos",
+        tags=("background", "policy"),
+    ),
+    RegSpec(
+        id="spotlight_off",
+        name="Sem Windows Spotlight e dicas na tela de bloqueio",
+        category="Leve / Conteúdo da nuvem",
+        profiles=("competitive",),
+        values=[
+            V("HKCU", POLICIES + r"\Windows\CloudContent", "DisableWindowsSpotlightFeatures", 1),
+            V("HKCU", POLICIES + r"\Windows\CloudContent", "DisableTailoredExperiencesWithDiagnosticData", 1),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "RotatingLockScreenEnabled", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "RotatingLockScreenOverlayEnabled", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "SubscribedContent-338387Enabled", 0),
+        ],
+        compatible=_admin,
+        description="Para o Windows de baixar imagens, curiosidades e propaganda para a tela de bloqueio e "
+                    "a área de trabalho em segundo plano.",
+        source="Políticas DisableWindowsSpotlightFeatures e DisableTailoredExperiencesWithDiagnosticData "
+               "(Conteúdo da Nuvem) e os valores de rotação do ContentDeliveryManager.",
+        trade_off="A tela de bloqueio fica com a imagem fixa que você escolher.",
+        metric="Downloads e processos em segundo plano",
+        tags=("background", "policy"),
+    ),
+    RegSpec(
+        id="tips_setup_off",
+        name="Sem 'Termine de configurar seu PC' e dicas do Windows",
+        category="Leve / Propaganda",
+        profiles=("competitive",),
+        values=[
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\UserProfileEngagement", "ScoobeSystemSettingEnabled", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "SubscribedContent-310093Enabled", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "SubscribedContent-338389Enabled", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager", "SoftLandingEnabled", 0),
+        ],
+        description="Some a tela azul de 'Vamos terminar de configurar seu dispositivo' depois das atualizações "
+                    "(que empurra OneDrive, Microsoft 365 e Game Pass) e as dicas que aparecem no meio do uso.",
+        source="Configurações > Notificações > Opções adicionais: 'Sugerir maneiras de concluir a configuração' "
+               "e 'Obter dicas e sugestões' (mesmos valores do registro).",
+        trade_off="Nenhum para quem joga.",
+        metric="Pop-ups e telas cheias depois de atualizações",
+        tags=("background", "gaming"),
+    ),
 ]
 
 TASKS, KEYS = compile_specs(MODULE["id"], SPECS)

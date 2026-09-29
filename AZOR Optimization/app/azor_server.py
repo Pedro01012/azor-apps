@@ -58,7 +58,7 @@ DATA = core.DATA_DIR
 RUNTIME_FILE = DATA / "server_runtime.json"
 STARTUP_LOG = DATA / "server_startup.log"
 BUILD_ID_FILE = ROOT / "BUILD_ID.txt"
-VERSION = "3.0"
+VERSION = "3.1"
 
 
 def _build_id():
@@ -128,11 +128,36 @@ def _cached(key, ttl, fn, force=False):
     return core.cached_reading("srv_" + key, ttl, fn, force=force)
 
 
-def tweaks_payload(force=False):
-    from azor_modules import engine, gamer
+def current_mode():
+    mode = core.load_settings().get("performance_mode") or "auto"
+    return mode if mode in ("auto", "maximo", "agressivo") else "auto"
+
+
+def preset_payload(force=False, mode=None):
+    from azor_modules import presets
+    mode = mode or current_mode()
+
     def build():
-        data = engine.arsenal("agressivo")
+        try:
+            data = presets.resolve(core, mode, force)
+            presets.remember(core, data)
+            return data
+        except Exception as exc:
+            core.log(f"preset resolve failed: {exc}")
+            return {"ok": False, "detail": str(exc), "skip": {}, "add": {}, "notes": [], "chips": [],
+                    "base": "agressivo" if mode == "auto" else mode, "mode": mode}
+    return _cached("preset_" + mode, 120.0, build, force)
+
+
+def tweaks_payload(force=False):
+    from azor_modules import engine, gamer, presets
+    def build():
+        preset = preset_payload(force)
+        data = engine.arsenal("agressivo", preset=presets.engine_view(preset if preset.get("ok") else None),
+                              batch_profile=preset.get("base") or "agressivo")
         data["goals"] = gamer.GOALS
+        data["mode"] = preset.get("mode")
+        data["preset_name"] = preset.get("name")
         return data
     return _cached("tweaks", 45.0, build, force)
 
@@ -254,7 +279,7 @@ def overview_payload():
         "windows": core.platform.platform(),
         "pc": {k: hp.get(k) for k in ("label", "tier", "cpu", "gpus", "ram_gb", "discrete_gpu", "battery",
                                      "logical_processors", "cores", "topology")},
-        "mode": st.get("performance_mode") or "maximo",
+        "mode": current_mode(),
         "streamer": bool(st.get("streamer")),
         "technician": bool(st.get("technician")),
         "reduce_motion": bool(st.get("reduce_motion")),
@@ -635,6 +660,11 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json(core.monitor_snapshot())
             if path == "/api/plan":
                 return self._send_json(plan_payload(force))
+            if path == "/api/preset":
+                mode = (query.get("mode") or [None])[0]
+                if mode not in (None, "auto", "maximo", "agressivo"):
+                    return self._send_json({"ok": False, "error": "Modo inválido."}, 400)
+                return self._send_json(preset_payload(force, mode))
             if path == "/api/tweaks":
                 return self._send_json(tweaks_payload(force))
             if path == "/api/compat":
@@ -752,8 +782,8 @@ class Handler(SimpleHTTPRequestHandler):
                 for key, typ in SETTINGS_KEYS.items():
                     if key in data:
                         settings[key] = typ(data[key]) if typ is not bool else bool(data[key])
-                if settings.get("performance_mode") not in ("maximo", "agressivo"):
-                    settings["performance_mode"] = "maximo"
+                if settings.get("performance_mode") not in ("auto", "maximo", "agressivo"):
+                    settings["performance_mode"] = "auto"
                 if "start_with_windows" in data:
                     core.set_start_with_windows(bool(data["start_with_windows"]))
                 settings["start_with_windows"] = core.get_start_with_windows()

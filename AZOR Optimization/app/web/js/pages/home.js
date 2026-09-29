@@ -3,9 +3,12 @@
 (() => {
   const {esc, icon} = AZ;
   let monitorTimer = 0;
-  let mode = 'maximo';
+  let mode = 'auto';
+  const MODE_NAME = {auto: 'AUTOMÁTICO', maximo: 'RECOMENDADO', agressivo: 'EXTREMO'};
+  const DIM_ICON = {form: 'hardware', cpu: 'cpu', gpu: 'gpu', ram: 'ram', disk: 'disk', os: 'apps', net: 'ping'};
 
   const MODE_TEXT = {
+    auto: '<b>Automático:</b> o AZOR reconhece processador, placa de vídeo, memória, disco e formato e aplica o pré-set mais forte que ESTE PC aguenta: base Extremo, sem o que esta peça não suporta, mais os extras que ela pede.',
     maximo: '<b>Recomendado:</b> tudo que dá FPS, tira delay e limpa o Windows, sem custo que você sinta. Ideal para qualquer PC e notebook.',
     agressivo: '<b>Extremo:</b> o Recomendado + timer global, tela cheia exclusiva, rede sem espera, NVMe sempre ativo e lançadores fora do boot. Mais calor e consumo; overlays podem sumir. Para PC só de jogo.',
   };
@@ -79,7 +82,7 @@
 
   function render(view) {
     const o = AZ.state.overview || {};
-    mode = o.mode || 'maximo';
+    mode = o.mode || 'auto';
     const plan = AZ.state.plan;
     view.innerHTML = `
       <div class="hero">
@@ -91,6 +94,7 @@
               <h2>Mais <em>FPS</em>, menos <em>delay</em>, Windows leve.</h2>
               <p>Um clique aplica os ajustes de desempenho, remove os apps inúteis, tira do boot o que pesa e limpa o disco. Tudo tem desfazer.</p>
               <div class="seg" role="tablist">
+                <button data-act="mode" data-mode="auto" class="${mode === 'auto' ? 'active' : ''}">AUTOMÁTICO</button>
                 <button data-act="mode" data-mode="maximo" class="${mode === 'maximo' ? 'active' : ''}">RECOMENDADO</button>
                 <button data-act="mode" data-mode="agressivo" class="extreme ${mode === 'agressivo' ? 'active' : ''}">EXTREMO</button>
               </div>
@@ -98,18 +102,61 @@
               <div class="boost-does">
                 <div>${icon('fps')} Ajustes de FPS e delay</div><div>${icon('trash')} Remove apps inúteis</div>
                 <div>${icon('power')} Limpa a inicialização</div><div>${icon('cleanup')} Limpa arquivos inúteis</div>
+                <div>${icon('cpu')} Fecha processos à toa</div><div>${icon('wand')} Pré-set do seu hardware</div>
               </div>
             </div>
           </div>
         </div>
         ${pcCard(o, plan)}
       </div>
+      <div id="presetCard">${presetCard(AZ.state.preset)}</div>
       <div id="metersWrap">${meters({})}</div>
       <div class="grid g2">${turboCard(o)}<div class="stack">${lastBoostCard(o)}
         <div class="card tight"><div class="spread"><div class="row">${AZ.stateIcon('manual')}<div><b>Antes de tudo</b><div class="muted" style="font-size:13px">O BOOST cria um ponto de restauração do Windows e guarda o estado de cada ajuste. Reparar &gt; Desfazer tudo volta o PC a como estava.</div></div></div></div></div>
         ${o.pc?.battery ? `<div class="card tight"><div class="row">${AZ.stateIcon('manual')}<div><b>Notebook detectado</b><div class="muted" style="font-size:13px">Jogue na tomada. Na bateria o Windows corta o desempenho, com ou sem otimização.</div></div></div></div>` : ''}
       </div></div>`;
     pollMonitor();
+  }
+
+  function presetCard(p) {
+    if (!p) return `<div class="card tight">${AZ.skeleton(1)}</div>`;
+    if (!p.ok) return '';
+    const m = p.memory || {};
+    const actions = (p.notes || []).filter(n => n.level === 'action').length;
+    return `<div class="card"><div class="spread nw"><div><span class="eyebrow">Pré-set deste PC ${m.known ? '· reconhecido da memória do AZOR' : '· PC novo'}</span>
+        <h3 style="margin-top:6px">${esc(p.name)}</h3></div>
+        <button class="btn sm" data-act="preset">${icon('wand')} Ver o que muda</button></div>
+      <div class="row" style="margin-top:12px;gap:8px">${(p.chips || []).filter(c => c.label).map(c => `<span class="pill" title="${esc(c.detail)}">${icon(DIM_ICON[c.dim] || 'info')} ${esc(c.label)}</span>`).join('')}</div>
+      <div class="row soft" style="margin-top:10px;font-size:12.5px;gap:16px">
+        <span>${icon('bolt', 'good')} ${Object.keys(p.add || {}).length} ajuste(s) a mais para este hardware</span>
+        <span>${icon('shield', 'good')} ${Object.keys(p.skip || {}).length} protegido(s) (esta peça piora com eles)</span>
+        ${actions ? `<span class="warn">${icon('alert')} ${actions} coisa(s) para você fazer (BIOS/peça)</span>` : ''}
+        ${m.applied_count ? `<span>${icon('clock')} BOOST aplicado ${m.applied_count}× neste PC</span>` : ''}
+        <span>${icon('star')} biblioteca: ${Number((p.library || {}).combinations || 0).toLocaleString('pt-BR')} combinações</span></div></div>`;
+  }
+
+  function presetModal(p) {
+    const row = (ic, cls, title, text) => `<div class="row" style="flex-wrap:nowrap;align-items:flex-start;gap:10px;margin-top:8px">
+      <span class="state-ico ${cls}">${icon(ic)}</span><div><b style="font-size:13.5px">${esc(title)}</b><div class="muted" style="font-size:12.5px">${esc(text)}</div></div></div>`;
+    const names = AZ.state.taskNames || {};
+    AZ.modal(`<h2>Pré-set: ${esc(p.name)}</h2>
+      <p>O AZOR encaixou cada peça numa família e juntou as regras. Chave: <code>${esc(p.key)}</code></p>
+      ${Object.keys(p.add || {}).length ? `<h3 style="margin-top:14px">Liga a mais neste PC</h3>${Object.entries(p.add).map(([id, why]) => row('bolt', 'ok', names[id] || id, why)).join('')}` : ''}
+      ${Object.keys(p.skip || {}).length ? `<h3 style="margin-top:14px">Não mexe neste PC (piora com esta peça)</h3>${Object.entries(p.skip).map(([id, why]) => row('shield', 'manual', names[id] || id, why)).join('')}` : ''}
+      ${(p.notes || []).length ? `<h3 style="margin-top:14px">O que depende de você</h3>${p.notes.map(n => row(n.level === 'action' ? 'alert' : 'info', n.level === 'action' ? 'todo' : 'manual', n.title, n.text)).join('')}` : ''}
+      <h3 style="margin-top:14px">Regras usadas</h3><div class="soft" style="font-size:12.5px">${(p.rules || []).map(esc).join(' · ')}</div>
+      <div class="foot"><button class="btn primary" data-close>Fechar</button></div>`, {wide: true});
+  }
+
+  async function loadPreset() {
+    try {
+      AZ.state.preset = await AZ.get('/api/preset', 90000);
+      const el = AZ.$('#presetCard');
+      if (el && AZ.current?.id === 'home') el.innerHTML = presetCard(AZ.state.preset);
+      if (!AZ.state.taskNames) {
+        AZ.get('/api/tweaks').then(t => { AZ.state.taskNames = Object.fromEntries((t.tasks || []).map(x => [x.id, x.title || x.name])); }).catch(() => {});
+      }
+    } catch (e) { const el = AZ.$('#presetCard'); if (el) el.innerHTML = ''; }
   }
 
   async function loadPlan() {
@@ -142,18 +189,22 @@
 
   async function startBoost() {
     const o = AZ.state.overview || {};
+    const pr = AZ.state.preset;
     const plan = AZ.state.plan;
     const step = id => (plan?.steps || []).find(s => s.id === id);
     const desktop = !o.pc?.battery;
     const opts = [
       ['debloat', 'Remover apps inúteis', step('bloat')?.detail || 'Notícias, Clima, Candy Crush, Copilot e afins. Voltam pela Microsoft Store.', true],
-      ['startup', 'Tirar programas inúteis do boot', mode === 'agressivo' ? 'Inúteis + lançadores (Steam, Epic, Discord abrem quando você quiser).' : (step('startup')?.detail || 'Atualizadores, Edge, Teams e afins.'), true],
+      ['startup', 'Tirar programas inúteis do boot', mode !== 'maximo' ? 'Inúteis, outros otimizadores e lançadores (Steam, Epic, Discord abrem quando você quiser).' : (step('startup')?.detail || 'Atualizadores, Edge, Teams e afins.'), true],
+      ['processes', 'Fechar processos inúteis agora', 'Widgets, Vincular ao Celular, OneDrive, atualizadores do Google/Adobe/Java… Liberam RAM na hora.', true],
       ['cleanup', 'Limpar arquivos inúteis', step('junk')?.detail || 'Temporários, cache do Windows Update, sobras de driver.', true],
       ['keep_on_logon', 'Manter otimizado a cada login', 'O Windows Update desfaz ajustes; o AZOR confere e reaplica 45 s depois de entrar.', true],
-      ['turbo', 'Ligar o Modo Turbo', 'Timer 0,5 ms + prioridade do jogo + memória. O AZOR fica na bandeja.', desktop],
+      ['turbo', 'Ligar o Modo Turbo', 'Timer 0,5 ms + jogo acima de todos os outros apps + memória. O AZOR fica na bandeja.', pr?.ok ? !!pr.turbo : desktop],
     ];
-    const m = AZ.modal(`<h2>BOOST ${mode === 'agressivo' ? 'EXTREMO' : 'RECOMENDADO'}</h2>
-      <p>${MODE_TEXT[mode]}</p>
+    const m = AZ.modal(`<h2>BOOST ${MODE_NAME[mode] || 'AUTOMÁTICO'}</h2>
+      <p>${MODE_TEXT[mode] || MODE_TEXT.auto}</p>
+      ${pr && pr.ok ? `<div class="card tight" style="margin:10px 0"><div class="row" style="flex-wrap:nowrap">${icon('wand', 'good')}<div><b>Pré-set: ${esc(pr.name)}</b>
+        <div class="muted" style="font-size:12.5px">${mode === 'auto' ? `${Object.keys(pr.add || {}).length} ajuste(s) a mais e ` : ''}${Object.keys(pr.skip || {}).length} protegido(s) para este hardware.</div></div></div></div>` : ''}
       ${opts.map(([k, t, d, on]) => `<label class="opt"><input type="checkbox" class="check" data-opt="${k}" ${on ? 'checked' : ''}><div><b>${t}</b><span>${esc(d)}</span></div></label>`).join('')}
       <div class="foot"><button class="btn ghost" data-close>Cancelar</button><button class="btn primary lg" data-go>${icon('bolt')} INICIAR BOOST</button></div>`);
     m.el.querySelector('[data-go]').addEventListener('click', async () => {
@@ -177,6 +228,7 @@
       await AZ.refreshOverview();
       render(view);
       if (!AZ.state.plan) loadPlan();
+      loadPreset();
     },
     leave() { clearTimeout(monitorTimer); },
     actions: {
@@ -187,7 +239,10 @@
         AZ.$('#modeDesc').innerHTML = MODE_TEXT[mode];
         await AZ.post('/api/settings', {performance_mode: mode});
         AZ.refreshOverview();
+        AZ.state.preset = null;
+        loadPreset();
       },
+      preset: () => { if (AZ.state.preset?.ok) presetModal(AZ.state.preset); },
       turbo: async el => {
         const on = !el.classList.contains('on');
         el.disabled = true;

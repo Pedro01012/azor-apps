@@ -40,7 +40,7 @@ def _all_tasks() -> List[OptimizationTask]:
     return out
 
 
-def _context(core, requested_profile: str) -> Dict[str, Any]:
+def _context(core, requested_profile: str, preset: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     from azor_managers import WindowsDetection
     hp = core.hardware_profile()
     requested = str(requested_profile or "auto").lower()
@@ -58,6 +58,7 @@ def _context(core, requested_profile: str) -> Dict[str, Any]:
         "fortnite": core.detect_fortnite(),
         "windows":WindowsDetection.read(),
         "streamer": streamer,
+        "preset": preset,
     }
 
 
@@ -249,7 +250,8 @@ def simulate(requested_profile: str = "competitive") -> Dict[str, Any]:
     }
 
 
-def arsenal(requested_profile: str = "auto") -> Dict[str, Any]:
+def arsenal(requested_profile: str = "auto", preset: Optional[Dict[str, Any]] = None,
+            batch_profile: str = "maximo") -> Dict[str, Any]:
     """Plano e estado atual numa varredura única.
 
     Antes a tela do Arsenal chamava build_plan() e analyze() em sequencia, e as
@@ -298,6 +300,7 @@ def arsenal(requested_profile: str = "auto") -> Dict[str, Any]:
             "state": state, "current": current, "state_detail": detail,
             "relations": [dict(r) for r in (task.relations or ())],
             **_gamer_fields(task),
+            **_batch_fields(task.id, batch_profile, preset),
         })
     # As relacoes so ajudam se o usuario vir o NOME e o ESTADO do outro item; um id
     # cru na tela nao diz nada a quem nao leu o codigo.
@@ -328,6 +331,15 @@ def arsenal(requested_profile: str = "auto") -> Dict[str, Any]:
                            for r in repairs if not r["eligible"] and "administrador" in r["reason"]],
         },
     }
+
+
+def _batch_fields(task_id: str, batch_profile: str, preset: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Se o BOOST de agora pega este item, e o que o pré-set do PC diz dele."""
+    selected, why = policy.in_batch(task_id, batch_profile, preset)
+    preset = preset or {}
+    mark = ("skip" if task_id in (preset.get("skip") or {}) else
+            "add" if task_id in (preset.get("add") or {}) else None)
+    return {"in_boost": bool(selected), "preset": mark, "preset_reason": why if mark else ""}
 
 
 def _gamer_fields(task: OptimizationTask) -> Dict[str, Any]:
@@ -538,11 +550,11 @@ def mode_cleanup_candidates() -> List[Dict[str, Any]]:
 
 
 def execute(requested_profile: str = "competitive", progress=None,
-            task_ids: Optional[Iterable[str]] = None) -> List[Dict[str, Any]]:
+            task_ids: Optional[Iterable[str]] = None, preset: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     core = _core()
     if core.os.name != "nt":
         return [{"name": "Compatibility", "status": "failed", "detail": "Windows only", "module": "engine"}]
-    ctx = _context(core, requested_profile)
+    ctx = _context(core, requested_profile, preset)
     selected = None if task_ids is None else set(task_ids)
     results = []
     def push(name, status, detail="", module="engine", **metadata):
@@ -550,7 +562,8 @@ def execute(requested_profile: str = "competitive", progress=None,
         results.append(row)
         if progress:
             progress(name, status, detail)
-    push("Hardware profile", "completed", "Hardware consultado; perfil " + ctx["resolved_profile"] + ".")
+    push("Hardware profile", "completed", "Hardware consultado; perfil " + ctx["resolved_profile"] + "."
+         + (f" Pré-set: {preset.get('name')}." if preset and preset.get("name") else ""))
     try:
         snap = core.capture_restore_point(force=True)
         reread = core.json.loads(core.STATE_FILE.read_text(encoding="utf-8")) if core.STATE_FILE.exists() else {}

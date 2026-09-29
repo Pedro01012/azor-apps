@@ -25,7 +25,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 TASK_NAME = 'AZOR Optimization - Desempenho no login'
-PROFILES = ('maximo', 'agressivo')
+PROFILES = ('auto', 'maximo', 'agressivo')
 LOGON_DELAY = 'PT45S'
 STATUS_NAME = 'logon_autoapply.json'
 MANIFEST_NAME = 'azor-install.json'
@@ -221,7 +221,7 @@ def query_task(core) -> dict:
             'on_battery': '<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>' in xml}
 
 
-def install(core, profile: str = 'maximo', progress=None) -> dict:
+def install(core, profile: str = 'auto', progress=None) -> dict:
     if profile not in PROFILES:
         raise ValueError('PROFILE_INVALID')
     if os.name != 'nt':
@@ -252,7 +252,7 @@ def install(core, profile: str = 'maximo', progress=None) -> dict:
     except Exception as exc:
         core.journal('logon_autoapply_install_failed', error=str(exc))
         return {'ok': False, 'enabled': False, 'detail': f'A tarefa do Windows não foi configurada: {exc}'}
-    label = 'Agressivo' if profile == 'agressivo' else 'Máximo'
+    label = {'auto': 'Automático (pré-set do PC)', 'agressivo': 'Extremo'}.get(profile, 'Recomendado')
     detail = (f'O AZOR vai reaplicar o modo {label} toda vez que você entrar no Windows, também na bateria.'
               if ok else 'A tarefa foi enviada ao Windows, mas a releitura não confirmou o comando esperado.')
     _write_status(core, enabled=ok, profile=profile, installed_at=time.time() if ok else None,
@@ -331,9 +331,9 @@ def run_logon() -> int:
         return finish('skipped', detail='Aplicação automática desligada no AZOR.')
     if not core.is_admin():
         return finish('failed', detail='A tarefa rodou sem privilégio de administrador; nada foi alterado.')
-    profile = str(core.load_settings().get('performance_mode') or status_now.get('profile') or 'maximo')
+    profile = str(core.load_settings().get('performance_mode') or status_now.get('profile') or 'auto')
     if profile not in PROFILES:
-        profile = 'maximo'
+        profile = 'auto'
     import msvcrt
     lock_dir = Path(core.DATA_DIR) / 'elevation'
     lock_dir.mkdir(parents=True, exist_ok=True)
@@ -347,8 +347,14 @@ def run_logon() -> int:
         except OSError:
             return finish('skipped', profile=profile, detail='Outra otimização do AZOR estava em andamento.')
         try:
-            from azor_modules import engine
-            results = engine.execute(profile)
+            from azor_modules import engine, presets
+            # O mesmo pré-set do BOOST: a peça que mudou desde o último login muda o lote.
+            try:
+                preset = presets.resolve(core, profile)
+            except Exception:
+                preset = None
+            base = (preset or {}).get('base') or ('agressivo' if profile == 'auto' else profile)
+            results = engine.execute(base, preset=presets.engine_view(preset))
         except Exception as exc:
             return finish('failed', profile=profile, detail=f'O lote não pôde rodar: {exc}')
         finally:

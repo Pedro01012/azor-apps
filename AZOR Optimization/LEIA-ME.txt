@@ -1,8 +1,9 @@
-AZOR OPTIMIZATION
-=================
+AZOR OPTIMIZATION 3.1
+=====================
 
 Um app só para deixar o PC no máximo para jogar: mais FPS, menos delay,
-menos travadinha e Windows leve. Tudo o que ele muda pode ser desfeito.
+menos travadinha e Windows leve. Ele reconhece o hardware de cada PC e aplica
+o pré-set certo para aquela combinação. Tudo o que ele muda pode ser desfeito.
 
 
 COMO ABRIR
@@ -14,18 +15,20 @@ COMO ABRIR
 
 COMO USAR (3 CLIQUES)
 ---------------------
-1. INÍCIO  ->  escolha RECOMENDADO (qualquer PC) ou EXTREMO (PC só para jogar).
+1. INÍCIO  ->  deixe em AUTOMÁTICO (o padrão).
 2. Clique no botão BOOST e espere terminar.
 3. Reinicie o PC quando ele pedir.
 
 Pronto. O resto das telas é para quem quer ir além:
 
-  DIAGNÓSTICO    A nota do PC e o que falta fazer, em ordem, com um botão em cada passo.
-                 Mostra também se Valorant, CS2, Fortnite e CoD vão abrir (anti-cheat).
+  DIAGNÓSTICO    A nota do PC, o pré-set do seu hardware e o que falta fazer, em ordem,
+                 com um botão em cada passo. Mostra também se Valorant, CS2, Fortnite e
+                 CoD vão abrir (anti-cheat).
   TWEAKS         Todos os ajustes, separados por: Mais FPS, Menos delay, Sem travadinhas,
                  Internet e ping, Windows leve... Aplique ou desfaça um por um.
   APPS           Remove o lixo que vem com o Windows e instala programas oficiais.
-  LIMPEZA        Apaga arquivos inúteis e tira do boot o que não precisa abrir sozinho.
+  LIMPEZA        Apaga arquivos inúteis e tira do boot o que não precisa abrir sozinho,
+                 inclusive outros "otimizadores" que brigam com o AZOR.
   JOGOS          Monitor na taxa máxima (Hz), placa de vídeo forte em cada jogo,
                  teste de FPS ANTES e DEPOIS para mostrar ao cliente, preset do Fortnite.
   PERIFÉRICOS    Teste ao vivo: polling do mouse, clique duplo fantasma, teclas
@@ -37,18 +40,60 @@ Pronto. O resto das telas é para quem quer ir além:
   AJUSTES        Nome do cliente, relatório para entregar, abrir com o Windows.
 
 
-RECOMENDADO x EXTREMO
----------------------
+AUTOMÁTICO x RECOMENDADO x EXTREMO
+----------------------------------
+AUTOMÁTICO   (padrão) Base Extremo + o pré-set do seu hardware: liga o que a sua peça
+             pede e protege o que ela não aguenta. O mais forte e o mais seguro.
 RECOMENDADO  Tudo que dá desempenho sem tirar nada que você usa. Serve para qualquer PC.
-EXTREMO      Também desliga o que um PC só de jogo não precisa (impressão, Bluetooth
-             ocioso, launchers abrindo com o Windows, efeitos visuais...). Custa conforto,
-             nunca estabilidade.
+EXTREMO      Também desliga o que um PC só de jogo não precisa (impressão, indexador,
+             launchers abrindo com o Windows...). Custa conforto, nunca estabilidade.
+Nos três modos o pré-set protege o que a sua peça não aguenta.
 
 
-MODO TURBO
-----------
-Liga o timer do Windows em 0,5 ms, prioridade alta automática no jogo e a limpeza
-de memória em espera. Funciona com o AZOR aberto na bandeja (perto do relógio).
+O QUE O BOOST FAZ
+-----------------
+  - Até 76 ajustes do Windows (conforme o hardware), cada um gravado e relido.
+  - Remove até 61 apps inúteis que vêm com o Windows (voltam pela Microsoft Store).
+  - Tira do boot os inúteis, os outros otimizadores e (no Automático/Extremo) os
+    lançadores: Steam, Epic e Discord abrem quando você for jogar.
+  - Fecha na hora o que roda escondido à toa (Widgets, Vincular ao Celular, OneDrive,
+    atualizadores do Google, Adobe e Java).
+  - Limpa temporários, cache do Windows Update e sobras de driver.
+  - Reaplica tudo a cada login (atualizações do Windows desfazem ajustes).
+
+
+PRÉ-SETS POR HARDWARE
+---------------------
+O AZOR lê o processador, a placa de vídeo, a memória, o disco, a rede, o Windows e
+se é notebook ou desktop, encaixa cada peça numa família e junta as regras daquela
+combinação (mais de 1,8 milhão de combinações cobertas). Exemplos:
+
+  Intel 12ª geração ou mais nova  Mantém a economia do Windows que manda Discord,
+                                  navegador e updates para os núcleos E.
+  Ryzen X3D de dois CCDs          Não troca o plano de energia (o driver da AMD só
+                                  estaciona o CCD certo no Equilibrado).
+  RTX 40/50                       Agendamento de GPU por hardware obrigatório
+                                  (Frame Generation).
+  Placa de vídeo antiga           Não liga o agendamento por hardware.
+  Notebook                        Nada que derreta bateria: sem timer global, SSD e
+                                  USB sempre ligados, e mantém a hibernação.
+  8 GB de RAM ou menos            Mantém a compressão de memória; com 32 GB+ desliga.
+  Windows em HD mecânico          Desliga o indexador de pesquisa.
+
+O pré-set reconhecido fica guardado: quando o mesmo PC volta, o AZOR já sabe quem
+ele é; se uma peça muda, o pré-set é recalculado. Veja em Início > "Ver o que muda".
+
+
+JOGO ACIMA DE TUDO (MODO TURBO)
+-------------------------------
+Com o Modo Turbo ligado, assim que um jogo abre (mais de 50 jogos reconhecidos,
+inclusive Free Fire em BlueStacks/LDPlayer/GameLoop, e todo jogo das pastas
+Steam/Epic/Riot):
+  - o jogo sobe para prioridade Acima do normal;
+  - navegador, lançadores e atualizadores descem para Abaixo do normal;
+  - Discord e Spotify só descem se o processador passar de 80% (a voz não picota);
+  - timer do Windows em 0,5 ms e limpeza da memória em espera.
+Tudo volta ao normal sozinho quando o jogo fecha. O AZOR fica na bandeja.
 
 
 É SEGURO?
@@ -62,6 +107,6 @@ de memória em espera. Funciona com o AZOR aberto na bandeja (perto do relógio)
 
 ONDE FICAM OS DADOS
 -------------------
-%LOCALAPPDATA%\AzorOptimization  (configurações, histórico para desfazer, relatórios)
+%LOCALAPPDATA%\AzorOptimization  (configurações, pré-set, histórico para desfazer, relatórios)
 
 A lista completa de ajustes está em TWEAKS.md.

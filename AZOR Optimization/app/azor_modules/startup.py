@@ -20,6 +20,18 @@ import re
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+# Outros "otimizadores" e "boosters": mexem em prioridade, serviços e memória por
+# conta própria e brigam com o AZOR (um desfaz o que o outro fez). Conferido ANTES
+# da lista essencial porque "avg tuneup" e "razer cortex" contêm nomes de antivírus
+# e de periférico.
+OPTIMIZERS = (
+    "razer cortex", "rzcortex", "cortex.exe", "wise game booster", "wisegamebooster", "wise care", "wisecare",
+    "advanced systemcare", "advancedsystemcare", "iobit", "driver booster", "smart game booster", "gamefire",
+    "game fire", "glary", "ashampoo", "restoro", "reimage", "processlasso", "process lasso", "hone.gg",
+    "ultimate game booster", "avg tuneup", "tuneup", "avast cleanup", "norton utilities", "winoptimizer",
+    "razer booster", "game booster", "pc booster", "speedup", "totalav", "pc app store", "driver easy",
+    "drivereasy", "driverpack", "auslogics", "boostspeed", "cleanmaster", "clean master",
+)
 ESSENTIAL = (
     "securityhealth", "windowsdefender", "msmpeng", "rtkaud", "realtek", "rthdvcpl", "waves", "maxxaudio",
     "nahimic", "dolby", "synaptics", "syntp", "elan", "etdctrl", "igfx", "intel", "nvidia", "nvbackend",
@@ -52,12 +64,15 @@ WHY = {
     "essencial": "Driver, antivírus, anti-cheat ou software do seu periférico. Deixe ligado.",
     "inutil": "Não precisa abrir com o Windows. Continua instalado e abre quando você quiser.",
     "lancador": "Lançador ou chat. Desligado, abre na hora que você for jogar, sem ocupar memória antes.",
+    "conflito": "Outro otimizador: briga com o AZOR, um desfaz o que o outro fez. O BOOST tira do boot.",
     "outro": "Programa não reconhecido. Desligue só se você souber o que é.",
 }
 
 
 def classify(name: str, command: str = "") -> str:
     text = f" {name} {command} ".lower()
+    if any(k in text for k in OPTIMIZERS):
+        return "conflito"
     if any(k in text for k in ESSENTIAL):
         return "essencial"
     if any(k in text for k in LAUNCHERS):
@@ -109,11 +124,12 @@ def items(core) -> Dict[str, Any]:
         kind = classify(str(row.get("name") or ""), str(row.get("command") or ""))
         row["kind"] = kind
         row["why"] = WHY[kind]
-    order = {"inutil": 0, "lancador": 1, "outro": 2, "essencial": 3}
+    order = {"conflito": 0, "inutil": 1, "lancador": 2, "outro": 3, "essencial": 4}
     rows.sort(key=lambda r: (order[r["kind"]], -(r.get("memory_mb") or 0), str(r.get("name")).lower()))
     return {"ok": bool(base.get("ok", os.name == "nt")), "items": rows,
             "enabled_count": sum(1 for r in rows if r.get("enabled")),
-            "useless_on": sum(1 for r in rows if r.get("enabled") and r["kind"] == "inutil"),
+            "useless_on": sum(1 for r in rows if r.get("enabled") and r["kind"] in ("inutil", "conflito")),
+            "conflicts_on": sum(1 for r in rows if r.get("enabled") and r["kind"] == "conflito"),
             "launchers_on": sum(1 for r in rows if r.get("enabled") and r["kind"] == "lancador")}
 
 
@@ -152,7 +168,7 @@ def _ledger(core) -> List[Dict[str, str]]:
 
 def boost_disable(core, extreme: bool, progress: Optional[Callable] = None) -> Dict[str, Any]:
     """Desliga o inútil (e os lançadores no Extremo). Anota o que o AZOR desligou."""
-    kinds = {"inutil", "lancador"} if extreme else {"inutil"}
+    kinds = {"inutil", "conflito", "lancador"} if extreme else {"inutil", "conflito"}
     state = items(core)
     targets = [r for r in state["items"] if r.get("enabled") and r["kind"] in kinds
                and not (r.get("admin_required") and not core.is_admin())]

@@ -42,7 +42,7 @@ RECOMENDADO = frozenset((
     # Windows leve
     'services_lite', 'telemetry_tasks_off', 'diagtrack_off', 'background_apps', 'edge_background_off',
     'copilot_recall_off', 'consumer_features_off', 'widgets', 'search_highlights_off', 'bing_search_off',
-    'device_metadata_off', 'windows_suggestions', 'startup_delay_off',
+    'device_metadata_off', 'windows_suggestions', 'startup_delay_off', 'wer_off', 'spotlight_off', 'tips_setup_off',
     # Privacidade que também tira processo e rede do fundo
     'telemetry_policy_min', 'telemetry_full_off', 'activity_history_off',
 ))
@@ -56,7 +56,9 @@ EXTREMO = RECOMENDADO | frozenset((
 # Nomes internos preservados: os estados salvos e a tarefa de login usam estes ids.
 MAXIMO, AGRESSIVO = RECOMENDADO, EXTREMO
 EXTENDED = {'maximo': RECOMENDADO, 'agressivo': EXTREMO}
-MODE_LABELS = {'maximo': 'RECOMENDADO', 'agressivo': 'EXTREMO'}
+MODE_LABELS = {'auto': 'AUTOMÁTICO', 'maximo': 'RECOMENDADO', 'agressivo': 'EXTREMO'}
+# Modos que o usuário escolhe. "auto" = pré-set do hardware sobre a base Extremo.
+USER_MODES = ('auto', 'maximo', 'agressivo')
 
 # Quem faz live marca isso nos Ajustes. Tela cheia exclusiva derruba overlay do
 # Discord e de alguns capturadores; o resto do BOOST continua igual.
@@ -137,11 +139,29 @@ def review(task):
     return task
 
 
+def in_batch(task_id, profile, preset=None):
+    """Só a escolha do lote (sem compatibilidade nem releitura): para a tela e o plano."""
+    preset = preset or {}
+    if task_id in REPAIRS:
+        return True, 'Conserto.'
+    if task_id in (preset.get('skip') or {}):
+        return False, 'Pré-set deste PC: ' + preset['skip'][task_id]
+    if task_id in NEVER_AUTOMATIC or task_id in AB_TEST_ONLY:
+        return False, 'Fora de qualquer lote automático.'
+    if task_id in (preset.get('add') or {}):
+        return True, 'Pré-set deste PC: ' + preset['add'][task_id]
+    return task_id in EXTENDED.get(profile, RECOMENDADO), ''
+
+
 def automatic_decision(task, ctx):
     """Entra no lote deste modo?"""
     profile = ctx.get('resolved_profile')
-    wanted = EXTENDED.get(profile, RECOMENDADO)
-    if task.apply is None or task.id in NEVER_AUTOMATIC:
+    preset = ctx.get('preset') or {}
+    skip, add = preset.get('skip') or {}, preset.get('add') or {}
+    wanted = EXTENDED.get(profile, RECOMENDADO) | frozenset(add)
+    if task.id in skip and task.id not in REPAIRS:
+        return False, 'Pré-set deste PC: ' + skip[task.id]
+    if task.apply is None or task.id in NEVER_AUTOMATIC or task.id in AB_TEST_ONLY:
         return False, task.audit_reason or 'Fora de qualquer lote automático.'
     if task.id in REPAIRS:
         if task.verify is None:
@@ -153,4 +173,6 @@ def automatic_decision(task, ctx):
         return False, 'Preservado porque você marcou que faz live (overlay do Discord e da captura).'
     if task.verify is None or task.revert is None or not task.reversible:
         return False, 'Sem releitura ou sem desfazer: não entra no lote.'
+    if task.id in add:
+        return True, 'Pré-set deste PC: ' + add[task.id]
     return True, 'Incluído no modo ' + MODE_LABELS.get(profile, 'RECOMENDADO').capitalize() + '.'

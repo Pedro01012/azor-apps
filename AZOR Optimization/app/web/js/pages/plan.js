@@ -49,8 +49,23 @@
         </div>
         ${AZ.sectionTitle('plan', 'Passo a passo', 'O que falta primeiro; o que já está certo fica no fim, apagado.')}
         <div class="list">${plan.steps.map(stepCard).join('')}</div>
+        ${AZ.sectionTitle('wand', 'Pré-set deste hardware', 'O que o AZOR decidiu por causa das SUAS peças, e o que depende de você.')}
+        <div id="presetBox">${AZ.skeleton(2)}</div>
         ${AZ.sectionTitle('shield', 'Seus jogos vão abrir?', 'Requisitos de anti-cheat (Valorant, CS2/FACEIT, CoD, Fortnite) e o básico que segura qualquer jogo.')}
         <div id="compat">${AZ.skeleton(3)}</div>`;
+      AZ.get('/api/preset', 90000).then(p => {
+        AZ.state.preset = p;
+        const el = AZ.$('#presetBox');
+        if (!el) return;
+        if (!p.ok) { el.innerHTML = `<div class="empty">${esc(p.detail || 'Hardware não reconhecido.')}</div>`; return; }
+        const item = (st, title, text, act) => `<div class="item">${AZ.stateIcon(st)}<div><div class="title">${esc(title)}</div><div class="desc">${esc(text)}</div></div>
+          <div class="side-actions">${act ? `<button class="btn sm" data-act="presetact" data-i="${act}">Abrir</button>` : ''}</div></div>`;
+        this.presetNotes = p.notes || [];
+        el.innerHTML = `<div class="card tight"><b>${esc(p.name)}</b><div class="row" style="margin-top:8px;gap:8px">${(p.chips || []).map(c => `<span class="pill" title="${esc(c.detail)}">${esc(c.label)}</span>`).join('')}</div>
+          <div class="soft" style="font-size:12.5px;margin-top:8px">${Object.keys(p.add || {}).length} ajuste(s) a mais e ${Object.keys(p.skip || {}).length} protegido(s) no BOOST para este hardware.</div></div>
+          <div class="list">${this.presetNotes.map((n, i) => item(n.level === 'action' ? 'todo' : n.level === 'warn' ? 'atencao' : 'manual', n.title, n.text, n.action ? String(i) : '')).join('')
+            || '<div class="empty">Nada para fazer à mão: o BOOST resolve tudo neste hardware.</div>'}</div>`;
+      }).catch(e => { const el = AZ.$('#presetBox'); if (el) el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
       AZ.get('/api/compat', 120000).then(c => {
         this.compat = c;
         const el = AZ.$('#compat');
@@ -61,6 +76,7 @@
       boost: () => AZ.pages.home.startBoost(),
       refresh: () => AZ.go('plan', {force: 1}),
       step: (el) => AZ.runStepAction(AZ.current.plan.steps[Number(el.dataset.i)].action, el),
+      presetact: el => AZ.runStepAction(AZ.current.presetNotes[Number(el.dataset.i)].action, el),
       compat: async (el) => {
         const k = AZ.current.compat.checks[Number(el.dataset.i)];
         if (k.link) return AZ.runStepAction({kind: 'link', url: k.link});

@@ -37,7 +37,7 @@ def validate(request):
     if not isinstance(request,dict) or request.get('operation') not in OPERATIONS:
         raise ValueError('OPERATION_INVALID')
     op=request['operation']
-    if op=='boost' and request.get('mode') not in ('maximo','agressivo'):
+    if op=='boost' and request.get('mode') not in ('auto','maximo','agressivo'):
         raise ValueError('MODE_INVALID')
     if op in ('apply_task','revert_task') and not re.fullmatch(TASK_ID,str(request.get('id',''))):
         raise ValueError('TASK_INVALID')
@@ -45,7 +45,7 @@ def validate(request):
         _ids(request,'ids',TASK_ID)
     if op=='restore_all' and request.get('target','baseline') not in ('baseline','last'):
         raise ValueError('TARGET_INVALID')
-    if op=='logon_autoapply' and (not isinstance(request.get('enabled'),bool) or request.get('profile','maximo') not in ('maximo','agressivo')):
+    if op=='logon_autoapply' and (not isinstance(request.get('enabled'),bool) or request.get('profile','auto') not in ('auto','maximo','agressivo')):
         raise ValueError('LOGON_INVALID')
     if op in ('apps_install','apps_uninstall'):
         _ids(request,'ids',APP_ID,80)
@@ -131,7 +131,7 @@ def execute_local(core,request,progress=None):
     if op=='restore_transaction':return transactions.restore(core,str(request.get('id','')))
     if op=='logon_autoapply':
         import azor_autostart
-        if request['enabled']:return azor_autostart.install(core,request.get('profile','maximo'),progress)
+        if request['enabled']:return azor_autostart.install(core,request.get('profile','auto'),progress)
         return azor_autostart.uninstall(core)
     if op=='apps_install':return apps.install(core,request['ids'],progress)
     if op=='apps_uninstall':return apps.uninstall(core,request['ids'],progress)

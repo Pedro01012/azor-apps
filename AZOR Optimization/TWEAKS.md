@@ -2,7 +2,7 @@
 
 Lista gerada do catálogo real do app (`tools/gen_tweaks_md.py`). Cada ajuste é gravado, relido e só conta como aplicado se o Windows confirmar; o valor de antes fica guardado para desfazer.
 
-Total: **105** ajustes.
+Total: **108** ajustes.
 
 | Selo | Significa |
 |---|---|
@@ -98,8 +98,11 @@ Menos processos, serviços e tarefas rodando escondidos gastando CPU, RAM e disc
 | **Esconder Widgets**<br>Tira o painel de notícias e clima da barra, que ficava carregando conteúdo. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Pesquisa sem destaques da internet**<br>A caixa de pesquisa para de buscar desenhos e notícias na internet. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Programas do boot sem espera**<br>O Windows para de esperar 10 segundos antes de abrir os programas de inicialização. | `BOOT` | Recomendado + Extremo | não | sim |
+| **Sem 'Termine de configurar seu PC'**<br>Some a tela cheia que aparece depois das atualizações empurrando OneDrive e Microsoft 365. | `+LEVE` `POP-UP` | Recomendado + Extremo | não | sim |
+| **Sem Spotlight na tela de bloqueio**<br>O Windows para de baixar imagens e propaganda para a tela de bloqueio. | `+LEVE` `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Sem apps de fabricante automáticos**<br>Conectar um aparelho novo não baixa mais programas de propaganda. | `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Sem nomes curtos antigos (8.3)**<br>O disco para de criar um segundo nome estilo DOS para cada arquivo novo. | `DISCO` | Só Extremo | não | sim |
+| **Sem relatório de erros do Windows**<br>Depois de um crash o Windows não fica juntando e enviando relatório em segundo plano. | `+LEVE` `DISCO` | Recomendado + Extremo | não | sim |
 | **Sem sugestões e propagandas do Windows**<br>Tira anúncios e 'dicas' do menu Iniciar e das Configurações. | `SEM LIXO` | Recomendado + Extremo | não | sim |
 
 ## Privacidade

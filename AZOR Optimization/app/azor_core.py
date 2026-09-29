@@ -2495,8 +2495,9 @@ def _sweep_stale_tmp(older_than_s: float = 300.0) -> int:
 
 def load_settings() -> Dict[str, Any]:
     defaults = {
-        # Modo do BOOST e da reaplicação no login: "maximo" (Recomendado) ou "agressivo" (Extremo).
-        "performance_mode": "maximo",
+        # Modo do BOOST e da reaplicação no login: "auto" (pré-set do hardware, padrão),
+        # "maximo" (Recomendado) ou "agressivo" (Extremo).
+        "performance_mode": "auto",
         # Modo Turbo: timer 0,5 ms + prioridade do jogo + motor de memória, vivos com o AZOR na bandeja.
         "turbo": False,
         # Quem faz live: preserva overlay (sem tela cheia exclusiva) e a reserva de CPU do encoder.
@@ -2514,8 +2515,8 @@ def load_settings() -> Dict[str, Any]:
     data = _safe_json_read(SETTINGS_FILE, {})
     if isinstance(data, dict):
         defaults.update(data)
-    if defaults.get("performance_mode") not in ("maximo", "agressivo"):
-        defaults["performance_mode"] = "maximo"
+    if defaults.get("performance_mode") not in ("auto", "maximo", "agressivo"):
+        defaults["performance_mode"] = "auto"
     return defaults
 
 

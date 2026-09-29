@@ -154,7 +154,7 @@ AZ.modal = (html, {wide = false, closable = true, onClose} = {}) => {
   });
   const esc = e => { if (e.key === 'Escape' && closable) { close(); document.removeEventListener('keydown', esc); } };
   document.addEventListener('keydown', esc);
-  wrap.querySelector('button:not(.close), .input')?.focus();
+  wrap.querySelector('button:not(.close), .input')?.focus({preventScroll: true});
   return {el: wrap.firstElementChild, close};
 };
 AZ.confirm = (title, text, okLabel = 'Confirmar', danger = false) => new Promise(resolve => {

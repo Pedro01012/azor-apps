@@ -149,6 +149,13 @@ def build(core, plan: Dict[str, Any]) -> Dict[str, Any]:
                  ("Apps inúteis removidos", _e(len(apps)), ", ".join(apps[:4]) + ("…" if len(apps) > 4 else "") or "nenhum instalado"),
                  ("Fora da inicialização", _e(len(boot)), ", ".join(map(str, boot[:4])) + ("…" if len(boot) > 4 else "") or "já estava limpa"),
                  ("Espaço liberado", f"{freed / 1024:.1f} GB".replace(".", ",") if freed >= 1024 else f"{freed:.0f} MB", "lixo e temporários")]
+        preset_name = (boost.get("preset") or {}).get("name")
+        if preset_name:
+            parts.append(f'<h2>Pré-set aplicado</h2><div class="card"><b style="font-size:17px">{_e(preset_name)}</b>'
+                         f'<span>Configuração escolhida pelo AZOR para este processador, placa de vídeo, memória e disco.</span></div>')
+        closed = (boost.get("processes") or {}).get("closed") or []
+        if closed:
+            cards.append(("Processos inúteis fechados", _e(len(closed)), ", ".join(closed[:4]) + ("…" if len(closed) > 4 else "")))
         parts.append(f'<h2>O que o BOOST fez · {_e(boost.get("mode_label") or "")}</h2><div class="grid">' + "".join(
             f'<div class="card"><small>{t}</small><b>{v}</b><span>{_e(s)}</span></div>' for t, v, s in cards) + "</div>")
         if cmp_rows:

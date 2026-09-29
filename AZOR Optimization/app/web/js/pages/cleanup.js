@@ -4,6 +4,7 @@
   const {esc, icon} = AZ;
   const S = {tab: 'files', scan: null, sel: null, startup: null};
   const KIND = {
+    conflito: ['Outros otimizadores', 'Mexem em prioridade, serviços e memória por conta própria e brigam com o AZOR. O BOOST tira do boot.', 'alert'],
     inutil: ['Inúteis', 'Não precisam abrir com o Windows. O BOOST desliga.', 'trash'],
     lancador: ['Lançadores e chat', 'Steam, Epic, Discord… Desligados, abrem na hora que você for jogar. O BOOST Extremo desliga.', 'games'],
     outro: ['Outros', 'Não reconhecidos. Desligue só se souber o que é.', 'info'],
@@ -51,9 +52,9 @@
     return `${AZ.how([['Veja o que abre com o Windows', 'A memória mostrada é o que o programa está usando agora.'],
                       ['Desligue o que não precisa', 'O programa continua instalado; só não abre sozinho.'],
                       ['Religue quando quiser', 'Mesmo registro do Gerenciador de Tarefas: volta com um clique.']])}
-      <div class="row"><button class="btn primary" data-act="offuseless" ${st.useless_on ? '' : 'disabled'}>${icon('power')} Desligar os ${st.useless_on} inúteis</button>
+      <div class="row"><button class="btn primary" data-act="offuseless" ${st.useless_on ? '' : 'disabled'}>${icon('power')} Desligar os ${st.useless_on} inúteis${st.conflicts_on ? ` (${st.conflicts_on} otimizador${st.conflicts_on > 1 ? 'es' : ''})` : ''}</button>
         <button class="btn" data-act="offlaunchers" ${st.launchers_on ? '' : 'disabled'}>Desligar também os ${st.launchers_on} lançadores</button></div>
-      ${['inutil', 'lancador', 'outro', 'essencial'].map(k => {
+      ${['conflito', 'inutil', 'lancador', 'outro', 'essencial'].map(k => {
         const items = st.items.filter(i => i.kind === k);
         if (!items.length) return '';
         const [label, hint, ic] = KIND[k];

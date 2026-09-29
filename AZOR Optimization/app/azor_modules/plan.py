@@ -79,8 +79,10 @@ def build(core, arsenal: Dict[str, Any], compat: Dict[str, Any], bloat: Dict[str
 
     # 1. BOOST: tweaks pendentes do modo recomendado
     tasks = arsenal.get("tasks") or []
-    pending = [t for t in tasks if t.get("boost") == "recomendado" and t.get("eligible") and t.get("state") != "applied"]
-    done = [t for t in tasks if t.get("boost") == "recomendado" and t.get("state") == "applied"]
+    # "in_boost" = o que o BOOST do modo atual pega neste PC, já com o pré-set do hardware.
+    chosen = [t for t in tasks if t.get("in_boost", t.get("boost") == "recomendado") and t.get("module") != "repair"]
+    pending = [t for t in chosen if t.get("eligible") and t.get("state") != "applied"]
+    done = [t for t in chosen if t.get("state") == "applied"]
     repairs = (arsenal.get("repair") or {}).get("found") or []
     steps.append(_step(
         "boost", "Rodar o BOOST",

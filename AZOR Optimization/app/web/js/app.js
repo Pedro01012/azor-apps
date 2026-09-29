@@ -31,11 +31,11 @@
       <div class="status-line"><i class="${o.admin ? 'on' : 'warn'}"></i><span>${o.admin ? 'Administrador: tudo liberado' : 'Sem administrador: o Windows vai pedir permissão'}</span></div>
       <div class="status-line"><i class="${turbo.enabled ? 'hot' : ''}"></i><span>Modo Turbo ${turbo.enabled ? 'ligado' : 'desligado'}</span></div>
       <div class="status-line"><i class="${o.logon?.enabled ? 'on' : ''}"></i><span>${o.logon?.enabled ? 'Mantido a cada login' : 'Sem reaplicação no login'}</span></div>`;
-    const mode = o.mode === 'agressivo' ? 'EXTREMO' : 'RECOMENDADO';
+    const mode = {auto: 'AUTOMÁTICO', agressivo: 'EXTREMO'}[o.mode] || 'RECOMENDADO';
     AZ.$('#topRight').innerHTML = `
       ${o.pending_reboot && o.pending_reboot.length ? `<span class="pill warn" title="${AZ.esc(o.pending_reboot.join(', '))}"><i></i>Reinicie para terminar</span>` : ''}
       ${o.job ? `<span class="pill hot"><i></i>${AZ.esc(o.job.phase || 'Trabalhando…')}</span>` : ''}
-      <span class="pill ${o.mode === 'agressivo' ? 'warn' : 'todo'}"><i></i>Modo ${mode}</span>
+      <span class="pill ${o.mode === 'maximo' ? 'todo' : 'warn'}"><i></i>Modo ${mode}</span>
       ${o.plan ? `<span class="pill ${o.plan.score >= 80 ? 'ok' : 'todo'}"><i></i>Nota ${o.plan.score}</span>` : ''}`;
     const todo = o.plan?.todo;
     const c = AZ.$('[data-count="plan"]');

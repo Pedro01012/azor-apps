@@ -10,7 +10,9 @@
     const st = stateOf(t);
     const on = S.sel.has(t.id);
     const tech = AZ.state.settings?.technician;
-    const boost = t.boost === 'recomendado' ? '<span class="pill todo" title="Entra no BOOST Recomendado e no Extremo"><i></i>BOOST</span>'
+    const boost = t.preset === 'skip' ? `<span class="pill" title="${esc(t.preset_reason)}"><i></i>PROTEGIDO NESTE PC</span>`
+      : t.preset === 'add' ? `<span class="pill todo" title="${esc(t.preset_reason)}"><i></i>PRÉ-SET</span>`
+      : t.boost === 'recomendado' ? '<span class="pill todo" title="Entra no BOOST Recomendado e no Extremo"><i></i>BOOST</span>'
       : t.boost === 'extremo' ? '<span class="pill warn" title="Entra só no BOOST Extremo"><i></i>EXTREMO</span>'
       : t.ab_test ? '<span class="pill bad" title="Fora do BOOST: teste você mesmo"><i></i>TESTE</span>' : '';
     const pill = st === 'applied' ? '<span class="pill ok"><i></i>Aplicado</span>'
@@ -24,6 +26,7 @@
           ${t.restart ? `<span class="soft" style="font-size:12px">${icon('power')} vale depois de reiniciar</span>` : ''}
           ${t.one_way ? '<span class="tag risk">SEM DESFAZER</span>' : ''}</div>
         ${st === 'na' ? `<div class="meta"><span class="soft" style="font-size:12.5px">${esc(t.reason)}</span></div>` : ''}
+        ${t.preset ? `<div class="meta"><span class="${t.preset === 'skip' ? 'warn' : 'good'}" style="font-size:12.5px">${icon(t.preset === 'skip' ? 'shield' : 'wand')} ${esc(t.preset_reason)}</span></div>` : ''}
         <details ${tech ? 'open' : ''}><summary>O que muda na prática</summary><div class="tech">
           <div><b>O que faz:</b> ${esc(t.description)}</div>
           ${t.trade_off ? `<div><b>O que você perde:</b> ${esc(t.trade_off)}</div>` : ''}
@@ -130,7 +133,8 @@
                   ['Desfaça quando quiser', 'Um clique volta o valor exato de antes. Nada é definitivo.']])}
         <div id="tweakStats">${AZ.skeleton(1)}</div>
         <div class="card tight"><div class="spread">
-          <div class="row"><button class="btn sm" data-act="preset" data-p="recomendado">${icon('bolt')} Marcar Recomendado</button>
+          <div class="row"><button class="btn sm primary" data-act="preset" data-p="auto">${icon('wand')} Marcar pré-set deste PC</button>
+            <button class="btn sm" data-act="preset" data-p="recomendado">${icon('bolt')} Marcar Recomendado</button>
             <button class="btn sm" data-act="preset" data-p="extremo">${icon('flame')} Marcar Extremo</button>
             <label class="row soft" style="font-size:12.5px;gap:8px"><input type="checkbox" class="check" data-change="pending" ${S.pending ? 'checked' : ''}> Só pendentes</label></div>
           <input class="input search" type="search" placeholder="Buscar: mouse, rede, fps, Edge…" data-input="search" value="${esc(S.q)}">
@@ -155,7 +159,10 @@
       },
       preset: el => {
         const want = el.dataset.p === 'extremo' ? ['recomendado', 'extremo'] : ['recomendado'];
-        S.data.tasks.filter(t => want.includes(t.boost) && stateOf(t) === 'pending').forEach(t => S.sel.add(t.id));
+        const pick = el.dataset.p === 'auto'
+          ? t => t.in_boost && t.module !== 'repair' && stateOf(t) === 'pending'
+          : t => want.includes(t.boost) && t.preset !== 'skip' && stateOf(t) === 'pending';
+        S.data.tasks.filter(pick).forEach(t => S.sel.add(t.id));
         paintList();
         AZ.toast(`${S.sel.size} ajuste(s) marcado(s). Revise e clique em Aplicar.`);
       },
