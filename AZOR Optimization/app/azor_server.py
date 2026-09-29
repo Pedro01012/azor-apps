@@ -470,10 +470,9 @@ def do_action(name: str, p: dict):
         if os.name != "nt":
             return {"ok": False, "detail": "Disponível só no Windows."}
         try:
-            if panel.startswith("ms-settings:"):
-                os.startfile(panel)
-            else:
-                subprocess.Popen(panel.split(" "), creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            # ShellExecute (startfile) pede o UAC sozinho quando o painel exige administrador;
+            # CreateProcess falharia com "elevação necessária".
+            os.startfile(panel)
             return {"ok": True, "detail": "Abrindo…"}
         except Exception as exc:
             return {"ok": False, "detail": str(exc)}
@@ -482,10 +481,10 @@ def do_action(name: str, p: dict):
 
 # Painéis do Windows que as telas abrem num clique (lista fechada).
 PANELS = {
-    "devices": "mmc.exe devmgmt.msc",
-    "sound": "control.exe mmsys.cpl",
-    "network": "control.exe ncpa.cpl",
-    "power": "control.exe powercfg.cpl",
+    "devices": "devmgmt.msc",
+    "sound": "mmsys.cpl",
+    "network": "ncpa.cpl",
+    "power": "powercfg.cpl",
     "taskmgr": "taskmgr.exe",
     "graphics": "ms-settings:display-advancedgraphics",
     "gamemode": "ms-settings:gaming-gamemode",
@@ -858,6 +857,7 @@ def main():
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument("--minimized", action="store_true")
     parser.add_argument("--autostart", action="store_true")
+    parser.add_argument("--no-window", action="store_true")
     parser.add_argument("--port", type=int, default=0)
     args = parser.parse_args()
     DATA.mkdir(parents=True, exist_ok=True)
@@ -886,7 +886,7 @@ def main():
         except Exception as exc:
             startup_log(f"Tray unavailable: {exc}")
     threading.Thread(target=watch_quit_event, args=(server, tray), daemon=True).start()
-    if not args.no_browser:
+    if not args.no_browser and not args.no_window:
         # "Abrir minimizado" vale só quando quem abriu foi o login do Windows (--autostart);
         # quem clica no ABRIR AZOR.bat quer ver a janela.
         minimized = args.minimized or (args.autostart and bool(core.load_settings().get("start_minimized")))

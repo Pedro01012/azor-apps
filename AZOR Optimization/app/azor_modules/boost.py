@@ -98,6 +98,7 @@ def run(core, mode: str, options: Optional[Dict[str, Any]] = None,
     report = {
         "version": 2, "id": report_id, "time": time.time(), "duration_s": round(time.time() - started, 1),
         "mode": mode, "mode_label": MODE_LABELS.get(mode, mode), "ok": not failed_items,
+        "restart": summary["restart"],
         "tweaks": summary, "apps": apps_out,
         "startup": {"disabled": startup_out.get("disabled", [])},
         "cleanup": {"freed_mb": cleanup_out.get("freed_mb", 0)},

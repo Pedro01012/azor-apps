@@ -38,7 +38,7 @@ USELESS = (
 )
 LAUNCHERS = (
     "steam", "epicgameslauncher", "epic games", "battle.net", "battlenet", "eadesktop", "ea app", "origin",
-    "ubisoft", "upc", "uplay", "goggalaxy", "galaxyclient", "riotclient", "riot client", "rockstar",
+    "ubisoft", "upc.exe", "uplay", "goggalaxy", "galaxyclient", "riotclient", "riot client", "rockstar",
     "playnite", "overwolf", "curseforge", "medal", "discord", "teamspeak", "vesktop", "parsec", "xbox",
 )
 
@@ -75,7 +75,7 @@ def _folder_flag(core, scope: str, name: str) -> Optional[bool]:
     try:
         with winreg.OpenKey(core._root_const(root), path, 0, winreg.KEY_READ) as k:
             raw, _ = winreg.QueryValueEx(k, name)
-            return not raw or int(raw[0]) not in (3,)
+            return not raw or int(raw[0]) % 2 == 0
     except OSError:
         return True
 

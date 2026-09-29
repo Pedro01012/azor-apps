@@ -53,7 +53,7 @@ def validate(request):
         _ids(request,'packages',PACKAGE,80)
     if op=='cleanup':
         _ids(request,'ids',r'[a-z_]{2,40}',20)
-    if op=='startup_set' and (request.get('scope') not in ('HKCU_RUN','HKLM_RUN','HKCU_FOLDER','HKLM_FOLDER')
+    if op=='startup_set' and (request.get('scope') not in ('HKCU_RUN','HKLM_RUN','HKLM_RUN32','HKCU_FOLDER','HKLM_FOLDER')
                               or not isinstance(request.get('enabled'),bool) or not str(request.get('name') or '').strip()):
         raise ValueError('STARTUP_INVALID')
     if op=='startup_bulk' and not isinstance(request.get('extreme'),bool):
@@ -184,7 +184,7 @@ def needs_admin(core,request):
         item=read(core.DATA_DIR/'transactions'/(id+'.json'))
         return item.get('requires_admin') or item['before']['kind']!='registry' or any(e['root']=='HKLM' for e in item['before'].get('entries',[]))
     if op=='startup_set':
-        return request.get('scope') in ('HKLM_RUN','HKLM_FOLDER')
+        return request.get('scope') in ('HKLM_RUN','HKLM_RUN32','HKLM_FOLDER')
     if op=='cleanup':
         wanted=set(request.get('ids') or [])
         return any(t['admin'] for t in cleanup.targets() if t['id'] in wanted)

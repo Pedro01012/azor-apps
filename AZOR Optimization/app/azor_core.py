@@ -3641,10 +3641,14 @@ def driver_inventory(force: bool = False) -> Dict[str, Any]:
 STARTUP_APPROVED = {
     "HKCU_RUN": ("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"),
     "HKLM_RUN": ("HKLM", r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"),
+    # Programas 32 bits de "todos os usuários" (Adobe, atualizadores, vários launchers) moram
+    # no WOW6432Node; o Gerenciador de Tarefas guarda a aprovação deles em "Run32".
+    "HKLM_RUN32": ("HKLM", r"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run32"),
 }
 STARTUP_RUN_KEYS = {
     "HKCU_RUN": ("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Run"),
     "HKLM_RUN": ("HKLM", r"Software\Microsoft\Windows\CurrentVersion\Run"),
+    "HKLM_RUN32": ("HKLM", r"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"),
 }
 
 
@@ -3682,8 +3686,8 @@ def _startup_enabled_flag(scope: str, name: str) -> Optional[bool]:
             raw, _typ = winreg.QueryValueEx(k, name)
             if not raw:
                 return True
-            # Task Manager writes 2/6 in byte 0 for enabled and 3 for disabled.
-            return int(raw[0]) not in (3,)
+            # Gerenciador de Tarefas: byte 0 par (2, 6) = ligado; ímpar (3, 7) = desligado.
+            return int(raw[0]) % 2 == 0
     except FileNotFoundError:
         return True  # no approval record at all means Windows still runs it
     except OSError:
@@ -3739,7 +3743,7 @@ def startup_items() -> Dict[str, Any]:
                         "enabled": _startup_enabled_flag(scope, name),
                         "running": bool(proc) or (low in procs),
                         "memory_mb": (proc or {}).get("memory_mb"),
-                        "admin_required": scope == "HKLM_RUN",
+                        "admin_required": scope.startswith("HKLM"),
                     })
         except FileNotFoundError:
             continue
@@ -3767,7 +3771,7 @@ def set_startup_item_enabled(scope: str, name: str, enabled: bool) -> Tuple[bool
     name = str(name or "").strip()
     if not name:
         return False, "Item de inicialização não informado."
-    if scope == "HKLM_RUN" and not is_admin():
+    if scope.startswith("HKLM") and not is_admin():
         return False, "Itens de 'Todos os usuários' exigem executar o AZOR como administrador."
     capture_restore_point()
     root, path = STARTUP_APPROVED[scope]

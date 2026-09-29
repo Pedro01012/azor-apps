@@ -83,9 +83,13 @@ def network_reset(core, progress: Optional[Callable] = None) -> Dict[str, Any]:
     rows = []
     for label, args in cmds:
         res = _run_text(core, args, 120)
-        rows.append({"name": label, "ok": res["code"] == 0, "detail": _last_lines(res["text"], 1)})
+        low = res["text"].lower()
+        # "netsh int ip reset" costuma sair com código 1 só porque uma chave protegida
+        # recusou a escrita, mesmo tendo redefinido o resto e pedido reinício.
+        ok = res["code"] == 0 or (res["code"] == 1 and ("reinici" in low or "restart" in low))
+        rows.append({"name": label, "ok": ok, "detail": _last_lines(res["text"], 1)})
         if progress:
-            progress(label, "completed" if res["code"] == 0 else "failed", rows[-1]["detail"])
+            progress(label, "completed" if ok else "failed", rows[-1]["detail"])
     ok = all(r["ok"] for r in rows if r["name"] != "Renovar endereço")
     return {"ok": ok, "results": rows, "restart": True,
             "detail": "Rede redefinida. Reinicie o PC para terminar." if ok else "Parte da redefinição falhou."}

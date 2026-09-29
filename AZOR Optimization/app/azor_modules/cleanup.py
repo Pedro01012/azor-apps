@@ -197,6 +197,13 @@ def _service(core, verb: str, name: str) -> None:
         pass
 
 
+def _running(core, name: str) -> bool:
+    try:
+        return "RUNNING" in (core.run_hidden(["sc", "query", name], timeout=15).stdout or "")
+    except Exception:
+        return False
+
+
 def clean(core, ids: List[str], progress: Optional[Callable] = None) -> Dict[str, Any]:
     wanted = [t for t in targets() if t["id"] in set(ids)]
     admin = core.is_admin()
@@ -210,8 +217,13 @@ def clean(core, ids: List[str], progress: Optional[Callable] = None) -> Dict[str
             progress(t["label"], "applying", "Limpando…")
         entries = list(_entries(t))
         before = sum(_size(e) for e in entries)
-        for svc in t.get("services") or []:
+        # Só religa depois o serviço que estava rodando: não liga o que o usuário
+        # (ou o BOOST Extremo) deixou parado.
+        was_running = [svc for svc in t.get("services") or [] if _running(core, svc)]
+        for svc in was_running:
             _service(core, "stop", svc)
+        if was_running:
+            time.sleep(2)  # "sc stop" é assíncrono: espera soltar os arquivos
         for entry in entries:
             try:
                 if entry.is_dir() and not entry.is_symlink():
@@ -220,7 +232,7 @@ def clean(core, ids: List[str], progress: Optional[Callable] = None) -> Dict[str
                     entry.unlink()
             except OSError:
                 continue  # em uso: fica para a próxima
-        for svc in t.get("services") or []:
+        for svc in was_running:
             _service(core, "start", svc)
         after = sum(_size(e) for e in _entries(t))
         freed = max(0, before - after)

@@ -42,7 +42,7 @@
     const tone = !nominal ? '' : nominal >= 1000 ? 'good' : nominal >= 500 ? 'warn' : 'bad';
     const clicks = m.clicks || {}, chatter = m.chatter || {};
     const bad = Object.entries(chatter).filter(([, n]) => n > 0);
-    const caps = (S.caps?.kinds || {}).mouse || {};
+    const caps = (S.caps || {}).mouse || {};
     return `<div class="card"><span class="eyebrow">Taxa de envio (polling)</span>
       <div class="row" style="margin-top:8px"><span class="big-num ${tone}">${nominal ? `${nominal} Hz` : '—'}</span>
         <span class="muted">${delayMs ? `= ${delayMs.toFixed(delayMs < 1 ? 2 : 1).replace('.', ',')} ms de atraso do mouse` : 'mova o mouse em círculos'}</span></div>
@@ -144,7 +144,7 @@
   function keyboardSide() {
     const k = (S.snap || {}).keyboard || {};
     const now = (k.down || []).length;
-    const caps = (S.caps?.kinds || {}).keyboard || {};
+    const caps = (S.caps || {}).keyboard || {};
     return `<div class="card"><span class="eyebrow">Teclas apertadas juntas</span>
       <div class="row" style="margin-top:8px"><span class="big-num">${now}</span><span class="muted">agora · recorde ${S.maxKeys}</span></div>
       <p style="font-size:12.5px;margin-top:8px">Aperte <b>W + A + SHIFT + ESPAÇO + C</b> juntos (correr, pular e agachar). Se as 5 acenderem, seu teclado não "come" tecla no meio da jogada.
@@ -310,7 +310,7 @@
       ${st.hybrid ? AZ.toggle(!!st.all_on_ecores, 'data-act="irq"') : ''}</div>
       ${(st.hosts || []).length ? `<div class="stack" style="margin-top:10px">${st.hosts.map(h => `<div class="row soft" style="font-size:12.5px">${icon(h.on_ecores ? 'check' : 'info', h.on_ecores ? 'good' : '')} ${esc(h.name)}</div>`).join('')}</div>` : ''}</div>
       ${AZ.sectionTitle('cpu', 'Quem está interrompendo o processador', 'Chamadas de driver (DPC) por núcleo nos últimos 2 segundos. Um núcleo muito acima dos outros costuma ser driver de rede, áudio ou vídeo atrapalhando o jogo.')}
-      ${rows.length ? `<div class="card">${rows.map(r => `<div class="kv"><span>Núcleo ${r.cpu}${r.cpu === load.busiest ? ' <span class="tag risk">MAIS CARREGADO</span>' : ''}</span>
+      ${rows.length ? `<div class="card">${rows.map(r => `<div class="kv"><span>Núcleo ${r.cpu}${r.cpu === load.busiest?.cpu ? ' <span class="tag risk">MAIS CARREGADO</span>' : ''}</span>
         <b style="min-width:240px;display:flex;gap:10px;align-items:center;justify-content:flex-end"><span class="bar" style="width:120px;height:8px"><i style="width:${Math.round((r.dpcs || 0) / maxDpc * 100)}%"></i></span>${Math.round(r.dpcs || 0)} DPC/s</b></div>`).join('')}</div>`
         : `<div class="empty">${esc(load.detail || 'Leitura indisponível neste sistema.')}</div>`}
       <div class="row" style="margin-top:10px"><button class="btn sm" data-act="irqreload">${icon('refresh')} Medir de novo</button>
