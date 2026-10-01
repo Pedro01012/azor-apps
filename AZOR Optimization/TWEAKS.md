@@ -2,7 +2,7 @@
 
 Lista gerada do catálogo real do app (`tools/gen_tweaks_md.py`). Cada ajuste é gravado, relido e só conta como aplicado se o Windows confirmar; o valor de antes fica guardado para desfazer.
 
-Total: **115** ajustes.
+Total: **119** ajustes.
 
 | Selo | Significa |
 |---|---|
@@ -58,6 +58,7 @@ Frametime estável: menos engasgos, quedas de 1% low e congeladas no meio da par
 | Ajuste | O que dá | BOOST | Reinicia | Desfaz |
 |---|---|---|---|---|
 | **Antivírus fora das pastas de jogo**<br>O Defender para de verificar cada arquivo que o jogo carrega. Carregamento e shader mais rápidos. | `-STUTTER` `LOADING` | Só Extremo | não | sim |
+| **Antivírus varrendo sem engasgar o jogo**<br>O Defender continua ligado, mas as varreduras usam no máximo 20% da CPU e só rodam com o PC parado. | `-STUTTER` `ANTIVÍRUS` | Recomendado + Extremo | não | sim |
 | **Mais processador para o jogo**<br>O Windows reserva menos CPU para tarefas de fundo enquanto você joga. | `+FPS` `-STUTTER` | Recomendado + Extremo | não | sim |
 | **Motor de memória AZOR**<br>Libera a memória em espera só quando ela está acabando (o que o ISLC faz), sem jogar cache fora à toa. | `-STUTTER` `RAM` | — | não | sim |
 | **Windows Update sem reiniciar sozinho**<br>Acabou o 'reiniciando em 15 minutos' no meio da partida. | `ESTÁVEL` | Recomendado + Extremo | não | sim |
@@ -65,6 +66,7 @@ Frametime estável: menos engasgos, quedas de 1% low e congeladas no meio da par
 | **Disco sem anotar cada leitura**<br>Cada arquivo que o jogo lê deixa de gerar uma escrita extra no disco. | `-STUTTER` `DISCO` | Recomendado + Extremo | não | sim |
 | **Núcleo do Windows sempre na RAM**<br>Impede o Windows de mandar partes dele para o disco no meio do jogo (só com 16 GB+). | `-STUTTER` | Só Extremo | sim | sim |
 | **SSD NVMe sempre pronto**<br>O SSD não entra em economia, então textura carregada no meio do jogo não engasga. | `-STUTTER` `LOADING` | Só Extremo | não | sim |
+| **Sem janela de AutoPlay no meio do jogo**<br>Plugar pendrive não abre janela por cima do jogo e não roda programa de pendrive sozinho. | `ESTÁVEL` `SEGURANÇA+` | Recomendado + Extremo | não | sim |
 
 ## Internet e ping
 
@@ -94,16 +96,18 @@ Menos processos, serviços e tarefas rodando escondidos gastando CPU, RAM e disc
 | **Desligar o serviço de telemetria**<br>O serviço que coleta e envia dados de uso para a Microsoft para de rodar. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Edge sem rodar escondido**<br>O Edge para de abrir sozinho no boot e de ficar na memória depois de fechado. | `+LEVE` `RAM` | Recomendado + Extremo | não | sim |
 | **Menu Iniciar sem Bing**<br>Pesquisar no menu Iniciar fica só no PC: mais rápido e sem internet. | `+LEVE` | Recomendado + Extremo | não | sim |
-| **Tirar do boot diagnóstico, telefonia e NFC**<br>Mais serviços que um PC de jogo não usa saem da memória. | `+LEVE` `RAM` | Só Extremo | não | sim |
+| **Tirar do boot diagnóstico, telefonia e apps de marca**<br>Mais serviços que um PC de jogo não usa saem da memória, inclusive os de suporte da HP e da Dell. | `+LEVE` `RAM` | Só Extremo | não | sim |
 | **Tirar serviços inúteis do boot**<br>Mapas, atualizadores do Edge/Google/Adobe, arquivos offline e outros saem do boot. | `+LEVE` `RAM` | Recomendado + Extremo | não | sim |
 | **Assistência Remota desligada**<br>Uma porta a menos aberta. AnyDesk e TeamViewer continuam funcionando. | `+LEVE` `SEGURANÇA` | Recomendado + Extremo | não | sim |
 | **Desligar a hibernação**<br>Libera vários GB no disco (arquivo hiberfil.sys). Só em desktop. | `+ESPAÇO` | Recomendado + Extremo | não | sim |
+| **Desligar e reiniciar mais rápido**<br>O Windows espera 5 segundos, e não 20, por programa travado na hora de desligar. | `BOOT` | Só Extremo | não | sim |
 | **Desligar indexador de pesquisa**<br>O indexador para de ler o disco inteiro de tempos em tempos. A busca fica mais lenta. | `+LEVE` `DISCO` | Só Extremo | não | sim |
 | **Desligar o serviço de impressão**<br>Só aparece se o PC não tem nenhuma impressora. Um processo a menos. | `+LEVE` | Só Extremo | não | sim |
 | **Esconder Widgets**<br>Tira o painel de notícias e clima da barra, que ficava carregando conteúdo. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Explorador sem propaganda**<br>Some a propaganda do OneDrive e do Microsoft 365 no Explorador e no Iniciar. | `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Pesquisa sem destaques da internet**<br>A caixa de pesquisa para de buscar desenhos e notícias na internet. | `+LEVE` | Recomendado + Extremo | não | sim |
 | **Programas do boot sem espera**<br>O Windows para de esperar 10 segundos antes de abrir os programas de inicialização. | `BOOT` | Recomendado + Extremo | não | sim |
+| **Sem 'Notícias e interesses' (Windows 10)**<br>Some o clima e as notícias da barra de tarefas, que ficavam carregando da internet. | `+LEVE` `RAM` | Recomendado + Extremo | não | sim |
 | **Sem 'Termine de configurar seu PC'**<br>Some a tela cheia que aparece depois das atualizações empurrando OneDrive e Microsoft 365. | `+LEVE` `POP-UP` | Recomendado + Extremo | não | sim |
 | **Sem Spotlight na tela de bloqueio**<br>O Windows para de baixar imagens e propaganda para a tela de bloqueio. | `+LEVE` `SEM LIXO` | Recomendado + Extremo | não | sim |
 | **Sem apps de fabricante automáticos**<br>Conectar um aparelho novo não baixa mais programas de propaganda. | `SEM LIXO` | Recomendado + Extremo | não | sim |

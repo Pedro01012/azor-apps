@@ -19,14 +19,19 @@ from azor_modules import presets as P, engine, policy  # noqa: E402
 CPUS = ["Intel(R) Core(TM) i9-14900K", "Intel(R) Core(TM) i7-14650HX", "Intel(R) Core(TM) i5-12600K", "Intel(R) Core(TM) i3-12100F", "Intel(R) Core(TM) i7-12700H",
         "Intel(R) Core(TM) i5-1135G7", "Intel(R) Core(TM) i5-4460", "Intel(R) Core(TM) Ultra 7 265K",
         "AMD Ryzen 7 7800X3D 8-Core Processor", "AMD Ryzen 9 7950X3D 16-Core Processor",
-        "AMD Ryzen 5 5600G with Radeon Graphics", "AMD Ryzen 7 7840HS", "AMD Ryzen 5 3600 6-Core Processor", "CPU X"]
+        "AMD Ryzen 5 5600G with Radeon Graphics", "AMD Ryzen 7 7840HS", "AMD Ryzen 5 3600 6-Core Processor", "CPU X",
+        "Intel(R) Xeon(R) CPU E5-2670 v3 @ 2.30GHz", "AMD FX(tm)-8350 Eight-Core Processor", "AMD Ryzen Z1 Extreme"]
 GPUS = [["NVIDIA GeForce RTX 4060 Laptop GPU", "Intel(R) UHD Graphics"], ["NVIDIA GeForce RTX 3060"],
         ["NVIDIA GeForce RTX 5070"], ["AMD Radeon RX 9070 XT"],
         ["NVIDIA GeForce GTX 1650"], ["NVIDIA GeForce GTX 970"], ["AMD Radeon RX 7800 XT"], ["AMD Radeon RX 6600"],
         ["AMD Radeon RX 580"], ["Intel(R) Arc(TM) A770 Graphics"], ["AMD Radeon(TM) Graphics"],
-        ["Intel(R) UHD Graphics 770"], []]
+        ["Intel(R) UHD Graphics 770"], ["NVIDIA GeForce GT 730"], ["AMD Radeon RX 6500 XT"], []]
 DISKS = [{"bus": "NVMe"}, {"bus": "SATA", "media": "SSD"}, {"bus": "SATA", "media": "HDD"}, {}]
 NETS = [[{"name": "Ethernet", "desc": "", "media": "802.3"}], [{"name": "Wi-Fi", "desc": "", "media": "Native 802.11"}], []]
+
+
+def is_igpu(name):
+    return "UHD" in name or name == "AMD Radeon(TM) Graphics"
 
 
 def main():
@@ -37,16 +42,20 @@ def main():
     rnd = random.Random(2026)
     extras = [(rnd.choice((19045, 26100)), rnd.choice(NETS), rnd.choice((False, True)),
                rnd.choice(("competitivo", "aaa", "live")), rnd.choice((60, 144, 240)),
-               rnd.choice(("ASUSTeK", "Micro-Star", "Dell Inc.", "")), rnd.choice(("auto", "maximo", "agressivo")))
+               rnd.choice(("ASUSTeK", "Micro-Star", "Dell Inc.", "HUANANZHI", "")), rnd.choice(("auto", "maximo", "agressivo")),
+               rnd.choice((8, 40, 300)), rnd.choice((False, True)), rnd.choice((False, True)))
               for _ in range(30)]
-    for (cpu, gpu, ram, disk, laptop), (build, net, single, usage, hz, board, mode) in itertools.product(
+    for (cpu, gpu, ram, disk, laptop), (build, net, single, usage, hz, board, mode, free_gb, mon_igpu, ssd_extra) in itertools.product(
             itertools.product(CPUS, GPUS, (4, 8, 12, 16, 32, 64), DISKS, (False, True)), extras):
         streamer = usage == "live"
         facts = {"cpu": {"name": cpu, "threads": 4 if "4460" in cpu else 6 if "12600" in cpu else 16, "topology": {}},
-                 "gpus": [{"name": g, "vram_gb": 4 if "1650" in " ".join(gpu) else 12} for g in gpu],
+                 "gpus": [{"name": g, "vram_gb": 4 if "1650" in " ".join(gpu) else 12,
+                            "active": is_igpu(g) if mon_igpu else not is_igpu(g)} for g in gpu],
                  "ram": {"gb": ram, "single_channel": single, "sticks": 4 if ram >= 32 else 2, "types": [34]},
                  "disk": disk, "battery": laptop, "chassis": [10 if laptop else 3], "build": build, "nics": net,
-                 "streamer": streamer, "usage": usage, "display": {"max_hz": hz}, "board": {"vendor": board}}
+                 "streamer": streamer, "usage": usage, "display": {"max_hz": hz}, "board": {"vendor": board},
+                 "space": {"free_gb": free_gb, "total_gb": 500},
+                 "disks": [{"media": "HDD", "bus": "SATA", "size_gb": 1000}] + ([{"media": "SSD", "bus": "SATA", "size_gb": 240}] if ssd_extra else [])}
         p = P.build_from_facts(facts, mode)
         count += 1
         keys.add(p["key"])
@@ -67,6 +76,29 @@ def main():
             errors.append(f"{p['key']}: jogos pesados com tela cheia exclusiva forçada")
         if laptop and "wu_drivers_off" not in p["skip"]:
             errors.append(f"{p['key']}: notebook sem drivers do Windows Update")
+        titles = {n["title"] for n in p["notes"]}
+        if free_gb < 15 and "O disco do Windows está quase cheio" not in titles:
+            errors.append(f"{p['key']}: pouco espaço sem aviso")
+        if "xeon" in p["key"] and "Confira se o Turbo está ligado na BIOS" not in titles:
+            errors.append(f"{p['key']}: Xeon sem aviso de Turbo")
+        if board == "HUANANZHI" and "Não atualize a BIOS por conta própria" not in titles:
+            errors.append(f"{p['key']}: placa genérica sem aviso")
+        if "Z1" in cpu and not p["flags"]["handheld"]:
+            errors.append(f"{p['key']}: Ryzen Z1 não reconhecido como portátil")
+        expected = bool(mon_igpu and not laptop and any(is_igpu(g) for g in gpu) and any(not is_igpu(g) for g in gpu))
+        if p["flags"]["monitor_on_igpu"] != expected:
+            errors.append(f"{p['key']}: monitor na placa-mãe detectado={p['flags']['monitor_on_igpu']} esperado={expected}")
+        if expected and "O monitor está ligado na placa-mãe, não na placa de vídeo" not in titles:
+            errors.append(f"{p['key']}: monitor na placa-mãe sem aviso")
+        if disk.get("media") == "HDD":
+            if p["flags"]["ssd_unused"] != (ssd_extra and True):
+                errors.append(f"{p['key']}: SSD sem uso detectado={p['flags']['ssd_unused']} esperado={bool(ssd_extra)}")
+        elif p["flags"]["ssd_unused"]:
+            errors.append(f"{p['key']}: SSD sem uso com Windows fora do HD")
+        if p["notes"] and p["notes"][0]["level"] != "action" and any(n["level"] == "action" for n in p["notes"]):
+            errors.append(f"{p['key']}: avisos fora de ordem")
+        if "gpu_entry" in p["key"] and "hags" not in p["skip"]:
+            errors.append(f"{p['key']}: placa de entrada com HAGS")
         if not [t for t in ids if policy.in_batch(t, p["base"], p)[0]]:
             errors.append(f"{p['key']}: lote vazio")
     print(f"{count} combinações, {len(keys)} pré-sets distintos, {len(errors)} erro(s).")

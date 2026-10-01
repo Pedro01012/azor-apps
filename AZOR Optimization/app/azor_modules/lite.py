@@ -53,6 +53,19 @@ def _win11(core, ctx):
     return True, detail
 
 
+def _win10(core, ctx):
+    ok, detail = _admin(core, ctx)
+    if not ok:
+        return ok, detail
+    build = int((ctx.get("windows") or {}).get("build") or 0)
+    if build >= 22000:
+        return False, "Recurso do Windows 10; o Windows 11 usa os Widgets, que outro ajuste já trata."
+    return True, detail
+
+
+DEFENDER_SCAN = POLICIES + r"\Windows Defender\Scan"
+EXPLORER = r"Software\Microsoft\Windows\CurrentVersion\Explorer"
+
 SPECS = [
     RegSpec(
         id="consumer_features_off",
@@ -387,9 +400,89 @@ SPECS = [
         metric="Varredura de rede e Bluetooth em segundo plano",
         tags=("background",),
     ),
+    RegSpec(
+        id="defender_light_scan",
+        name="Antivírus varrendo sem engasgar o jogo",
+        category="Leve / Antivírus",
+        profiles=("competitive",),
+        values=[
+            V("HKLM", DEFENDER_SCAN, "AvgCPULoadFactor", 20),
+            V("HKLM", DEFENDER_SCAN, "ScanOnlyIfIdle", 1),
+            V("HKLM", DEFENDER_SCAN, "DisableCatchupFullScan", 1),
+            V("HKLM", DEFENDER_SCAN, "DisableCatchupQuickScan", 1),
+        ],
+        compatible=_admin,
+        description="O Windows Defender continua LIGADO e protegendo, mas as varreduras agendadas passam a "
+                    "usar no máximo 20% da CPU, só rodam com o PC parado e não 'recuperam' varreduras "
+                    "perdidas assim que você liga o PC para jogar.",
+        source="Políticas do Microsoft Defender Antivirus > Varredura: AvgCPULoadFactor, ScanOnlyIfIdle, "
+               "DisableCatchupFullScan e DisableCatchupQuickScan (Microsoft Learn).",
+        trade_off="A varredura completa agendada demora mais para terminar. A proteção em tempo real não muda. "
+                  "O app Segurança do Windows pode avisar que algumas configurações são gerenciadas.",
+        metric="Picos de CPU e disco por varredura",
+        tags=("background", "policy", "security-safe"),
+    ),
+    RegSpec(
+        id="autoplay_off",
+        name="Sem janela de AutoPlay ao plugar pendrive ou HD",
+        category="Leve / Segurança",
+        profiles=("competitive",),
+        values=[
+            V("HKCU", EXPLORER + r"\AutoplayHandlers", "DisableAutoplay", 1),
+            V("HKLM", r"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer", "NoDriveTypeAutoRun", 255),
+        ],
+        compatible=_admin,
+        description="Plugar um pendrive no meio da partida não abre mais janela por cima do jogo (que pode "
+                    "minimizar a tela cheia), e o Windows deixa de rodar programas de pendrive sozinho, "
+                    "que é por onde entra vírus.",
+        source="Painel de Controle > Reprodução Automática e a política 'Desativar a Reprodução Automática' "
+               "(NoDriveTypeAutoRun = 255).",
+        trade_off="Pendrives e HDs continuam aparecendo normalmente no Explorador; só não abre mais a janela sozinha.",
+        metric="Janelas que roubam o foco do jogo",
+        tags=("background", "security"),
+    ),
+    RegSpec(
+        id="news_interests_off",
+        name="Tirar 'Notícias e interesses' da barra (Windows 10)",
+        category="Leve / Propaganda",
+        profiles=("competitive",),
+        values=[
+            V("HKLM", POLICIES + r"\Windows\Windows Feeds", "EnableFeeds", 0),
+            V("HKCU", r"Software\Microsoft\Windows\CurrentVersion\Feeds", "ShellFeedsTaskbarViewMode", 2),
+        ],
+        compatible=_win10,
+        description="No Windows 10 a barra de tarefas carrega o clima e as notícias da internet o tempo todo, "
+                    "gastando rede, RAM e um processo escondido. Aqui ela some.",
+        source="Política 'Habilitar notícias e interesses na barra de tarefas' (EnableFeeds) e a opção "
+               "'Notícias e interesses > Desativado' da barra de tarefas.",
+        trade_off="O clima deixa de aparecer na barra de tarefas.",
+        metric="Processo e rede em segundo plano",
+        tags=("background", "policy", "ui"),
+    ),
+    RegSpec(
+        id="fast_shutdown",
+        name="Desligar e reiniciar o Windows mais rápido",
+        category="Leve / Boot",
+        profiles=("competitive",),
+        values=[
+            V("HKCU", r"Control Panel\Desktop", "HungAppTimeout", "2000"),
+            V("HKCU", r"Control Panel\Desktop", "WaitToKillAppTimeout", "5000"),
+            V("HKLM", r"SYSTEM\CurrentControlSet\Control", "WaitToKillServiceTimeout", "5000"),
+        ],
+        compatible=_admin,
+        description="Quando um programa trava na hora de desligar, o Windows esperava até 20 segundos por ele. "
+                    "Agora espera 5. Nada é fechado à força: o aviso 'este app está impedindo o desligamento' "
+                    "continua aparecendo.",
+        source="Chaves HungAppTimeout, WaitToKillAppTimeout e WaitToKillServiceTimeout (tempos limite de "
+               "encerramento de aplicativos e serviços).",
+        trade_off="Um programa lento para salvar pode ser interrompido um pouco antes. Salve seu trabalho antes de desligar.",
+        metric="Tempo de desligamento",
+        tags=("boot",),
+    ),
 ]
 
 TASKS, KEYS = compile_specs(MODULE["id"], SPECS)
+
 
 
 # ---------------------------------------------------------------------------
@@ -431,6 +524,18 @@ MORE_SERVICES: Tuple[Tuple[str, str], ...] = (
     ("SEMgrSvc", "Pagamentos e NFC"),
     ("wisvc", "Programa Windows Insider"),
     ("SCardSvr", "Cartão inteligente"),
+    ("NvTelemetryContainer", "Telemetria da NVIDIA"),
+    # Programas de suporte que PCs de marca instalam e que ficam residentes.
+    ("HPTouchpointAnalyticsService", "Análise de uso da HP"),
+    ("HPAppHelperCap", "Auxiliar de apps da HP"),
+    ("HPDiagsCap", "Diagnóstico da HP"),
+    ("HPNetworkCap", "Rede do suporte da HP"),
+    ("HPSysInfoCap", "Informações do sistema da HP"),
+    ("SupportAssistAgent", "SupportAssist da Dell"),
+    ("DellClientManagementService", "Gerenciamento de cliente da Dell"),
+    ("DDVDataCollector", "Coletor de dados da Dell"),
+    ("DDVRulesProcessor", "Regras de dados da Dell"),
+    ("DDVCollectorSvcApi", "API do coletor da Dell"),
 )
 
 EXTREME_SERVICES: Tuple[Tuple[str, str], ...] = (
@@ -528,6 +633,20 @@ TELEMETRY_TASKS: Tuple[Tuple[str, str], ...] = (
     (r"\Microsoft\Windows\Windows Error Reporting\\", "QueueReporting"),
     (r"\Microsoft\Windows\Maps\\", "MapsUpdateTask"),
     (r"\Microsoft\Windows\Maps\\", "MapsToastTask"),
+    (r"\Microsoft\Windows\Application Experience\\", "StartupAppTask"),
+    (r"\Microsoft\Windows\Application Experience\\", "PcaPatchDbTask"),
+    (r"\Microsoft\Windows\Customer Experience Improvement Program\\", "KernelCeipTask"),
+    (r"\Microsoft\Windows\SettingSync\\", "BackgroundUploadTask"),
+    (r"\Microsoft\Windows\SettingSync\\", "NetworkStateChangeTask"),
+    (r"\Microsoft\Windows\Shell\\", "FamilySafetyMonitor"),
+    (r"\Microsoft\Windows\Shell\\", "FamilySafetyRefreshTask"),
+    (r"\Microsoft\Windows\NetTrace\\", "GatherNetworkInfo"),
+    (r"\Microsoft\Windows\Device Information\\", "Device"),
+    (r"\Microsoft\Windows\DiskFootprint\\", "Diagnostics"),
+    (r"\Microsoft\Windows\Power Efficiency Diagnostics\\", "AnalyzeSystem"),
+    (r"\Microsoft\Windows\Mobile Broadband Accounts\\", "MNO Metadata Parser"),
+    (r"\Microsoft\Windows\Location\\", "Notifications"),
+    (r"\Microsoft\Windows\Location\\", "WindowsActionDialog"),
 )
 TASKS_BASELINE = "lite_tasks_baseline.json"
 
@@ -636,7 +755,8 @@ def _telemetry_tasks_task():
         "telemetry_tasks_off", "Desligar as tarefas agendadas de telemetria", MODULE["id"],
         "Leve / Tarefas agendadas", ("competitive",), risk="low",
         description="Desativa as tarefas que acordam sozinhas para varrer o disco e enviar dados "
-                    "(CompatTelRunner, CEIP, relatórios de erro, diagnóstico de disco). São a causa "
+                    "(CompatTelRunner, CEIP, relatórios de erro, diagnóstico de disco, sincronização de "
+                    "configurações, Controle dos Pais, localização). São a causa "
                     "clássica de 'o PC engasgou do nada' com o disco em 100%.",
         apply=apply, verify=verify, revert=revert, compatible=compat,
         tags=("background", "telemetry", "tasks"),
@@ -667,10 +787,11 @@ def tasks():
             "podem parar.",
             extreme=True),
         _service_task(
-            "services_more", "Tirar do boot diagnóstico, telefonia, NFC e Insider", MORE_SERVICES,
+            "services_more", "Tirar do boot diagnóstico, telefonia, NFC e apps de marca", MORE_SERVICES,
             "Os serviços de diagnóstico ficam observando o PC o tempo todo para sugerir soluções; "
-            "telefonia, pagamentos por NFC, cartão inteligente e Insider não servem a um PC de jogo. "
-            "Em Manual eles saem do boot e só sobem se o recurso for aberto.",
-            "A solução de problemas automática do Windows demora um pouco mais para abrir.",
+            "telefonia, pagamentos por NFC, cartão inteligente, Insider e a telemetria da NVIDIA não "
+            "servem a um PC de jogo, e PCs HP e Dell trazem serviços de suporte e análise de uso que "
+            "ficam residentes. Em Manual eles saem do boot e só sobem se o recurso for aberto.",
+            "A solução de problemas automática do Windows e os apps de suporte da HP e da Dell demoram um pouco mais para abrir.",
             extreme=True),
     ]

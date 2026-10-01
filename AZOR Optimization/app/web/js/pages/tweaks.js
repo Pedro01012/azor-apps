@@ -2,7 +2,7 @@
 'use strict';
 (() => {
   const {esc, icon} = AZ;
-  const S = {data: null, sel: new Set(), filter: 'all', q: '', pending: false, dns: null};
+  const S = {data: null, sel: new Set(), filter: 'all', q: '', pending: false, dns: null, bench: null, benching: false};
 
   const stateOf = t => t.state === 'applied' ? 'applied' : (t.eligible ? 'pending' : 'na');
 
@@ -43,14 +43,30 @@
     </div>`;
   }
 
+  function benchRows(b) {
+    const top = Math.max(...b.rows.filter(r => r.usable).map(r => r.ms), 1);
+    return `<div class="stack" style="gap:6px;margin-top:10px">${b.rows.map(r => `
+      <div class="spread" style="gap:10px;font-size:13px">
+        <span style="min-width:190px" class="${r.id === b.best ? 'good' : ''}">${esc(r.label)}${r.id === b.best ? ' ✔' : ''}</span>
+        <div class="bar ${r.id === b.best ? 'good' : ''}" style="flex:1;margin:0"><i style="width:${r.usable ? Math.max(6, Math.round(100 * r.ms / top)) : 0}%"></i></div>
+        <b style="min-width:70px;text-align:right">${r.usable ? r.ms + ' ms' : 'sem resposta'}</b>
+      </div>`).join('')}</div>
+      <div class="row" style="margin-top:10px;gap:10px;align-items:center"><span class="muted" style="font-size:13px">${esc(b.detail)}</span>
+        ${b.pick && b.pick !== S.dns?.current ? `<button class="btn primary" data-act="dnspick" data-id="${b.pick}">${icon('bolt')} Usar o mais rápido</button>` : ''}</div>`;
+  }
+
   function dnsCard() {
     const d = S.dns;
     if (!d) return `<div class="card tight" id="dnsCard">${AZ.skeleton(1)}</div>`;
     return `<div class="card tight" id="dnsCard"><div class="spread"><div><div class="title" style="font:650 14px var(--font-title)">DNS da internet
       <span class="tag ping">INTERNET</span></div>
       <div class="desc muted" style="font-size:13px;margin-top:4px">O DNS não muda o ping da partida, mas deixa sites, logins e lojas abrindo mais rápido e resolve "sem conexão" com a internet funcionando.</div></div>
-      <select class="input" data-change="dns">${(d.providers || []).map(p => `<option value="${p.id}" ${p.id === d.current ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select></div></div>`;
+      <div class="row" style="gap:8px"><button class="btn" data-act="dnsbench" ${S.benching ? 'disabled' : ''}>${icon('ping')} ${S.benching ? 'Medindo…' : 'Medir o mais rápido'}</button>
+      <select class="input" data-change="dns">${(d.providers || []).map(p => `<option value="${p.id}" ${p.id === d.current ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select></div></div>
+      ${S.bench ? benchRows(S.bench) : ''}</div>`;
   }
+
+  function repaintDns() { const c = AZ.$('#dnsCard'); if (c) c.outerHTML = dnsCard(); }
 
   function visible(t) {
     if (S.filter !== 'all' && t.goal !== S.filter) return false;
@@ -145,7 +161,7 @@
         <div id="tweakList">${AZ.skeleton(6)}</div>
         <div class="actionbar" id="tweakBar" hidden></div>`;
       await load(false);
-      AZ.get('/api/dns').then(d => { S.dns = d; const c = AZ.$('#dnsCard'); if (c) c.outerHTML = dnsCard(); }).catch(() => {});
+      AZ.get('/api/dns').then(d => { S.dns = d; repaintDns(); }).catch(() => {});
     },
     actions: {
       pick: el => {
@@ -174,9 +190,18 @@
       undo1: el => run('revert_tasks', [el.dataset.id], 'Desfazendo ajuste'),
       applysel: () => run('apply_tasks', [...S.sel].filter(id => stateOf(S.data.tasks.find(t => t.id === id) || {}) !== 'applied'), 'Aplicando ajustes'),
       undosel: () => run('revert_tasks', [...S.sel].filter(id => stateOf(S.data.tasks.find(t => t.id === id) || {}) === 'applied'), 'Desfazendo ajustes'),
+      dnsbench: async () => {
+        S.benching = true; S.bench = null; repaintDns();
+        const r = await AZ.action('dns_bench').catch(e => ({ok: false, detail: e.message, rows: []}));
+        S.benching = false; S.bench = r; repaintDns();
+      },
+      dnspick: async el => {
+        const r = await AZ.runJob('dns_set', {provider: el.dataset.id}, {title: 'Trocando o DNS'});
+        if (r?.state) { S.dns = r.state; repaintDns(); }
+      },
       dns: async el => {
         const r = await AZ.runJob('dns_set', {provider: el.value}, {title: 'Trocando o DNS'});
-        if (r?.state) { S.dns = r.state; }
+        if (r?.state) { S.dns = r.state; repaintDns(); }
       },
     },
   });

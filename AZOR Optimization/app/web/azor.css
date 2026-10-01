@@ -363,3 +363,4 @@ body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{an
 /* três modos do BOOST lado a lado, sem estourar a coluna */
 .boost-side .seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:100%;max-width:440px}
 .boost-side .seg button{padding:0 6px;font-size:11.5px;letter-spacing:.04em;white-space:nowrap}
+.mono{font-family:ui-monospace,Consolas,"Cascadia Mono",monospace;font-size:12px}

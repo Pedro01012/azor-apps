@@ -2,7 +2,7 @@
 'use strict';
 (() => {
   const {esc, icon} = AZ;
-  const S = {data: null, test: null, customer: '', target: '', poll: 0};
+  const S = {data: null, test: null, customer: '', target: '', poll: 0, cfg: null};
 
   const num = (v, d = 0) => v == null ? '—' : Number(v).toFixed(d).replace('.', ',');
 
@@ -173,12 +173,29 @@
       <div class="row" style="margin-top:8px"><button class="linkbtn" data-act="alltips">${S.allTips ? 'Mostrar só os meus' : `Ver os ${GAME_TIPS.length} jogos`}</button></div>`;
   }
 
+  /* Arquivo de configuração do próprio jogo: sombras, partículas, V-Sync. Só edita o que já existe. */
+  function cfgCard() {
+    const list = S.cfg?.games || [];
+    if (!list.length) return '';
+    return `${AZ.sectionTitle('wand', 'Ajustes dentro do jogo', 'O AZOR muda o arquivo de configuração do próprio jogo (sombras, partículas, V-Sync). Só mexe no que já existe, guarda uma cópia do seu e volta com um clique. Feche o jogo antes.')}
+      <div class="grid g2">${list.map(g => `
+        <div class="card"><div class="spread"><b>${esc(g.label)}</b>${g.applied ? '<span class="pill ok"><i></i>PRESET APLICADO</span>' : ''}</div>
+          ${g.running ? `<div class="desc warn" style="margin-top:6px">${icon('alert')} O jogo está aberto. Feche para aplicar.</div>` : ''}
+          ${g.pending ? `<div class="stack" style="gap:4px;margin-top:8px">${g.preview.slice(0, 6).map(c => `<div class="row" style="gap:8px;font-size:12.5px"><span class="mono soft">${esc(c.key.replace('setting.', ''))}</span><span class="muted">${esc(c.from)} → <b>${esc(c.to)}</b></span></div>`).join('')}
+              ${g.pending > 6 ? `<div class="soft" style="font-size:12px">…e mais ${g.pending - 6}</div>` : ''}</div>`
+            : `<p class="muted" style="margin-top:8px;font-size:13px">${g.applied ? 'O arquivo já está no preset.' : 'Nada a mudar: o arquivo já está assim.'}</p>`}
+          <p class="soft" style="margin-top:8px;font-size:12.5px">${esc(g.tip)}</p>
+          <div class="row" style="margin-top:12px;gap:8px"><button class="btn primary" data-act="cfgapply" data-game="${g.id}" data-level="fps" ${g.running || !g.pending ? 'disabled' : ''}>${icon('bolt')} FPS máximo</button>
+            <button class="btn" data-act="cfgapply" data-game="${g.id}" data-level="equilibrado" ${g.running ? 'disabled' : ''}>Equilibrado</button>
+            ${g.applied ? `<button class="btn ghost" data-act="cfgrestore" data-game="${g.id}" ${g.running ? 'disabled' : ''}>${icon('undo')} Voltar o meu</button>` : ''}</div></div>`).join('')}</div>`;
+  }
+
   function paint() {
     const d = S.data;
     const body = AZ.$('#gmBody');
     if (!body) return;
     if (!d) { body.innerHTML = AZ.skeleton(5); return; }
-    body.innerHTML = `${monitorCard(d)}${gpuCard(d)}<div style="margin-top:12px">${priorityCard(d)}</div>${testCard()}${tipsCard(d)}${fortniteCard(d)}`;
+    body.innerHTML = `${monitorCard(d)}${gpuCard(d)}<div style="margin-top:12px">${priorityCard(d)}</div>${testCard()}${tipsCard(d)}${cfgCard()}${fortniteCard(d)}`;
   }
 
   function paintTest() {
@@ -192,6 +209,12 @@
     S.test = S.data.test || {};
     if (AZ.current?.id === 'games') paint();
     schedule();
+    loadCfg();
+  }
+
+  async function loadCfg() {
+    S.cfg = await AZ.action('gamecfg_scan').catch(() => null);
+    if (AZ.current?.id === 'games') paintTest();
   }
 
   function schedule() {
@@ -222,6 +245,18 @@
     leave() { clearTimeout(S.poll); },
     actions: {
       alltips: () => { S.allTips = !S.allTips; paint(); },
+      cfgapply: async el => {
+        el.disabled = true;
+        const r = await AZ.action('gamecfg_apply', {game: el.dataset.game, level: el.dataset.level}).catch(e => ({ok: false, detail: e.message}));
+        AZ.toast(r.detail, r.ok);
+        loadCfg();
+      },
+      cfgrestore: async el => {
+        el.disabled = true;
+        const r = await AZ.action('gamecfg_restore', {game: el.dataset.game}).catch(e => ({ok: false, detail: e.message}));
+        AZ.toast(r.detail, r.ok);
+        loadCfg();
+      },
       copy: async el => {
         try { await navigator.clipboard.writeText(el.dataset.t); AZ.toast('Copiado. Cole nas opções de inicialização do jogo.'); }
         catch (e) { AZ.toast('Selecione o texto e copie com Ctrl+C.', false); }

@@ -1,4 +1,4 @@
-AZOR OPTIMIZATION 3.2
+AZOR OPTIMIZATION 3.3
 =====================
 
 Um app só para deixar o PC no máximo para jogar: mais FPS, menos delay,
@@ -27,12 +27,15 @@ Pronto. O resto das telas é para quem quer ir além:
                  CoD vão abrir (anti-cheat).
   TWEAKS         Todos os ajustes, separados por: Mais FPS, Menos delay, Sem travadinhas,
                  Internet e ping, Windows leve... Aplique ou desfaça um por um.
+                 Em "Internet e ping": mede qual DNS responde mais rápido neste PC e
+                 troca com um clique.
   APPS           Remove o lixo que vem com o Windows e instala programas oficiais.
   LIMPEZA        Apaga arquivos inúteis e tira do boot o que não precisa abrir sozinho,
                  inclusive outros "otimizadores" que brigam com o AZOR.
   JOGOS          Monitor na taxa máxima (Hz), placa de vídeo forte em cada jogo,
-                 teste de FPS ANTES e DEPOIS para mostrar ao cliente, preset do Fortnite
-                 e a configuração ideal de 14 jogos (CS2, Valorant, Fortnite, Apex, CoD,
+                 teste de FPS ANTES e DEPOIS para mostrar ao cliente, preset do Fortnite,
+                 ajuste direto no arquivo do Minecraft e do CS2 (com cópia do seu e
+                 "Voltar o meu") e a configuração ideal de 14 jogos (CS2, Valorant, Fortnite, Apex, CoD,
                  LoL, Dota 2, Minecraft, Roblox, GTA V, Free Fire, Rocket League,
                  Overwatch 2, PUBG) com opções de inicialização para copiar.
   PERIFÉRICOS    Teste ao vivo: polling do mouse, clique duplo fantasma, teclas
@@ -56,9 +59,11 @@ Nos três modos o pré-set protege o que a sua peça não aguenta.
 
 O QUE O BOOST FAZ
 -----------------
-  - Até 83 ajustes do Windows (conforme o hardware), cada um gravado e relido.
+  - Até 87 ajustes do Windows (conforme o hardware), cada um gravado e relido.
     Inclui: som do jogo não abaixa em call, Windows Update sem reiniciar sozinho
-    e sem trocar o driver de vídeo, e mais serviços fora do boot.
+    e sem trocar o driver de vídeo, antivírus varrendo sem engasgar o jogo (continua
+    ligado), sem janela de AutoPlay por cima do jogo, mais serviços e tarefas
+    agendadas fora do boot (inclusive os de suporte da HP e da Dell).
   - Remove até 61 apps inúteis que vêm com o Windows (voltam pela Microsoft Store).
   - Tira do boot os inúteis, os outros otimizadores e (no Automático/Extremo) os
     lançadores: Steam, Epic e Discord abrem quando você for jogar.
@@ -72,7 +77,7 @@ PRÉ-SETS POR HARDWARE
 ---------------------
 O AZOR lê processador, placa de vídeo, memória, disco, rede, Windows, monitor,
 placa-mãe e se é notebook ou desktop, soma como o cliente joga, encaixa cada coisa
-numa família e junta as regras daquela combinação (mais de 3,5 bilhões de
+numa família e junta as regras daquela combinação (mais de 20 bilhões de
 combinações cobertas). Exemplos:
 
   Intel 12ª geração ou mais nova  Mantém a economia do Windows que manda Discord,
@@ -92,6 +97,18 @@ combinações cobertas). Exemplos:
   Processador x placa             Mostra quem é o gargalo e o que fazer.
   Jogos pesados                   Sem tela cheia exclusiva forçada (HDR e alt-tab).
   Jogo + live                     Preserva overlay e encoder; indica NVENC/AMF.
+  Xeon (placa X99)                Avisa para ligar o Turbo na BIOS e não atualizar
+                                  BIOS de placa genérica (Huananzhi, Machinist...).
+  AMD FX / Phenom / A-Series      Avisa da falta de AVX2 e do que ligar na BIOS.
+  Placa de entrada (GT 730,       Sem agendamento por hardware; manda jogar em 720p/900p;
+  RX 6400/6500 XT...)             avisa do PCIe x4 da RX 6400/6500 XT.
+  Portátil (ROG Ally, Legion Go,  Trata como notebook e orienta modo Turbo, 25-30 W e
+  Steam Deck)                     limite de FPS.
+  Monitor na placa-mãe            Descobre quando o cabo está no vídeo integrado e a placa
+                                  de vídeo está parada: o maior ganho de FPS que existe.
+  SSD parado, Windows no HD       Avisa que o SSD do PC não está sendo usado para o Windows
+                                  e os jogos.
+  Disco do Windows quase cheio    Avisa e leva direto para a Limpeza.
 
 O pré-set reconhecido fica guardado: quando o mesmo PC volta, o AZOR já sabe quem
 ele é; se uma peça muda, o pré-set é recalculado. Veja em Início > "Ver o que muda".

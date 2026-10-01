@@ -39,7 +39,7 @@ from urllib.request import Request, urlopen
 import azor_core as core
 import azor_game_diag as game_diag
 from azor_jobs import JobManager, BusyError
-from azor_modules import transactions
+from azor_modules import fixes, gameconfig, transactions
 from azor_elevation import run_action as run_operation, validate as validate_operation
 
 if os.name == "nt":
@@ -58,7 +58,7 @@ DATA = core.DATA_DIR
 RUNTIME_FILE = DATA / "server_runtime.json"
 STARTUP_LOG = DATA / "server_startup.log"
 BUILD_ID_FILE = ROOT / "BUILD_ID.txt"
-VERSION = "3.2"
+VERSION = "3.3"
 
 
 def _build_id():
@@ -484,6 +484,14 @@ def do_action(name: str, p: dict):
         input_monitor.stop()
         gamepad_monitor.stop()
         return {"ok": True}
+    if name == "gamecfg_scan":
+        return gameconfig.scan(core, str(p.get("level") or "fps"))
+    if name == "gamecfg_apply":
+        return gameconfig.apply(core, str(p.get("game") or ""), str(p.get("level") or "fps"))
+    if name == "gamecfg_restore":
+        return gameconfig.restore(core, str(p.get("game") or ""))
+    if name == "dns_bench":
+        return fixes.dns_bench(core)
     if name == "ping":
         host = str(p.get("host") or "1.1.1.1").strip()
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.:-]{0,79}", host):
@@ -521,7 +529,9 @@ PANELS = {
 }
 
 READ_ONLY_ACTIONS = {"open_link", "open_folder", "open_report", "open_panel", "game_test_start", "game_test_stop", "game_test_setup",
-                     "input_stop", "ping", "export_report"}
+                     "input_stop", "ping", "export_report", "dns_bench", "gamecfg_scan"}
+# Testes de rede demoram alguns segundos e não mexem em nada: não seguram a fila das outras ações.
+LOCK_FREE_ACTIONS = {"ping", "dns_bench"}
 
 SETTINGS_KEYS = {"streamer": bool, "start_minimized": bool, "technician": bool, "reduce_motion": bool,
                  "performance_mode": str, "customer_name": str, "usage_profile": str}
@@ -773,8 +783,11 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._send_json({"ok": True, "job": job}, 202)
             if path == "/api/action":
                 name = str(data.get("name") or "")
-                with ACTION_LOCK:
+                if name in LOCK_FREE_ACTIONS:
                     result = do_action(name, data)
+                else:
+                    with ACTION_LOCK:
+                        result = do_action(name, data)
                 if name not in READ_ONLY_ACTIONS:
                     core.invalidate_cache()
                 return self._send_json(result)

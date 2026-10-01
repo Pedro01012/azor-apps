@@ -27,6 +27,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -46,6 +47,8 @@ CPU_FAMILIES = {
     "amd_zen": ("Ryzen de mesa", "Ryzen 3000, 5000, 7000 e 9000."),
     "amd_apu": ("Ryzen com vídeo integrado (G)", "5600G, 5700G, 8600G, 8700G."),
     "amd_mobile": ("Ryzen de notebook", "Ryzen HS/H/HX/U e Ryzen AI."),
+    "xeon": ("Intel Xeon (placa X99 e servidor)", "E5/E3 em placa X99 e PCs de empresa: muitos núcleos, clock baixo."),
+    "amd_legacy_cpu": ("AMD antigo (FX, Phenom, A-Series)", "Sem boost moderno: o que vale é clock alto e memória rápida."),
     "entry": ("Processador de entrada", "Até 4 threads: Pentium, Celeron, Athlon, i3/i5 antigos."),
     "unknown": ("Processador não identificado", "Regras gerais, sem ajuste por modelo."),
 }
@@ -59,6 +62,7 @@ GPU_FAMILIES = {
     "amd_rdna3": ("Radeon RX 7000", "RDNA 3."),
     "amd_rdna": ("Radeon RX 5000/6000", "RDNA 1 e 2."),
     "amd_legacy": ("Radeon antiga", "RX 400/500, Vega, R9/R7."),
+    "gpu_entry": ("Placa de vídeo de entrada", "GT 710/730/1030, MX, RX 550, RX 6400/6500 XT, Radeon R5/R7."),
     "intel_arc": ("Intel Arc", "A e B series (dependem de Resizable BAR)."),
     "igpu_amd": ("Só vídeo integrado AMD", "Radeon Graphics / 680M / 780M."),
     "igpu_intel": ("Só vídeo integrado Intel", "UHD, Iris Xe e Arc integrado."),
@@ -108,6 +112,7 @@ BOARD_FAMILIES = {
     "gigabyte": ("Placa Gigabyte", "Aorus, Gaming X."),
     "asrock": ("Placa ASRock", "Phantom Gaming, Steel Legend."),
     "oem": ("PC de marca", "Dell, HP, Lenovo, Acer, Positivo...: BIOS com menos opções."),
+    "generica": ("Placa genérica (Huananzhi, Machinist...)", "Placas X99/X79 sem suporte oficial: BIOS não se atualiza por conta própria."),
     "other": ("Outra placa", ""),
 }
 DIMENSIONS = (("cpu", CPU_FAMILIES), ("gpu", GPU_FAMILIES), ("ram", RAM_FAMILIES), ("disk", DISK_FAMILIES),
@@ -115,7 +120,8 @@ DIMENSIONS = (("cpu", CPU_FAMILIES), ("gpu", GPU_FAMILIES), ("ram", RAM_FAMILIES
               ("use", USE_FAMILIES), ("board", BOARD_FAMILIES))
 # Chaves que mudam o resultado sem virar família: mudam as regras aplicadas.
 FLAGS = ("single_channel", "xmp_off", "hybrid_graphics", "high_refresh", "streamer", "ddr5",
-         "four_sticks_ddr5", "low_vram", "cpu_bottleneck", "gpu_bottleneck")
+         "four_sticks_ddr5", "low_vram", "cpu_bottleneck", "gpu_bottleneck", "handheld", "low_disk",
+         "monitor_on_igpu", "ssd_unused")
 USES = tuple(USE_FAMILIES)
 
 MEMORY_FILE = "preset_memory.json"
@@ -144,12 +150,13 @@ try {
   $pd=Get-PhysicalDisk | Where-Object { [string]$_.DeviceId -eq [string]$part.DiskNumber } | Select-Object -First 1
   if($pd){ $disk=[pscustomobject]@{Bus=[string]$pd.BusType;Media=[string]$pd.MediaType;Name=[string]$pd.FriendlyName} }
 } catch {}
+$disks=@(Get-PhysicalDisk | ForEach-Object { [pscustomobject]@{Media=[string]$_.MediaType;Bus=[string]$_.BusType;SizeGB=[math]::Round($_.Size/1GB);Id=[string]$_.DeviceId} })
 $mem=@(Get-CimInstance Win32_PhysicalMemory | Select-Object SMBIOSMemoryType,Speed,ConfiguredClockSpeed,Capacity)
-$gpus=@(Get-CimInstance Win32_VideoController | Select-Object Name,PNPDeviceID,AdapterRAM)
+$gpus=@(Get-CimInstance Win32_VideoController | Select-Object Name,PNPDeviceID,AdapterRAM,CurrentHorizontalResolution)
 $nics=@(Get-NetAdapter -Physical | Where-Object Status -eq 'Up' | Select-Object Name,InterfaceDescription,PhysicalMediaType)
 $board=Get-CimInstance Win32_BaseBoard | Select-Object -First 1 Manufacturer,Product
 $chassis=@((Get-CimInstance Win32_SystemEnclosure).ChassisTypes)
-[pscustomobject]@{Disk=$disk;Memory=$mem;Gpus=$gpus;Nics=$nics;Board=$board;Chassis=$chassis}
+[pscustomobject]@{Disk=$disk;Disks=$disks;Memory=$mem;Gpus=$gpus;Nics=$nics;Board=$board;Chassis=$chassis}
 """
 
 LAPTOP_CHASSIS = {8, 9, 10, 11, 12, 14, 18, 21, 30, 31, 32}
@@ -239,8 +246,11 @@ def collect(core, force: bool = False) -> Dict[str, Any]:
     for g in _as_list(extra.get("Gpus")):
         if isinstance(g, dict) and g.get("Name"):
             name = str(g.get("Name")).strip()
+            res = g.get("CurrentHorizontalResolution")
             gpus.append({"name": name, "pnp": str(g.get("PNPDeviceID") or ""),
-                         "vram_gb": vram.get(name.lower())})
+                         "vram_gb": vram.get(name.lower()),
+                         # Placa com imagem saindo: o Windows só preenche a resolução de quem tem monitor ligado.
+                         "active": bool(res)})
     if not gpus:
         gpus = [{"name": n, "pnp": "", "vram_gb": None} for n in hp.get("gpus") or []]
     mem_types = [int(m.get("SMBIOSMemoryType") or 0) for m in _as_list(extra.get("Memory")) if isinstance(m, dict)]
@@ -252,6 +262,12 @@ def collect(core, force: bool = False) -> Dict[str, Any]:
         streamer = bool(core.load_settings().get("streamer"))
     except Exception:
         streamer = False
+    space: Dict[str, Any] = {}
+    try:
+        usage = shutil.disk_usage((os.environ.get("SystemDrive") or "C:") + "\\")
+        space = {"free_gb": round(usage.free / 1024 ** 3, 1), "total_gb": round(usage.total / 1024 ** 3, 1)}
+    except Exception:
+        space = {}
     facts = {
         "cpu": {"name": str(hp.get("cpu") or ""), "cores": int(hp.get("cores") or 0),
                 "threads": int(hp.get("logical_processors") or 0), "topology": hp.get("topology") or {}},
@@ -261,10 +277,12 @@ def collect(core, force: bool = False) -> Dict[str, Any]:
                 "rated_mhz": mem.get("rated_mhz"), "configured_mhz": mem.get("configured_mhz"),
                 "types": sorted(set(t for t in mem_types if t))},
         "disk": {"bus": str(disk.get("Bus") or ""), "media": str(disk.get("Media") or ""), "name": str(disk.get("Name") or "")},
+        "disks": [{"media": str(d.get("Media") or ""), "bus": str(d.get("Bus") or ""), "size_gb": d.get("SizeGB")}
+                  for d in _as_list(extra.get("Disks")) if isinstance(d, dict)],
         "battery": bool(hp.get("battery")), "chassis": chassis,
         "board": {"vendor": str(board.get("Manufacturer") or ""), "model": str(board.get("Product") or "")},
         "display": {"current_hz": display.get("current_hz"), "max_hz": display.get("max_hz")},
-        "nics": nics, "build": build, "streamer": streamer,
+        "nics": nics, "build": build, "streamer": streamer, "space": space,
         "_at": time.time(),
     }
     try:
@@ -287,6 +305,13 @@ def classify_cpu(cpu: Dict[str, Any], laptop: bool) -> Tuple[str, Dict[str, Any]
     info: Dict[str, Any] = {"model": cpu.get("name") or ""}
     if threads and threads <= 4:
         return "entry", info
+    if "xeon" in name:
+        return "xeon", info
+    if "amd" in name and "ryzen" not in name and re.search(r"\bfx\b|fx\(tm\)|phenom|opteron|\ba\d{1,2}-\d{4}|athlon", name):
+        return "amd_legacy_cpu", info
+    if re.search(r"ryzen\s+z[12]|custom apu", name):
+        info["handheld"] = True
+        return "amd_mobile", info
     if "ryzen" in name or "amd" in name:
         m = re.search(r"ryzen\s+(?:ai\s+)?(?:\d+\s+)?(?:pro\s+)?(?:hx\s+)?(\d{3,4})([a-z0-9]*)", name)
         model, suffix = (m.group(1), m.group(2)) if m else ("", "")
@@ -335,7 +360,7 @@ def classify_gpu(gpus: List[Dict[str, Any]]) -> Tuple[str, Dict[str, Any]]:
     low = [n.lower() for n in names if n and not re.search(r"basic display|virtual|parsec|remote|idd|spacedesk", n.lower())]
     dgpu, fam = None, None
     order = ["nvidia_rtx50", "nvidia_rtx40", "amd_rdna4", "nvidia_rtx", "amd_rdna3", "intel_arc", "amd_rdna",
-             "nvidia_gtx", "amd_legacy", "nvidia_legacy"]
+             "nvidia_gtx", "amd_legacy", "nvidia_legacy", "gpu_entry"]
     found: Dict[str, str] = {}
     igpu = False
     for n in low:
@@ -348,6 +373,8 @@ def classify_gpu(gpus: List[Dict[str, Any]]) -> Tuple[str, Dict[str, Any]]:
                 found.setdefault("nvidia_rtx", n)
             elif re.search(r"gtx\s*(16|10)\d\d", n):
                 found.setdefault("nvidia_gtx", n)
+            elif re.search(r"\bgt\s*\d{3,4}\b|\bmx\s*\d{3}", n):
+                found.setdefault("gpu_entry", n)
             else:
                 found.setdefault("nvidia_legacy", n)
         elif "radeon" in n or "amd" in n:
@@ -355,8 +382,12 @@ def classify_gpu(gpus: List[Dict[str, Any]]) -> Tuple[str, Dict[str, Any]]:
                 found.setdefault("amd_rdna4", n)
             elif re.search(r"rx\s*7\d{3}", n):
                 found.setdefault("amd_rdna3", n)
+            elif re.search(r"rx\s*(550|6400|6500)", n):
+                found.setdefault("gpu_entry", n)
             elif re.search(r"rx\s*(5|6)\d{3}", n):
                 found.setdefault("amd_rdna", n)
+            elif re.search(r"radeon\s*(r[579]\s*\d{3}|hd\s*\d{4})", n):
+                found.setdefault("gpu_entry", n)
             elif re.search(r"rx\s*[45]\d\d|vega\s*(56|64)|r9\s|r7\s|radeon vii", n):
                 found.setdefault("amd_legacy", n)
             else:
@@ -433,10 +464,16 @@ OEM_VENDORS = ("dell", "hewlett", "hp", "lenovo", "acer", "positivo", "samsung",
                "avell", "microsoft", "toshiba", "compaq", "itautec", "daten", "quanta", "pegatron", "wistron")
 
 
+GENERIC_BOARDS = ("huananzhi", "machinist", "jginyue", "qiyida", "kllisre", "atermiter", "erying", "mougol",
+                  "soyo", "zsus", "tonmov")
+
+
 def classify_board(board: Dict[str, Any]) -> str:
     v = str((board or {}).get("vendor") or "").lower()
     if not v:
         return "other"
+    if any(k in v for k in GENERIC_BOARDS):
+        return "generica"
     for key, fam in (("asus", "asus"), ("micro-star", "msi"), ("msi", "msi"), ("gigabyte", "gigabyte"),
                      ("asrock", "asrock")):
         if key in v:
@@ -447,7 +484,7 @@ def classify_board(board: Dict[str, Any]) -> str:
 
 
 STRONG_GPUS = ("nvidia_rtx50", "nvidia_rtx40", "amd_rdna4", "amd_rdna3")
-WEAK_GPUS = ("nvidia_legacy", "amd_legacy", "igpu_amd", "igpu_intel", "nvidia_gtx")
+WEAK_GPUS = ("nvidia_legacy", "amd_legacy", "igpu_amd", "igpu_intel", "nvidia_gtx", "gpu_entry")
 
 
 def classify(facts: Dict[str, Any]) -> Dict[str, Any]:
@@ -466,6 +503,21 @@ def classify(facts: Dict[str, Any]) -> Dict[str, Any]:
     if use not in USE_FAMILIES:
         use = "competitivo"
     vram = gpu_info.get("vram_gb")
+    gl = [g for g in facts.get("gpus") or [] if isinstance(g, dict)]
+    dname = str(gpu_info.get("model") or "").lower() if gpu not in ("igpu_intel", "igpu_amd", "unknown") else ""
+    known = any("active" in g for g in gl)
+    d_active = any(g.get("active") for g in gl if str(g.get("name") or "").lower() == dname)
+    o_active = any(g.get("active") for g in gl if str(g.get("name") or "").lower() != dname)
+    monitor_on_igpu = bool(known and dname and not laptop and gpu_info.get("igpu") and not d_active and o_active)
+    others = [d for d in facts.get("disks") or [] if isinstance(d, dict)]
+    has_ssd = any(str(d.get("media") or "").upper() == "SSD" or str(d.get("bus") or "").upper() == "NVME"
+                  for d in others if (d.get("size_gb") or 0) >= 100)
+    ssd_unused = bool(classify_disk(facts.get("disk") or {}) == "hdd" and has_ssd)
+    space = facts.get("space") or {}
+    free, total = float(space.get("free_gb") or 0), float(space.get("total_gb") or 0)
+    board = facts.get("board") or {}
+    handheld = bool(cpu_info.get("handheld") or 11 in (facts.get("chassis") or [])
+                    or re.match(r"rc7[12]", str(board.get("model") or "").lower()))
     return {
         "cpu": cpu, "gpu": gpu, "ram": classify_ram(float(ram.get("gb") or 0)), "disk": classify_disk(facts.get("disk") or {}),
         "form": "laptop" if laptop else "desktop", "os": "win11" if build >= 22000 else "win10",
@@ -481,6 +533,8 @@ def classify(facts: Dict[str, Any]) -> Dict[str, Any]:
             "hybrid_graphics": bool(gpu_info.get("hybrid_graphics")),
             "high_refresh": bool((display.get("max_hz") or 0) >= 120),
             "streamer": use == "live", "ddr5": ddr5,
+            "handheld": handheld, "monitor_on_igpu": monitor_on_igpu, "ssd_unused": ssd_unused,
+            "low_disk": bool(total and (free < 15 or free / total < 0.10)),
         },
         "cpu_info": cpu_info, "gpu_info": gpu_info,
     }
@@ -504,8 +558,12 @@ class Decisions:
         if task_id not in self.skip:
             self.add.setdefault(task_id, why)
 
-    def note(self, level: str, title: str, text: str, action: Optional[Dict[str, Any]] = None):
-        self.notes.append({"level": level, "title": title, "text": text, "action": action})
+    def note(self, level: str, title: str, text: str, action: Optional[Dict[str, Any]] = None, first: bool = False):
+        row = {"level": level, "title": title, "text": text, "action": action}
+        if first:
+            self.notes.insert(0, row)
+        else:
+            self.notes.append(row)
 
 
 RULES: List[Tuple[str, Callable[[Dict[str, Any], Decisions], bool]]] = []
@@ -612,9 +670,104 @@ def _entry_cpu(c, d):
 # ---- placa de vídeo ------------------------------------------------------------
 @rule("Placa antiga: sem agendamento de GPU por hardware")
 def _gpu_legacy(c, d):
-    if c["gpu"] not in ("nvidia_legacy", "amd_legacy"):
+    if c["gpu"] not in ("nvidia_legacy", "amd_legacy", "gpu_entry"):
         return False
     d.no("hags", "Placa de vídeo antiga: o agendamento por hardware não é suportado ou causa travadinhas.")
+    return True
+
+
+@rule("Placa de entrada: resolução menor e gráficos no mínimo")
+def _gpu_entry(c, d):
+    if c["gpu"] != "gpu_entry":
+        return False
+    d.note("info", "Placa de entrada: jogue em 720p ou 900p",
+           "Resolução menor e escala de renderização em 75% (ou FSR em Desempenho) dão mais FPS que qualquer "
+           "ajuste do Windows. Sombras, efeitos e pós-processamento no mínimo; texturas em médio se a placa "
+           "tiver 2 GB ou 4 GB.")
+    model = str(c["gpu_info"].get("model") or "").lower()
+    if re.search(r"rx\s*(6400|6500)", model):
+        d.note("warn", "RX 6400/6500 XT: só 4 pistas de PCIe",
+               "Essas placas usam PCIe x4 e 4 GB de VRAM. Em placa-mãe PCIe 3.0 (Ryzen 3000/5000 antigos, Intel até "
+               "a 10ª geração) elas perdem FPS quando a VRAM enche. Texturas em médio resolvem na maioria dos jogos.")
+    return True
+
+
+@rule("Xeon: muitos núcleos, clock baixo")
+def _xeon(c, d):
+    if c["cpu"] != "xeon":
+        return False
+    d.no("nic_interrupt_moderation_off", "Xeon de muitos núcleos: placa de rede sem espera gera interrupção demais.")
+    d.note("action", "Confira se o Turbo está ligado na BIOS",
+           "Em placa X99 e em PC de empresa o Turbo Boost às vezes vem desligado: o Xeon fica no clock de base "
+           "(2,3 GHz num E5-2670 v3) e perde muito FPS. Com Turbo ligado ele passa de 3 GHz com o jogo aberto.",
+           {"kind": "goto", "target": "hardware", "tab": "bios"})
+    d.note("info", "Jogos usam poucos núcleos",
+           "Núcleos de sobra não viram FPS: o que conta é o clock de cada um. O Modo Turbo derruba o fundo de "
+           "prioridade para o jogo ficar com os núcleos mais rápidos.")
+    return True
+
+
+@rule("AMD antigo: clock e memória")
+def _amd_legacy_cpu(c, d):
+    if c["cpu"] != "amd_legacy_cpu":
+        return False
+    d.no("nic_interrupt_moderation_off", "Processador antigo: placa de rede sem espera gera interrupção demais.")
+    d.note("info", "Processador sem instruções modernas",
+           "FX, Phenom e A-Series não têm AVX2 (e o Phenom nem AVX). Alguns jogos recentes fecham sozinhos ao abrir "
+           "por isso: não é defeito do Windows. Na BIOS, desligar o C6 State e o Cool'n'Quiet reduz as travadinhas.")
+    return True
+
+
+@rule("Placa genérica: BIOS sem suporte oficial")
+def _generic_board(c, d):
+    if c["board"] != "generica":
+        return False
+    d.note("warn", "Não atualize a BIOS por conta própria",
+           "Placas X99/X79 genéricas não têm suporte oficial: BIOS errada pode deixar o PC sem ligar. Resizable BAR "
+           "e boot por NVMe dependem de BIOS modificada pelo vendedor. Ative 'Above 4G Decoding' se existir.")
+    return True
+
+
+@rule("Portátil (ROG Ally, Legion Go, Steam Deck...)")
+def _handheld(c, d):
+    if not c["flags"]["handheld"]:
+        return False
+    d.note("action", "No portátil o limite é a energia, não o Windows",
+           "Jogue com carregador e no modo Turbo/25-30 W do software do fabricante. Resolução 720p/800p com FSR, "
+           "e limite de FPS igual à taxa da tela (60 ou 120) para esquentar e gastar menos.")
+    return True
+
+
+@rule("Monitor ligado na placa-mãe: a placa de vídeo fica parada")
+def _monitor_on_igpu(c, d):
+    if not c["flags"]["monitor_on_igpu"]:
+        return False
+    d.note("action", "O monitor está ligado na placa-mãe, não na placa de vídeo",
+           "Só o vídeo integrado está mandando imagem para o monitor: a placa de vídeo cara está parada. É o erro mais "
+           "comum e o maior ganho que existe: desligue o PC, mude o cabo (HDMI/DisplayPort) para a placa de vídeo, "
+           "na traseira, nas portas de baixo, e ligue de novo. Pode dobrar ou triplicar o FPS.", first=True)
+    return True
+
+
+@rule("SSD no PC, mas o Windows está no HD")
+def _ssd_unused(c, d):
+    if not c["flags"]["ssd_unused"]:
+        return False
+    d.note("action", "Você tem um SSD, mas o Windows está no HD",
+           "O SSD do PC não está sendo usado para o que mais pesa: o Windows e os jogos. Clone o Windows para o SSD "
+           "(o próprio fabricante do SSD tem programa grátis para isso) ou, no mínimo, instale os jogos no SSD. "
+           "Carregamento e travadas somem.")
+    return True
+
+
+@rule("Pouco espaço no disco do Windows")
+def _low_disk(c, d):
+    if not c["flags"]["low_disk"]:
+        return False
+    d.note("warn", "O disco do Windows está quase cheio",
+           "Com menos de 15 GB livres (ou 10%) o Windows fica lento, o arquivo de paginação não cresce e as "
+           "atualizações falham. Rode a Limpeza: ela costuma devolver vários GB sem tocar em nada seu.",
+           {"kind": "goto", "target": "cleanup"})
     return True
 
 
@@ -808,6 +961,8 @@ def _hdd(c, d):
     if c["disk"] != "hdd":
         return False
     d.yes("services_extreme", "HD mecânico: o indexador de pesquisa é o que mais trava o disco em segundo plano.")
+    if c["flags"]["ssd_unused"]:
+        return True
     d.note("warn", "Um SSD é o maior upgrade deste PC",
            "Com o Windows em HD mecânico, carregamento e travadas ao abrir mapa só somem com um SSD. "
            "O BOOST corta o que mais usa o disco, mas não faz milagre.")
@@ -948,11 +1103,13 @@ def build_from_facts(facts: Dict[str, Any], mode: str = "auto") -> Dict[str, Any
     for name, fn in RULES:
         if fn(c, d):
             d.rules.append(name)
+    # O que depende do cliente primeiro, depois os avisos, depois as dicas (a ordem das regras vale dentro de cada grupo).
+    d.notes.sort(key=lambda n: {"action": 0, "warn": 1}.get(n["level"], 2))
     labels = {dim: fams.get(c[dim], fams.get("unknown", ("", "")))[0] for dim, fams in DIMENSIONS}
     key = ".".join([c["form"], c["cpu"], c["gpu"], c["ram"], c["disk"], c["os"], c["net"], c["display"], c["use"], c["board"]])
     name = " · ".join([labels["form"], labels["cpu"], labels["gpu"], labels["ram"], labels["disk"]]) + f" · {labels['use']}"
     chips = [
-        {"dim": "form", "label": labels["form"], "detail": ""},
+        {"dim": "form", "label": labels["form"], "detail": "Portátil (handheld)" if c["flags"]["handheld"] else ""},
         {"dim": "cpu", "label": labels["cpu"], "detail": c["cpu_info"].get("model") or ""},
         {"dim": "gpu", "label": labels["gpu"], "detail": (c["gpu_info"].get("model") or "")
          + (f" · {c['gpu_info']['vram_gb']:g} GB" if c["gpu_info"].get("vram_gb") else "")},

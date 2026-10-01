@@ -7,8 +7,13 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
+import socket
+import statistics
+import struct
 import subprocess
+import threading
 import time
 from typing import Any, Callable, Dict, List, Optional
 
@@ -212,3 +217,109 @@ def dns_set(core, provider: str) -> Dict[str, Any]:
     ok = state.get("current") == provider
     core.journal("dns_set", provider=provider, ok=ok)
     return {"ok": ok, "detail": f"DNS: {prov['label']}." if ok else "A troca não foi confirmada.", "state": state}
+
+
+# ---------------------------------------------------------------------------
+# Medir qual DNS responde mais rápido neste PC e nesta internet.
+#
+# É o mesmo teste que um técnico faz à mão com nslookup, só que feito por UDP
+# direto: cada servidor recebe os mesmos nomes (lojas e launchers de jogo) e
+# vale a mediana. Não precisa de administrador e não muda nada no Windows.
+# ---------------------------------------------------------------------------
+BENCH_NAMES = ("steamcommunity.com", "epicgames.com", "riotgames.com", "discord.com",
+               "battle.net", "google.com")
+BENCH_EXTRA = {"opendns": {"label": "OpenDNS", "v4": ["208.67.222.222", "208.67.220.220"]}}
+
+
+def _dns_query(server: str, name: str, timeout: float = 1.2, port: int = 53) -> Optional[float]:
+    """Pergunta o endereço de `name` a `server` e devolve o tempo em ms (None se não respondeu)."""
+    qid = random.randrange(65536)
+    packet = struct.pack(">HHHHHH", qid, 0x0100, 1, 0, 0, 0)
+    packet += b"".join(bytes([len(part)]) + part.encode("ascii") for part in name.split(".")) + b"\x00"
+    packet += struct.pack(">HH", 1, 1)
+    sock = socket.socket(socket.AF_INET6 if ":" in server else socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(timeout)
+    try:
+        start = time.perf_counter()
+        sock.sendto(packet, (server, port))
+        data, _ = sock.recvfrom(2048)
+        elapsed = (time.perf_counter() - start) * 1000
+    except (OSError, socket.timeout):
+        return None
+    finally:
+        sock.close()
+    if len(data) < 12:
+        return None
+    reply_id, flags = struct.unpack(">HH", data[:4])
+    # Resposta de verdade (QR=1) com o mesmo número; "não existe" (3) também vale como resposta.
+    if reply_id != qid or not flags & 0x8000 or (flags & 0xF) not in (0, 3):
+        return None
+    return elapsed
+
+
+def _bench_one(server: str, names, port: int, out: Dict[str, Any]) -> None:
+    samples, failed = [], 0
+    for name in names:
+        _dns_query(server, name, port=port)           # a 1ª pergunta aquece o cache do servidor
+        ms = _dns_query(server, name, port=port)      # a 2ª é o dia a dia de quem usa o PC
+        if ms is None:
+            failed += 1
+        else:
+            samples.append(ms)
+    out["failed"] = failed
+    out["total"] = len(names)
+    out["ms"] = round(statistics.median(samples), 1) if samples else None
+
+
+def dns_bench(core, resolvers: Optional[Dict[str, Dict[str, Any]]] = None, port: int = 53) -> Dict[str, Any]:
+    """Mede todos os provedores (e o DNS atual do provedor de internet) em paralelo."""
+    candidates: Dict[str, Dict[str, Any]] = {}
+    if resolvers is None:
+        for key, prov in list(DNS_PROVIDERS.items()) + list(BENCH_EXTRA.items()):
+            if prov["v4"]:
+                candidates[key] = {"label": prov["label"], "server": prov["v4"][0]}
+        try:
+            state = dns_state(core)
+        except Exception:
+            state = {}
+        if state.get("ok") and state.get("current") == "auto":
+            servers = [s for a in state.get("adapters", []) for s in a.get("servers", []) if ":" not in s]
+            if servers:
+                candidates["atual"] = {"label": "Atual (do provedor de internet)", "server": servers[0]}
+    else:
+        candidates = {k: dict(v) for k, v in resolvers.items()}
+    rows = {key: {"id": key, "label": c["label"], "server": c["server"]} for key, c in candidates.items()}
+    threads = [threading.Thread(target=_bench_one, args=(c["server"], BENCH_NAMES, port, rows[key]), daemon=True)
+               for key, c in candidates.items()]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=30)
+    result = []
+    for row in rows.values():
+        row.setdefault("ms", None)
+        row.setdefault("failed", len(BENCH_NAMES))
+        row.setdefault("total", len(BENCH_NAMES))
+        row["usable"] = row["ms"] is not None and row["failed"] * 3 <= row["total"]
+        result.append(row)
+    result.sort(key=lambda r: (not r["usable"], r["ms"] if r["ms"] is not None else 9e9))
+    usable = [r for r in result if r["usable"]]
+    if not usable:
+        return {"ok": False, "rows": result, "best": None,
+                "detail": "Nenhum DNS respondeu. Confira se a internet está funcionando e se o firewall não bloqueia a porta 53."}
+    best = usable[0]
+    current = next((r for r in usable if r["id"] == "atual"), None)
+    # Só recomenda trocar se o vencedor for claramente melhor (10 ms ou 25%); senão trocar não vale o incômodo.
+    worth = bool(current is None or best["id"] == "atual"
+                 or (current["ms"] - best["ms"] >= 10 and best["ms"] <= current["ms"] * 0.75))
+    if best["id"] == "atual" or (current is not None and not worth):
+        detail = "O DNS que você já usa é rápido; não precisa trocar."
+        pick = None
+    else:
+        detail = f"O mais rápido aqui é {best['label']}: {best['ms']} ms."
+        pick = best["id"] if best["id"] in DNS_PROVIDERS else None
+        if pick is None:
+            detail += " Ele não está na lista para aplicar; escolha o próximo da lista."
+            pick = next((r["id"] for r in usable if r["id"] in DNS_PROVIDERS), None)
+    return {"ok": True, "rows": result, "best": best["id"], "pick": pick, "detail": detail}
+
