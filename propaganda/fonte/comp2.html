@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR Motion</title>
+<style>
+@font-face{font-family:Orb;font-weight:700;src:url(node_modules/@fontsource/orbitron/files/orbitron-latin-700-normal.woff2)}
+:root{--pink:#ff2fc8;--pink2:#ff66d9;--purple:#8b6cff}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow:hidden;background:#0d0b10}
+body{font-family:"Inter Display","Inter",sans-serif;color:#fff;-webkit-font-smoothing:antialiased}
+#stage{position:absolute;left:0;top:0;overflow:hidden;background:#0d0b10}
+#bgc,#fx{position:absolute;left:0;top:0}
+#sq{position:absolute;width:1080px;height:1080px;transform-origin:540px 540px}
+.s{position:absolute;opacity:0}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.13),rgba(255,255,255,.07));border:1.5px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(26px) saturate(140%);box-shadow:0 30px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.18)}
+#bar{left:80px;top:440px;width:920px;height:196px;border-radius:44px}
+#bar .txt{position:absolute;left:44px;top:36px;font-size:38px;font-weight:400;color:rgba(255,255,255,.88);letter-spacing:-.2px;white-space:nowrap}
+#bar .ph{color:rgba(255,255,255,.38)}
+.caret{display:inline-block;width:3px;height:42px;background:#fff;vertical-align:-8px;margin-left:3px;border-radius:2px}
+#bar .row{position:absolute;left:36px;right:30px;bottom:26px;display:flex;align-items:center;gap:22px}
+#bar svg.ic{width:34px;height:34px;stroke:rgba(255,255,255,.75);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#chip{display:flex;align-items:center;gap:8px;font-size:27px;font-weight:600;color:rgba(255,255,255,.85);padding:6px 14px;border-radius:14px}
+#send{margin-left:auto;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));display:grid;place-items:center;
+  box-shadow:0 0 30px rgba(255,47,200,.6)}
+#dd{left:300px;top:660px;width:380px;border-radius:26px;padding:10px;background:rgba(28,24,34,.82)}
+#dd .it{height:70px;border-radius:16px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:30px;font-weight:500;color:rgba(255,255,255,.82);position:relative}
+#dd .it small{font-size:20px;color:rgba(255,255,255,.45);font-weight:500}
+#ddh{position:absolute;left:10px;right:10px;height:70px;border-radius:16px;background:rgba(255,47,200,.22);border:1px solid rgba(255,47,200,.45)}
+#pill{left:110px;top:470px;width:860px;height:140px;border-radius:70px;padding:12px}
+#knob{position:absolute;top:12px;height:116px;border-radius:58px;background:rgba(255,255,255,.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 24px rgba(0,0,0,.35)}
+#pill .lb{position:absolute;top:0;height:140px;display:grid;place-items:center;font-size:40px;font-weight:600;color:rgba(255,255,255,.8)}
+#win{left:40px;top:250px;width:1000px;height:598px;border-radius:24px;overflow:hidden;background:#0c0a12;
+  box-shadow:0 0 0 1px rgba(255,255,255,.1),0 40px 120px rgba(0,0,0,.75),0 0 90px rgba(255,47,200,.18)}
+#win .tb{position:absolute;left:0;right:0;top:0;height:36px;background:#0a0910;display:flex;align-items:center;gap:10px;padding:0 16px;font-family:Inter;font-size:15px;color:rgba(255,255,255,.75);z-index:2}
+#win .tb .wc{margin-left:auto;display:flex;gap:28px;font-size:16px;color:rgba(255,255,255,.6)}
+#win .vp{position:absolute;left:0;right:0;top:36px;bottom:0;overflow:hidden}
+#win .vp img{position:absolute;left:0;top:0;width:1600px;transform-origin:0 0}
+#cur{position:absolute;width:46px;height:46px;left:0;top:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.5));z-index:5}
+#rip{position:absolute;border-radius:50%;border:4px solid rgba(255,255,255,.9);z-index:4}
+#words{left:0;width:1080px;top:420px;height:240px;overflow:visible;text-align:center}
+#words .w{position:absolute;left:0;right:0;top:0;font-size:120px;font-weight:600;letter-spacing:-2.5px;line-height:240px}
+#ballw{left:0;top:0;width:1080px;height:1080px}
+#ball{position:absolute;width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 0 30px rgba(255,255,255,.9),0 0 70px rgba(255,47,200,.6)}
+#line{position:absolute;top:650px;height:10px;border-radius:5px;background:rgba(255,255,255,.85);overflow:hidden}
+#line i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--pink),var(--purple));box-shadow:0 0 20px var(--pink)}
+#cnt{position:absolute;left:0;right:0;top:420px;text-align:center}
+#cnt b{display:block;font-size:170px;font-weight:600;letter-spacing:-4px;line-height:1}
+#cnt span{font-size:36px;color:rgba(255,255,255,.62);font-weight:500}
+.circ{width:150px;height:150px;border-radius:50%;border:4px solid rgba(255,255,255,.92);display:grid;place-items:center;
+  box-shadow:0 0 30px rgba(255,255,255,.25),inset 0 0 20px rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
+.circ svg{width:70px;height:70px}
+#icon{left:465px;top:465px}
+#cta{left:0;top:465px;width:1080px;height:150px}
+#cta .circ{position:absolute;left:0;top:0}
+#cta .t{position:absolute;top:0;height:150px;display:flex;align-items:center;font-size:64px;font-weight:700;letter-spacing:1px;white-space:nowrap}
+#cta small{position:absolute;left:0;right:0;top:200px;text-align:center;font-size:32px;color:rgba(255,255,255,.55);font-weight:500;letter-spacing:4px}
+#logo{left:0;top:440px;width:1080px;text-align:center}
+#logo img{width:120px;height:120px;border-radius:30px}
+#logo .lt{margin-top:28px;font-size:84px;font-weight:600;letter-spacing:14px;padding-left:14px}
+#logo .lt span{display:inline-block}
+#logo small{display:block;margin-top:14px;font-size:24px;letter-spacing:12px;padding-left:12px;color:var(--pink2);font-weight:600}
+#burst svg{position:absolute;width:56px;height:56px}
+#flash{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;background:radial-gradient(ellipse at center,#fffaf2 0%,#efe6dc 60%,#d8cfc6 100%);opacity:0}
+#grain{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.05;mix-blend-mode:overlay}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <filter id="mb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur id="mbg" stdDeviation="0 0"/></filter>
+  <symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z" fill="currentColor"/></symbol>
+</defs></svg>
+<div id="stage">
+<canvas id="bgc"></canvas>
+<div id="sq">
+  <!-- barra de comando -->
+  <div class="s glass" id="bar">
+    <div class="txt" id="btxt"></div>
+    <div class="row">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <svg class="ic" viewBox="0 0 24 24" id="i-fps"></svg><svg class="ic" viewBox="0 0 24 24" id="i-cpu"></svg>
+      <svg class="ic" viewBox="0 0 24 24" id="i-gpu"></svg><svg class="ic" viewBox="0 0 24 24" id="i-mouse"></svg>
+      <svg class="ic" viewBox="0 0 24 24" id="i-ping"></svg>
+      <div id="chip">AZOR 3.2 <svg viewBox="0 0 24 24" style="width:22px;height:22px;stroke:rgba(255,255,255,.7);fill:none;stroke-width:2.4"><path d="m6 9 6 6 6-6"/></svg></div>
+      <div id="send"><svg viewBox="0 0 24 24" style="width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></div>
+    </div>
+  </div>
+  <div class="s glass" id="dd"><div id="ddh"></div>
+    <div class="it">Recomendado <small>todo PC</small></div><div class="it">Extremo <small>só jogo</small></div><div class="it">Automático <small id="ddck">pré-set</small></div>
+  </div>
+  <!-- seletor -->
+  <div class="s glass" id="pill"><div id="knob"></div>
+    <div class="lb" style="left:12px;width:278px">Tweaks</div><div class="lb" style="left:291px;width:278px">Limpeza</div><div class="lb" id="lbB" style="left:570px;width:278px">BOOST</div>
+  </div>
+  <!-- app -->
+  <div class="s" id="win">
+    <div class="tb"><img src="web/assets/Azor_icon.png" style="width:18px;height:18px;border-radius:4px">AZOR — Otimização para jogos<div class="wc"><span>—</span><span>▢</span><span>✕</span></div></div>
+    <div class="vp" id="vp"><img id="a1" src="shots/home_before.png"><img id="a2" src="shots/job_6.png"><img id="a3" src="shots/result.png"></div>
+    <svg id="cur" viewBox="0 0 32 32"><path d="M5 3v22l6-5.5 4.2 9 3.6-1.6-4.1-8.9H23z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    <div id="rip"></div>
+  </div>
+  <!-- palavras -->
+  <div class="s" id="words"></div>
+  <!-- bola / progresso -->
+  <div class="s" id="ballw"><div id="cnt"><b id="cntn">0</b><span>ajustes · 1 clique</span></div><div id="line"><i id="fill"></i></div><div id="ball"></div></div>
+  <!-- ícone + explosão -->
+  <div class="s" id="burst"></div>
+  <div class="s circ" id="icon"><svg style="color:#fff"><use href="#bolt"/></svg></div>
+  <!-- CTA -->
+  <div class="s" id="cta"><div class="circ" id="ctai"><svg style="color:#fff"><use href="#bolt"/></svg></div><div class="t" id="ctat">OTIMIZE COM AZOR</div><small id="ctas">LINK NA BIO</small></div>
+  <!-- logo -->
+  <div class="s" id="logo"><img id="lgi" src="web/assets/Azor_icon.png"><div class="lt" id="lgt"></div><small id="lgs">OPTIMIZATION</small></div>
+</div>
+<canvas id="fx"></canvas>
+<div id="flash"></div>
+<canvas id="grain"></canvas>
+</div>
+<script>
+const Q = new URLSearchParams(location.search);
+const W = Number(Q.get('w') || 1080), H = Number(Q.get('h') || 1920);
+const U = Math.min(W, H) / 1080;
+const $ = id => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const eOut = k => 1 - Math.pow(1 - k, 3);
+const eOut5 = k => 1 - Math.pow(1 - k, 5);
+const eIn = k => k * k * k;
+const eIO = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const eBack = k => { const c1 = 1.5, c3 = c1 + 1; return 1 + c3 * Math.pow(k - 1, 3) + c1 * Math.pow(k - 1, 2); };
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+// Ícones do próprio AZOR (core.js), traço 1.8.
+const ICON = {
+  fps: 'M4 18 9.5 12.5l3.5 3.5L20 8.5M14.5 8.5H20v5.5',
+  cpu: 'M8 8h8v8H8zM4 10h2M4 14h2M18 10h2M18 14h2M10 4v2M14 4v2M10 18v2M14 18v2M6 6h12v12H6z',
+  gpu: 'M3 7h18v10H3zM7 17v3M17 17v3M8 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0M15 10.5h3M15 13.5h3',
+  mouse: 'M12 3a6 6 0 0 1 6 6v6a6 6 0 0 1-12 0V9a6 6 0 0 1 6-6ZM12 3v6M6 9.5h12',
+  ping: 'M3.5 9a12 12 0 0 1 17 0M6.5 12.2a7.5 7.5 0 0 1 11 0M9.5 15.4a3.2 3.2 0 0 1 5 0M12 19h.01',
+};
+for (const k in ICON) $('i-' + k).innerHTML = `<path d="${ICON[k]}"/>`;
+
+/* ---------- linha do tempo (segundos) ---------- */
+const T = {
+  barIn: .12, type1: [.55, 2.0], send: 2.22, flash: [2.26, 3.05],
+  type2: [3.15, 4.1], chip: 4.32, dd: 4.38, hov: [4.7, 4.98, 5.22], camDD: [4.25, 5.35], pick: 5.32,
+  pill: 5.55, knob: [6.0, 6.45], zoom: [6.75, 7.5],
+  streak: [7.45, 8.35],
+  win: 8.15, click: 9.42, job: 9.72, res: 10.62, winOut: 11.85,
+  words: [11.85, 14.3],
+  ball: [14.3, 16.15], bounce: 14.72, fill: [14.82, 15.62], spark: 15.62,
+  icon: [16.15, 17.75], iconClick: 16.7,
+  cta: [17.75, 20.35],
+  logo: [20.35, 23.2],
+};
+window.DURATION = 23.2;
+const TXT1 = 'Meu PC tá travando nos jogos…', TXT2 = 'Deixa ele no máximo';
+const WORDS = [['Mais FPS', '#ff66d9'], ['Menos delay', '#a48bff'], ['Menos travadinha', '#ff4fb8'], ['Windows leve', '#8b6cff'], ['No máximo.', '#ff2fc8']];
+
+// Efeitos sonoros gerados a partir da mesma linha do tempo (lidos pelo music2.py).
+const SFX = [];
+const sfx = (t, kind, v = 1) => SFX.push({t: +t.toFixed(3), kind, v});
+(() => {
+  sfx(T.barIn, 'pop', .5);
+  for (let i = 0; i < TXT1.length; i++) if (TXT1[i] !== ' ') sfx(lerp(T.type1[0], T.type1[1], i / TXT1.length), 'key', .5 + hash(i) * .5);
+  sfx(T.send, 'click'); sfx(T.flash[0], 'bloom');
+  for (let i = 0; i < TXT2.length; i++) if (TXT2[i] !== ' ') sfx(lerp(T.type2[0], T.type2[1], i / TXT2.length), 'key', .5 + hash(i + 40) * .5);
+  sfx(T.chip, 'click', .7); sfx(T.dd, 'open'); T.hov.forEach(h => sfx(h, 'tick')); sfx(T.pick, 'click', .8);
+  sfx(T.pill, 'pop', .6); T.knob.forEach(k => sfx(k, 'slide')); sfx(T.zoom[0], 'whoosh'); sfx(T.zoom[1] - .05, 'hit');
+  sfx(T.streak[0], 'swoosh');
+  sfx(T.win, 'rise'); sfx(T.click, 'click'); sfx(T.click, 'boost'); sfx(T.job, 'tick'); sfx(T.res, 'success');
+  WORDS.forEach((w, i) => sfx(T.words[0] + i * .49, i === WORDS.length - 1 ? 'hit' : 'word'));
+  sfx(T.ball[0] + .05, 'fall'); sfx(T.bounce, 'boop'); sfx(T.bounce + .2, 'boop', .35); sfx(T.fill[0], 'riser'); sfx(T.spark, 'sparkle');
+  sfx(T.icon[0], 'pop', .7); sfx(T.iconClick, 'click'); sfx(T.iconClick, 'burst');
+  sfx(T.cta[0], 'whoosh', .6); sfx(T.cta[0] + .3, 'chime');
+  sfx(T.logo[0] + .15, 'shimmer'); sfx(T.logo[0] + .9, 'chime', .6);
+})();
+window.SFX = SFX;
+
+/* ---------- layout ---------- */
+const stage = $('stage'), sq = $('sq');
+stage.style.width = W + 'px'; stage.style.height = H + 'px';
+for (const c of [$('bgc'), $('fx'), $('grain')]) { c.width = W; c.height = H; c.style.width = W + 'px'; c.style.height = H + 'px'; }
+const SQX = W / 2 - 540, SQY = H / 2 - 540;
+const toStage = (x, y, cam) => [W / 2 + ((x - 540) * cam.s + cam.x) * U, H / 2 + ((y - 540) * cam.s + cam.y) * U];
+
+// palavras
+WORDS.forEach(([w]) => { const d = document.createElement('div'); d.className = 'w'; d.textContent = w; $('words').appendChild(d); });
+// letras do logo
+'AZOR'.split('').forEach(ch => { const s = document.createElement('span'); s.textContent = ch; $('lgt').appendChild(s); });
+// ícones da explosão
+const BURST = Array.from({length: 16}, (_, i) => {
+  const a = hash(i + 3) * 6.283, r = 260 + hash(i + 9) * 260;
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  el.innerHTML = '<use href="#bolt"/>';
+  el.style.color = ['#ff66d9', '#a48bff', '#ffffff', '#ff2fc8'][i % 4];
+  $('burst').appendChild(el);
+  return {el, x: 540 + Math.cos(a) * r * 1.2, y: 540 + Math.sin(a) * r, s: .6 + hash(i + 1) * .7, d: hash(i + 5) * .25};
+});
+
+/* ---------- fundo: brilhos suaves ---------- */
+const bg = $('bgc').getContext('2d');
+function blob(ctx, x, y, rx, ry, color, a) {
+  if (a <= 0.003) return;
+  ctx.save(); ctx.translate(x, y); ctx.scale(rx / 100, ry / 100);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
+  g.addColorStop(0, color.replace('A', a)); g.addColorStop(.55, color.replace('A', a * .45)); g.addColorStop(1, color.replace('A', 0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 100, 0, 6.283); ctx.fill(); ctx.restore();
+}
+const PINK = 'rgba(255,47,200,A)', PURP = 'rgba(139,108,255,A)', BLUE = 'rgba(70,80,255,A)', WARM = 'rgba(255,190,230,A)';
+
+/* ---------- efeitos (rastros de luz e faíscas) ---------- */
+const fx = $('fx').getContext('2d');
+function streaks(t) {
+  const k = prog(t, T.streak[0], T.streak[1]);
+  if (k <= 0 || k >= 1) return;
+  const cols = ['#ff2fc8', '#b49cff', '#ff9be6', '#8b6cff'];
+  fx.save(); fx.lineCap = 'round';
+  for (let i = 0; i < 4; i++) {
+    const head = eIO(clamp(k * 1.35 - i * .08)), tail = eIO(clamp(k * 1.35 - i * .08 - .3));
+    const pt = u => { const x = lerp(-.15, 1.15, u) * W, y = H * (.38 + i * .035) + Math.sin(u * 3.2 + i) * H * .06 - u * H * .05; return [x, y]; };
+    fx.beginPath();
+    for (let s = 0; s <= 40; s++) { const [x, y] = pt(lerp(tail, head, s / 40)); s ? fx.lineTo(x, y) : fx.moveTo(x, y); }
+    fx.strokeStyle = cols[i]; fx.lineWidth = (7 - i) * U; fx.shadowColor = cols[i]; fx.shadowBlur = 30 * U; fx.globalAlpha = .95;
+    fx.stroke();
+  }
+  fx.restore();
+}
+function sparks(t, t0, cx, cy, n = 22) {
+  const k = prog(t, t0, t0 + .7);
+  if (k <= 0 || k >= 1) return;
+  fx.save(); fx.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + (hash(i * 7) - .5) * 2.6, sp = (180 + hash(i) * 260) * U;
+    const r1 = eOut(k) * sp, r0 = Math.max(0, r1 - 60 * U * (1 - k));
+    fx.strokeStyle = i % 3 ? '#ff66d9' : '#ffffff'; fx.shadowColor = '#ff2fc8'; fx.shadowBlur = 16 * U;
+    fx.globalAlpha = 1 - k; fx.lineWidth = 4 * U;
+    fx.beginPath(); fx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0 + k * k * 60 * U); fx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1 + k * k * 90 * U); fx.stroke();
+  }
+  fx.restore();
+}
+// grão de filme leve
+const gr = $('grain').getContext('2d');
+const GN = Array.from({length: 4}, (_, i) => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const x = c.getContext('2d'); const d = x.createImageData(256, 256);
+  for (let p = 0; p < d.data.length; p += 4) { const v = hash(p * .37 + i * 999) * 255; d.data[p] = d.data[p + 1] = d.data[p + 2] = v; d.data[p + 3] = 255; } x.putImageData(d, 0, 0); return c; });
+
+function vis(el, a) { el.style.opacity = a; el.style.display = a > 0.002 ? 'block' : 'none'; }
+function typed(t, [a, b], s) { const n = Math.round(s.length * prog(t, a, b)); return s.slice(0, n); }
+function camImg(img, vpW, vpH, cx, cy, z) { img.style.transform = `translate(${vpW / 2 - cx * z}px,${vpH / 2 - cy * z}px) scale(${z})`; return (x, y) => [vpW / 2 + (x - cx) * z, vpH / 2 + (y - cy) * z]; }
+
+/* ---------- quadro ---------- */
+window.renderFrame = t => {
+  const cam = {x: 0, y: 0, s: 1, rot: 0, blurX: 0, blurY: 0};
+  let flash = 0;
+  bg.clearRect(0, 0, W, H); fx.clearRect(0, 0, W, H);
+  // fundo base com vinheta quente
+  const g = bg.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * .75);
+  const dark = t > T.logo[0] ? 1 - prog(t, T.logo[0], T.logo[0] + .3) * .6 : 1;
+  g.addColorStop(0, `rgba(${34 * dark | 0},${30 * dark | 0},${38 * dark | 0},1)`); g.addColorStop(1, '#09080b');
+  bg.fillStyle = g; bg.fillRect(0, 0, W, H);
+  const C = (x, y) => [W / 2 + (x - 540) * U, H / 2 + (y - 540) * U];
+
+  /* 1–3: barra de comando, flash e menu */
+  {
+    const inA = eOut(prog(t, T.barIn, T.barIn + .5));
+    const out = prog(t, T.pill - .25, T.pill + .05);
+    const fl = prog(t, T.flash[0], T.flash[0] + .12) * (1 - prog(t, T.flash[1] - .5, T.flash[1]));
+    const a = inA * (1 - out) * (1 - fl);
+    vis($('bar'), a);
+    const bar = $('bar');
+    const press = Math.max(0, 1 - Math.abs(t - T.send) / .1);
+    bar.style.transform = `translateY(${(1 - inA) * 40}px) scale(${lerp(.94, 1, inA) * (1 - press * .015)})`;
+    const caret = (Math.floor(t * 2.2) % 2 === 0 || (t > T.type1[0] && t < T.type1[1]) || (t > T.type2[0] && t < T.type2[1])) ? '<span class="caret"></span>' : '<span class="caret" style="opacity:0"></span>';
+    let txt;
+    if (t < T.type1[0]) txt = `<span class="ph">Como posso deixar seu PC mais rápido?</span>`;
+    else if (t < T.flash[0] + .2) txt = typed(t, T.type1, TXT1) + caret;
+    else txt = typed(t, T.type2, TXT2) + caret;
+    $('btxt').innerHTML = txt;
+    $('send').style.transform = `scale(${1 - press * .2})`;
+    // brilho rosa sob o menu
+    const ddA = eOut(prog(t, T.dd, T.dd + .3)) * (1 - out);
+    blob(bg, ...C(500, 860), 520 * U, 300 * U, PINK, .5 * ddA);
+    blob(bg, ...C(700, 900), 380 * U, 220 * U, BLUE, .35 * ddA);
+    blob(bg, ...C(540, 520), 600 * U, 360 * U, WARM, .06 * inA * (1 - out));
+    vis($('dd'), ddA);
+    $('dd').style.transform = `translateY(${(1 - ddA) * -20}px) scale(${lerp(.96, 1, ddA)})`;
+    const hi = t < T.hov[0] ? 0 : t < T.hov[1] ? lerp(0, 1, eOut(prog(t, T.hov[0], T.hov[0] + .15))) : lerp(1, 2, eOut(prog(t, T.hov[1], T.hov[1] + .15)));
+    $('ddh').style.top = (10 + hi * 70) + 'px';
+    $('ddck').textContent = t > T.pick ? '✓ pré-set' : 'pré-set';
+    $('chip').style.background = t > T.chip && t < T.pill ? 'rgba(255,255,255,.14)' : 'transparent';
+    // câmera: leve aproximação e depois desce até o menu
+    const kd = eIO(prog(t, T.camDD[0], T.camDD[1]));
+    if (t < T.pill) {
+      cam.s = lerp(1, 1.04, prog(t, 0, T.flash[0])) * lerp(1, 1.28, kd);
+      cam.y = lerp(0, -230, kd); cam.x = lerp(0, 40, kd);
+      cam.blurY = Math.sin(kd * Math.PI) * 6;
+    }
+    flash = Math.max(flash, fl);
+  }
+  /* 4: seletor deslizando até BOOST e zoom */
+  {
+    const inA = eOut(prog(t, T.pill, T.pill + .35));
+    const out = prog(t, T.zoom[1] - .1, T.zoom[1] + .1);
+    vis($('pill'), inA * (1 - out));
+    $('pill').style.transform = `scale(${lerp(.9, 1, inA)})`;
+    const kx = t < T.knob[0] ? 0 : t < T.knob[1] ? eBack(prog(t, T.knob[0], T.knob[0] + .28)) : 1 + eBack(prog(t, T.knob[1], T.knob[1] + .28));
+    $('knob').style.left = (12 + kx * 279) + 'px'; $('knob').style.width = '278px';
+    const boostOn = prog(t, T.knob[1] + .1, T.knob[1] + .35);
+    $('knob').style.background = `linear-gradient(90deg,rgba(255,47,200,${.25 + .75 * boostOn}),rgba(139,108,255,${.2 + .8 * boostOn}))`;
+    $('knob').style.boxShadow = `0 0 ${50 * boostOn}px rgba(255,47,200,${.7 * boostOn}),inset 0 1px 0 rgba(255,255,255,.3)`;
+    $('lbB').style.color = boostOn > .5 ? '#fff' : 'rgba(255,255,255,.8)';
+    $('lbB').style.fontWeight = boostOn > .5 ? 800 : 600;
+    blob(bg, ...C(540 + (kx - 1) * 280, 560), 420 * U, 240 * U, boostOn > 0 ? PINK : PURP, .28 * inA * (1 - out));
+    if (t >= T.pill && t < T.zoom[1] + .1) {
+      const kz = eIn(prog(t, T.zoom[0], T.zoom[1]));
+      cam.s = lerp(1, 4.2, kz); cam.x = lerp(0, -(819 - 540) * 4.2, kz); cam.y = lerp(0, -(540 - 540), kz);
+      cam.blurX = kz * 14;
+    }
+  }
+  /* 5: rastros de luz */
+  streaks(t);
+  blob(bg, W / 2, H * .42, 700 * U, 260 * U, PINK, .25 * Math.sin(Math.PI * prog(t, T.streak[0], T.streak[1])));
+  /* 6: o app de verdade */
+  {
+    const inA = eOut5(prog(t, T.win, T.win + .55));
+    const out = eIn(prog(t, T.winOut - .3, T.winOut));
+    vis($('win'), inA * (1 - out));
+    $('win').style.transform = `perspective(2200px) rotateX(${(1 - inA) * 18}deg) translateY(${(1 - inA) * 90 + out * -40}px) scale(${lerp(.86, 1, inA) * lerp(1, 1.08, out)})`;
+    $('win').style.filter = out > 0 ? `blur(${out * 12}px)` : 'none';
+    blob(bg, ...C(540, 560), 700 * U, 420 * U, PINK, .22 * inA * (1 - out));
+    blob(bg, ...C(820, 300), 360 * U, 260 * U, PURP, .25 * inA * (1 - out));
+    const vpW = 1000, vpH = 562;
+    const a1 = $('a1'), a2 = $('a2'), a3 = $('a3');
+    const kz = eIO(prog(t, T.win + .25, T.click - .15));
+    const m1 = camImg(a1, vpW, vpH, lerp(800, 470, kz), lerp(450, 380, kz), lerp(.625, 1.25, kz));
+    const j = eOut(prog(t, T.job, T.job + .2)), r = eOut(prog(t, T.res, T.res + .25));
+    a2.style.opacity = j; a3.style.opacity = r;
+    camImg(a2, vpW, vpH, 720, lerp(440, 480, prog(t, T.job, T.res)), 1.18);
+    const kr = eIO(prog(t, T.res, T.winOut - .2));
+    camImg(a3, vpW, vpH, 800, lerp(380, 430, kr), lerp(1.5, 1.15, kr));
+    // cursor
+    const ck = eIO(prog(t, T.win + .5, T.click - .06));
+    const [px, py] = m1(lerp(1300, 440, ck), lerp(820, 372, ck));
+    const press = Math.max(0, 1 - Math.abs(t - T.click) / .08);
+    $('cur').style.transform = `translate(${px - 6}px,${py + 36 - 4}px) scale(${1 - press * .18})`;
+    $('cur').style.opacity = clamp((t - T.win - .5) * 5) * (1 - j);
+    const rk = prog(t, T.click, T.click + .4), rs = 30 + rk * 260;
+    Object.assign($('rip').style, {width: rs + 'px', height: rs + 'px', left: (px - rs / 2) + 'px', top: (py + 36 - rs / 2) + 'px', opacity: rk > 0 && rk < 1 ? 1 - rk : 0});
+    if (t > T.click) flash = Math.max(flash, .18 * (1 - prog(t, T.click, T.click + .25)));
+  }
+  /* 7: palavras rolando com brilho */
+  {
+    const [a, b] = T.words;
+    const inA = prog(t, a, a + .2), out = prog(t, b - .2, b);
+    vis($('words'), inA * (1 - out));
+    const step = .49, f = (t - a) / step;
+    const ws = [...$('words').children];
+    ws.forEach((el, i) => {
+      const last = i === ws.length - 1;
+      const kin = i === 0 ? eOut(prog(t, a, a + .25)) : eOut(prog(f, i - .42, i));
+      const kout = last ? 0 : eIO(prog(f, i + .58, i + .98));
+      el.style.transform = `translateY(${(1 - kin) * 130 - kout * 130}px) scale(${last ? lerp(1, 1.12, prog(t, a + i * step, b)) : 1})`;
+      el.style.opacity = kin * (1 - kout);
+      el.style.filter = `blur(${(1 - kin) * 12 + kout * 12}px)`;
+      el.style.textShadow = last ? '0 0 40px rgba(255,47,200,.9)' : 'none';
+    });
+    const ci = clamp(Math.floor(f + .3), 0, WORDS.length - 1);
+    const col = WORDS[ci][1];
+    const rgb = col.match(/\w\w/g).map(h => parseInt(h, 16));
+    blob(bg, ...C(540, 540), 520 * U, 260 * U, `rgba(${rgb.join(',')},A)`, .55 * inA * (1 - out) * (0.85 + .15 * Math.sin(t * 9)));
+    blob(bg, ...C(540, 540), 900 * U, 420 * U, PURP, .18 * inA * (1 - out));
+  }
+  /* 8: bola cai, vira barra de progresso */
+  {
+    const [a, b] = T.ball;
+    const inA = prog(t, a, a + .1), out = prog(t, b - .2, b);
+    vis($('ballw'), inA * (1 - out));
+    const bl = $('ball'), ln = $('line'), fl = $('fill');
+    let by;
+    if (t < T.bounce) by = lerp(150, 632 - 18, eIn(prog(t, a + .05, T.bounce)));
+    else by = 632 - 18 - Math.sin(Math.PI * prog(t, T.bounce, T.bounce + .38)) * 70;
+    const merge = eOut(prog(t, T.fill[0] - .1, T.fill[0] + .1));
+    const sqh = t > T.bounce && t < T.bounce + .08 ? .7 : 1;
+    bl.style.left = (540 - 18) + 'px'; bl.style.top = by + 'px';
+    bl.style.transform = `scale(${1 / sqh}, ${sqh}) scale(${1 - merge})`;
+    const lw = lerp(220, 640, eOut(prog(t, T.bounce, T.fill[0] + .1)));
+    ln.style.left = (540 - lw / 2) + 'px'; ln.style.width = lw + 'px'; ln.style.top = '650px';
+    ln.style.opacity = clamp((t - a) * 6);
+    const fk = eIO(prog(t, T.fill[0], T.fill[1]));
+    fl.style.width = (fk * 100) + '%';
+    $('cntn').textContent = Math.round(115 * fk);
+    $('cnt').style.opacity = eOut(prog(t, T.fill[0] - .1, T.fill[0] + .2));
+    $('cnt').style.transform = `translateY(${(1 - eOut(prog(t, T.fill[0] - .1, T.fill[0] + .3))) * 30}px)`;
+    blob(bg, ...C(540, 620), 420 * U, 160 * U, PINK, .35 * fk * (1 - out));
+    sparks(t, T.spark, ...C(540 + 320, 655));
+    if (t > T.ball[0] && t < T.ball[1]) blob(bg, ...C(540, by + 18), 120 * U, 120 * U, WARM, .25 * (1 - merge));
+  }
+  /* 9: ícone e explosão */
+  {
+    const [a, b] = T.icon;
+    const inA = eBack(prog(t, a, a + .35)), out = prog(t, b - .15, b);
+    vis($('icon'), clamp((t - a) * 6) * (1 - out));
+    const press = Math.max(0, 1 - Math.abs(t - T.iconClick) / .1);
+    $('icon').style.transform = `scale(${lerp(.4, 1, inA) * (1 - press * .15) * (1 + .03 * Math.sin((t - a) * 8))})`;
+    const bk = prog(t, T.iconClick, b);
+    vis($('burst'), bk > 0 && bk < 1 ? 1 : 0);
+    BURST.forEach(p => {
+      const k = eOut(prog(t, T.iconClick + p.d * .4, b));
+      const x = lerp(540, p.x, k), y = lerp(540, p.y, k) - k * 60;
+      p.el.style.left = (x - 28) + 'px'; p.el.style.top = (y - 28) + 'px';
+      p.el.style.transform = `scale(${p.s * Math.sin(Math.PI * clamp(k * 1.1))})`;
+      p.el.style.opacity = clamp(1.3 - k);
+    });
+    const fl = prog(t, T.iconClick, T.iconClick + .08) * (1 - prog(t, T.iconClick + .15, b - .1));
+    if (fl > 0) {
+      bg.fillStyle = `rgba(40,45,140,${.55 * fl})`; bg.fillRect(0, 0, W, H);
+      blob(bg, W * .3, H * .35, 500 * U, 400 * U, BLUE, .5 * fl); blob(bg, W * .75, H * .65, 500 * U, 400 * U, PINK, .35 * fl);
+    }
+    blob(bg, ...C(540, 540), 260 * U, 260 * U, PINK, .25 * clamp((t - a) * 4) * (1 - out) * (b > t ? 1 : 0));
+  }
+  /* 10: chamada */
+  {
+    const [a, b] = T.cta;
+    const inA = eOut(prog(t, a, a + .5)), out = prog(t, b - .25, b);
+    vis($('cta'), clamp((t - a) * 5) * (1 - out));
+    const tw = 640;  // largura do texto
+    const total = 150 + 44 + tw, x0 = 540 - total / 2;
+    const slide = eOut(prog(t, a + .2, a + .75));
+    $('ctai').style.left = lerp(540 - 75, x0, slide) + 'px';
+    $('ctai').style.transform = `scale(${lerp(.5, 1, eBack(prog(t, a, a + .35)))})`;
+    const ct = $('ctat');
+    ct.style.left = (x0 + 194) + 'px';
+    ct.style.opacity = slide; ct.style.clipPath = `inset(0 ${(1 - slide) * 100}% 0 0)`;
+    ct.style.filter = `blur(${(1 - slide) * 6}px)`;
+    $('ctas').style.opacity = eOut(prog(t, a + .7, a + 1.1)) * .9;
+    // brilhos que flutuam (como na referência)
+    const w = (t - a);
+    blob(bg, ...C(380 + Math.sin(w * 1.3) * 120, 420 + Math.cos(w) * 80), 230 * U, 230 * U, PURP, .45 * inA * (1 - out));
+    blob(bg, ...C(360 + Math.cos(w * 1.1) * 140, 700 + Math.sin(w * 1.4) * 60), 200 * U, 200 * U, BLUE, .4 * inA * (1 - out));
+    blob(bg, ...C(820 + Math.sin(w * .9) * 100, 560), 260 * U, 200 * U, PINK, .3 * inA * (1 - out));
+    if (t > a && t < b) cam.s = lerp(1.06, 1, eOut(prog(t, a, b)));
+  }
+  /* 11: logo letra por letra */
+  {
+    const [a, b] = T.logo;
+    const inA = prog(t, a, a + .2);
+    vis($('logo'), inA);
+    const lk = eOut(prog(t, a + .1, a + .6));
+    $('lgi').style.transform = `scale(${lerp(.6, 1, lk)})`; $('lgi').style.opacity = lk;
+    $('lgi').style.filter = `drop-shadow(0 0 ${30 * lk}px rgba(255,47,200,.7))`;
+    [...$('lgt').children].forEach((s, i) => {
+      const k = eOut(prog(t, a + .45 + i * .12, a + .85 + i * .12));
+      s.style.opacity = k; s.style.transform = `translateY(${(1 - k) * 26}px)`; s.style.filter = `blur(${(1 - k) * 8}px)`;
+    });
+    $('lgs').style.opacity = eOut(prog(t, a + 1.1, a + 1.6));
+    $('lgs').style.letterSpacing = lerp(24, 12, eOut(prog(t, a + 1.1, a + 1.9))) + 'px';
+    sparks(t, a + .5, ...C(470, 640), 14);
+    blob(bg, ...C(540, 560), 400 * U, 200 * U, PINK, .12 * lk);
+    const end = prog(t, b - .45, b);
+    stage.style.opacity = 1 - end;
+  }
+
+  // câmera + "motion blur" direcional
+  sq.style.left = SQX + 'px'; sq.style.top = SQY + 'px';
+  sq.style.transform = `translate(${cam.x * U}px,${cam.y * U}px) scale(${cam.s * U})`;
+  $('mbg').setAttribute('stdDeviation', `${cam.blurX.toFixed(2)} ${cam.blurY.toFixed(2)}`);
+  sq.style.filter = (cam.blurX > .3 || cam.blurY > .3) ? 'url(#mb)' : 'none';
+  $('flash').style.opacity = flash;
+  // grão
+  gr.clearRect(0, 0, W, H);
+  const pat = gr.createPattern(GN[Math.floor(t * 24) % 4], 'repeat');
+  gr.fillStyle = pat; gr.fillRect(0, 0, W, H);
+};
+window.ready = async () => {
+  await Promise.all(['600 40px "Inter Display"', '400 40px "Inter Display"', '700 40px "Inter Display"', '500 40px "Inter Display"', '800 40px "Inter Display"', '400 15px Inter'].map(f => document.fonts.load(f)));
+  await document.fonts.ready;
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {})));
+  return {W, H, D: window.DURATION};
+};
+</script>
+</body></html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR Laptop</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#stage{position:absolute;inset:0;overflow:hidden;background:#050307}
+#world{position:absolute;inset:-60px;transform-origin:50% 50%}
+#wall{position:absolute;left:0;right:0;top:0;height:760px;background:radial-gradient(ellipse at 60% 30%,#1c0c2a 0%,#0a0510 60%,#050307 100%)}
+.neon{position:absolute;border-radius:8px}
+#screenWrap{position:absolute;left:600px;top:990px;width:0;height:0}
+#bezel{position:absolute;left:-1000px;top:-640px;width:2000px;height:1280px;border-radius:38px;background:#050506;padding:40px;
+  box-shadow:0 0 0 3px #1a1a1e,0 30px 80px rgba(0,0,0,.9)}
+#screen{position:relative;width:1920px;height:1200px;overflow:hidden;border-radius:6px;background:#000}
+#screen img{position:absolute;inset:0;width:100%;height:100%;filter:contrast(.86) brightness(1.08) saturate(1.08)}
+#glare{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,0) 35%,rgba(255,255,255,0) 70%,rgba(255,255,255,.035) 100%);mix-blend-mode:screen}
+#lines{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0 2px,transparent 2px 5px);mix-blend-mode:multiply}
+#kbWrap{position:absolute;left:600px;top:1690px;width:0;height:0}
+#kb{position:absolute;left:-1150px;top:-420px;width:2300px;height:840px;background:#0b0a0d;border-radius:30px;padding:40px 50px}
+.key{position:absolute;border-radius:12px;background:linear-gradient(180deg,#1b1a1f,#0f0e12);box-shadow:inset 0 2px 0 rgba(255,255,255,.07),0 4px 0 #050406;
+  font:500 36px Inter,sans-serif;color:rgba(235,230,245,.78);display:flex;align-items:flex-start;justify-content:flex-start;padding:12px 16px}
+#kbLight{position:absolute;inset:0;border-radius:30px;pointer-events:none}
+#cap{position:absolute;left:0;right:0;top:300px;text-align:center;z-index:5}
+#cap span{display:inline-block;background:#fff;color:#111;font:600 50px/1.18 Inter,sans-serif;padding:8px 22px;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+#cap span+br+span{margin-top:-6px}
+#grain{position:absolute;inset:0;opacity:.09;mix-blend-mode:overlay;pointer-events:none}
+#vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,transparent 45%,rgba(0,0,0,.6) 100%)}
+</style></head>
+<body><div id="stage">
+<div id="world">
+  <div id="wall"></div>
+  <div id="neons"></div>
+  <div id="kbWrap"><div id="kb"></div></div>
+  <div id="screenWrap"><div id="bezel"><div id="screen"><img id="scr"><div id="lines"></div><div id="glare"></div></div></div></div>
+</div>
+<div id="vig"></div>
+<canvas id="grain" width="540" height="960" style="width:1080px;height:1920px"></canvas>
+<div id="cap"><span>Seu PC no máximo</span><br><span>com AZOR 3.2</span></div>
+</div>
+<script src="lap_meta.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+const sm = (seed, t, f) => { // ruído suave 1D
+  const x = t * f, i = Math.floor(x), k = x - i, u = k * k * (3 - 2 * k);
+  return (hash(i + seed * 101) * (1 - u) + hash(i + 1 + seed * 101) * u) * 2 - 1;
+};
+const Q = new URLSearchParams(location.search);
+const FRAMES = Q.get('frames') || 'lap_frames', FPS = Number(Q.get('fps') || 30);
+const LUMA = window.LUMA || [];
+
+// Neons na parede, em perspectiva (como prateleiras com fita de LED)
+const NEON = [
+  [-40, 70, 1180, 16, 'linear-gradient(90deg,#3a2cff,#7a3cff 30%,#e23cff 70%,#ff4fe8)', -3],
+  [120, 250, 1000, 14, 'linear-gradient(90deg,#4b35ff,#b23cff 50%,#ff3ce0)', -3],
+  [470, 400, 700, 12, 'linear-gradient(90deg,#c83cff,#ff3ce0)', -3],
+  [-20, 520, 420, 12, 'linear-gradient(90deg,#4030ff,#9a3cff)', -3],
+  [180, 40, 14, 230, 'linear-gradient(180deg,#ff4fe8,#9a3cff)', 0],
+  [520, 220, 14, 200, 'linear-gradient(180deg,#e23cff,#7a3cff)', 0],
+  [60, 520, 12, 160, 'linear-gradient(180deg,#ff4fe8,#6a3cff)', 0],
+];
+NEON.forEach(([x, y, w, h, g, r]) => {
+  const d = document.createElement('div'); d.className = 'neon';
+  Object.assign(d.style, {left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', background: g, transform: `rotate(${r}deg)`,
+    boxShadow: '0 0 18px rgba(214,70,255,.9),0 0 60px rgba(160,60,255,.65),0 0 140px rgba(120,50,255,.45)'});
+  $('neons').appendChild(d);
+  const s = document.createElement('div'); s.className = 'neon';   // "prateleira" escura sob o LED
+  Object.assign(s.style, {left: x + 'px', top: (y + h) + 'px', width: w + 'px', height: (h > 50 ? 0 : 26) + 'px', background: 'linear-gradient(180deg,#120a1c,#070409)', transform: `rotate(${r}deg)`});
+  $('neons').appendChild(s);
+});
+// Teclado
+const ROWS = ['1234567890', 'QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'];
+const KW = 170, KH = 150, GAP = 22;
+ROWS.forEach((row, r) => {
+  const x0 = 60 + r * 70;
+  [...row].forEach((c, i) => {
+    const k = document.createElement('div'); k.className = 'key'; k.textContent = c;
+    Object.assign(k.style, {left: (x0 + i * (KW + GAP)) + 'px', top: (40 + r * (KH + GAP)) + 'px', width: KW + 'px', height: KH + 'px'});
+    $('kb').appendChild(k);
+  });
+});
+const kl = document.createElement('div'); kl.id = 'kbLight'; $('kb').appendChild(kl);
+
+const gr = $('grain').getContext('2d');
+const img = $('scr');
+window.renderFrame = async t => {
+  const fi = Math.min(Math.round(t * FPS), (window.NFR || 1) - 1);
+  const src = `${FRAMES}/f${String(fi).padStart(5, '0')}.jpg`;
+  if (!img.src.endsWith(src)) { img.src = src; await img.decode().catch(() => {}); }
+  const lum = LUMA[fi] != null ? LUMA[fi] / 255 : .15;
+  // câmera na mão: deriva lenta + tremidinha
+  const dx = sm(1, t, .35) * 16 + sm(2, t, 2.2) * 2.5, dy = sm(3, t, .3) * 14 + sm(4, t, 2.6) * 2.5;
+  const rot = sm(5, t, .25) * .9 + sm(6, t, 1.8) * .15;
+  const zoom = 1.0 + sm(7, t, .12) * .025 + .02;
+  $('world').style.transform = `translate(${dx}px,${dy}px) rotate(${rot}deg) scale(${zoom})`;
+  // tela em perspectiva
+  $('screenWrap').style.transform = `perspective(2600px) rotateX(${13 + sm(8, t, .2) * 1.5}deg) rotateY(${-9 + sm(9, t, .17) * 2}deg) rotateZ(-2.2deg) scale(.62)`;
+  $('kbWrap').style.transform = `perspective(1500px) rotateX(52deg) rotateZ(-2.2deg) scale(.74)`;
+  // luz da tela no teclado e exposição automática do celular
+  $('kbLight').style.background = `radial-gradient(ellipse at 50% 0%,rgba(230,215,255,${.08 + lum * .45}) 0%,rgba(0,0,0,0) 70%)`;
+  const expo = 1 - Math.max(0, lum - .35) * .55;
+  $('neons').style.filter = `brightness(${expo})`;
+  $('wall').style.filter = `brightness(${expo})`;
+  $('bezel').style.boxShadow = `0 0 0 3px #1a1a1e,0 30px 80px rgba(0,0,0,.9),0 0 ${80 + lum * 200}px rgba(220,200,255,${lum * .35})`;
+  // grão de câmera
+  const id = gr.createImageData(540, 960);
+  const seed = Math.floor(t * 30) * 7919;
+  for (let p = 0; p < id.data.length; p += 4) { const v = hash(p * .0137 + seed) * 255; id.data[p] = id.data[p + 1] = id.data[p + 2] = v; id.data[p + 3] = 255; }
+  gr.putImageData(id, 0, 0);
+};
+window.ready = async () => {
+  await document.fonts.ready;
+  return {D: window.DURATION || 23.2};
+};
+</script>
+</body></html>
