@@ -52,7 +52,12 @@ body{font-family:"Inter Display","Inter",sans-serif;color:#fff;-webkit-font-smoo
 #cta{left:0;top:465px;width:1080px;height:150px}
 #cta .circ{position:absolute;left:0;top:0}
 #cta .t{position:absolute;top:0;height:150px;display:flex;align-items:center;font-size:64px;font-weight:700;letter-spacing:1px;white-space:nowrap}
-#cta small{position:absolute;left:0;right:0;top:200px;text-align:center;font-size:32px;color:rgba(255,255,255,.55);font-weight:500;letter-spacing:4px}
+#ctas{position:absolute;left:0;right:0;top:196px;display:flex;justify-content:center;gap:22px}
+#ctas span{display:flex;align-items:center;gap:14px;font-size:36px;font-weight:600;color:#fff;padding:16px 30px 16px 24px;border-radius:44px}
+#ctas svg{width:38px;height:38px;color:#fff}
+#ctab{position:absolute;left:0;right:0;top:310px;text-align:center;font-size:26px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:6px}
+#lgh{margin-top:46px;display:flex;justify-content:center;gap:34px;font-size:30px;font-weight:600;color:rgba(255,255,255,.82)}
+#lgh span{display:flex;align-items:center;gap:10px}#lgh svg{width:32px;height:32px;color:#fff}
 #logo{left:0;top:440px;width:1080px;text-align:center}
 #logo img{width:120px;height:120px;border-radius:30px}
 #logo .lt{margin-top:28px;font-size:84px;font-weight:600;letter-spacing:14px;padding-left:14px}
@@ -65,6 +70,8 @@ body{font-family:"Inter Display","Inter",sans-serif;color:#fff;-webkit-font-smoo
 <body>
 <svg width="0" height="0" style="position:absolute"><defs>
   <filter id="mb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur id="mbg" stdDeviation="0 0"/></filter>
+  <symbol id="tt" viewBox="0 0 24 24"><path fill="currentColor" d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.6 2.6 0 0 1-2.6-2.6 2.6 2.6 0 0 1 3.4-2.47V9.67a5.73 5.73 0 0 0-.81-.06 5.69 5.69 0 0 0-5.69 5.69A5.69 5.69 0 0 0 9.85 21a5.69 5.69 0 0 0 5.69-5.69V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.3 4.3 0 0 1-3.24-1.48z"/></symbol>
+  <symbol id="ig" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5.2" fill="none" stroke="currentColor" stroke-width="2.1"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2.1"/><circle cx="17.2" cy="6.8" r="1.25" fill="currentColor"/></symbol>
   <symbol id="bolt" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z" fill="currentColor"/></symbol>
 </defs></svg>
 <div id="stage">
@@ -104,9 +111,9 @@ body{font-family:"Inter Display","Inter",sans-serif;color:#fff;-webkit-font-smoo
   <div class="s" id="burst"></div>
   <div class="s circ" id="icon"><svg style="color:#fff"><use href="#bolt"/></svg></div>
   <!-- CTA -->
-  <div class="s" id="cta"><div class="circ" id="ctai"><svg style="color:#fff"><use href="#bolt"/></svg></div><div class="t" id="ctat">OTIMIZE COM AZOR</div><small id="ctas">LINK NA BIO</small></div>
+  <div class="s" id="cta"><div class="circ" id="ctai"><svg style="color:#fff"><use href="#bolt"/></svg></div><div class="t" id="ctat">OTIMIZE COM AZOR</div><div id="ctas"><span class="glass"><svg><use href="#tt"/></svg>@azorwrld</span><span class="glass"><svg><use href="#ig"/></svg>@azortweaks</span></div><div id="ctab">LINK NA BIO</div></div>
   <!-- logo -->
-  <div class="s" id="logo"><img id="lgi" src="web/assets/Azor_icon.png"><div class="lt" id="lgt"></div><small id="lgs">OPTIMIZATION</small></div>
+  <div class="s" id="logo"><img id="lgi" src="web/assets/Azor_icon.png"><div class="lt" id="lgt"></div><small id="lgs">OPTIMIZATION</small><div id="lgh"><span><svg><use href="#tt"/></svg>@azorwrld</span><span><svg><use href="#ig"/></svg>@azortweaks</span></div></div>
 </div>
 <canvas id="fx"></canvas>
 <div id="flash"></div>
@@ -429,7 +436,9 @@ window.renderFrame = t => {
     ct.style.left = (x0 + 194) + 'px';
     ct.style.opacity = slide; ct.style.clipPath = `inset(0 ${(1 - slide) * 100}% 0 0)`;
     ct.style.filter = `blur(${(1 - slide) * 6}px)`;
-    $('ctas').style.opacity = eOut(prog(t, a + .7, a + 1.1)) * .9;
+    const sk = eOut(prog(t, a + .45, a + .85));
+    $('ctas').style.opacity = sk; $('ctas').style.transform = `translateY(${(1 - sk) * 24}px)`;
+    $('ctab').style.opacity = eOut(prog(t, a + .8, a + 1.2));
     // brilhos que flutuam (como na referência)
     const w = (t - a);
     blob(bg, ...C(380 + Math.sin(w * 1.3) * 120, 420 + Math.cos(w) * 80), 230 * U, 230 * U, PURP, .45 * inA * (1 - out));
@@ -450,6 +459,8 @@ window.renderFrame = t => {
       s.style.opacity = k; s.style.transform = `translateY(${(1 - k) * 26}px)`; s.style.filter = `blur(${(1 - k) * 8}px)`;
     });
     $('lgs').style.opacity = eOut(prog(t, a + 1.1, a + 1.6));
+    const hk = eOut(prog(t, a + 1.3, a + 1.8));
+    $('lgh').style.opacity = hk; $('lgh').style.transform = `translateY(${(1 - hk) * 16}px)`;
     $('lgs').style.letterSpacing = lerp(24, 12, eOut(prog(t, a + 1.1, a + 1.9))) + 'px';
     sparks(t, a + .5, ...C(470, 640), 14);
     blob(bg, ...C(540, 560), 400 * U, 200 * U, PINK, .12 * lk);

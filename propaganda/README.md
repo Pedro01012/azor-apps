@@ -7,7 +7,7 @@ Vídeos para TikTok, Reels e Shorts (9:16, 1080×1920) e YouTube (16:9, 1920×10
 | Arquivo | Estilo | Duração |
 |---|---|---|
 | `AZOR_v2_motion_design.mp4` | Motion design minimalista no estilo do vídeo de referência: barra de vidro digitando, menu, seletor deslizando até o BOOST, app real, palavras com brilho, logo letra por letra. 60 fps. | 23 s |
-| `AZOR_v2_15s.mp4` | Corte curto da v2 para anúncio pago: gancho, BOOST no app, palavras, chamada e logo. 60 fps. | 15,5 s |
+| `AZOR_v2_15s.mp4` | Corte curto da v2 para anúncio pago: gancho, BOOST no app, palavras, chamada e logo. 60 fps. | 15,7 s |
 | `AZOR_v2_horizontal_16x9.mp4` | A v2 em 1920×1080 para YouTube e site, com o conteúdo 1,3× maior. 60 fps. | 23 s |
 | `AZOR_v3_notebook_filmado.mp4` | A mesma animação "filmada" na tela de um notebook num quarto escuro com neon roxo, com câmera na mão e legenda branca no topo, igual à referência. 30 fps. | 23 s |
 | `AZOR_v1_estilo_agressivo.mp4` | Alternativa de anúncio direto: gancho "SEU PC TÁ TRAVANDO?", problemas reais do Windows, BOOST, nota 41 → 97 e "LINK NA BIO". 60 fps. | 32 s |
@@ -35,8 +35,8 @@ ffmpeg -i v2_video.mp4 -i music2.wav -c:v copy -c:a aac -b:a 256k -af loudnorm=I
 Z=1.3 node render2.js comp2.html 1920 1080 60 v2h_video.mp4
 
 # v2 de 15 s: CUT lista os trechos (início_fim, em segundos) da linha do tempo completa
-CUT=0.45_2.95,5.62_14.3,17.75_19.0,20.15_23.2 node render2.js comp2.html 1080 1920 60 v2c_video.mp4
-python3 music2.py v2c_video.sfx.json music2c.wav 15.48   # a trilha é refeita no tamanho do corte
+CUT=0.45_2.95,5.62_14.2,17.75_19.3,20.15_23.2 node render2.js comp2.html 1080 1920 60 v2c_video.mp4
+python3 music2.py v2c_video.sfx.json music2c.wav 15.68   # a trilha é refeita no tamanho do corte
 
 # v3 — notebook filmado (usa a mesma animação em 1920×1200)
 node render2.js comp2.html 1920 1200 30 lap_frames
@@ -50,6 +50,7 @@ node render.js 60 v1_video.mp4 && python3 music.py music.wav
 Onde mudar o quê:
 
 - **Textos digitados, palavras e linha do tempo:** em `comp2.html`, as constantes `TXT1`, `TXT2`, `WORDS` e `T`.
-- **Chamada final (CTA):** em `comp2.html`, `#ctat` ("OTIMIZE COM AZOR") e `#ctas` ("LINK NA BIO").
+- **Chamada final (CTA):** em `comp2.html`, `#ctat` ("OTIMIZE COM AZOR"), `#ctas` (TikTok @azorwrld e Instagram @azortweaks) e `#ctab` ("LINK NA BIO"). Os @ também aparecem na tela do logo (`#lgh`).
+- **@ na v1:** em `comp.html`, `#s9`.
 - **Legenda branca do vídeo no notebook:** em `laptop.html`, `#cap`.
 - **Textos da v1:** direto no HTML de `comp.html`.
