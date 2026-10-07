@@ -9,9 +9,9 @@ const path = require('path');
   const browser = await chromium.launch({args: ['--allow-file-access-from-files']});
   const page = await browser.newPage({viewport: {width: W, height: H}});
   page.on('pageerror', e => console.log('ERR', e.message));
-  await page.goto('file://' + path.join(__dirname, comp) + `?w=${W}&h=${H}`);
+  await page.goto('file://' + path.join(__dirname, comp) + `?w=${W}&h=${H}` + (process.env.CUT ? `&cut=${process.env.CUT}` : '') + (process.env.Z ? `&z=${process.env.Z}` : ''));
   const info = await page.evaluate(() => window.ready());
-  fs.writeFileSync(path.join(__dirname, 'sfx.json'), JSON.stringify(await page.evaluate(() => window.SFX || [])));
+  fs.writeFileSync(out.endsWith('.mp4') ? out.replace(/\.mp4$/, '.sfx.json') : path.join(__dirname, 'sfx.json'), JSON.stringify(await page.evaluate(() => window.SFX || [])));
   const D = info.D || info;
   if (stills) {
     fs.mkdirSync(out, {recursive: true});

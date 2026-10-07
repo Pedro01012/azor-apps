@@ -3,4 +3,5 @@ lap_frames/
 luma*.txt
 *.wav
 v*_video.mp4
+*.sfx.json
 sfx.json

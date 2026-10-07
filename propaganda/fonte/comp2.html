@@ -115,7 +115,7 @@ body{font-family:"Inter Display","Inter",sans-serif;color:#fff;-webkit-font-smoo
 <script>
 const Q = new URLSearchParams(location.search);
 const W = Number(Q.get('w') || 1080), H = Number(Q.get('h') || 1920);
-const U = Math.min(W, H) / 1080;
+const U = Math.min(W, H) / 1080 * Number(Q.get('z') || 1);  // z: escala extra (ex.: 1.3 no 16:9)
 const $ = id => document.getElementById(id);
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, k) => a + (b - a) * k;
@@ -468,6 +468,19 @@ window.renderFrame = t => {
   const pat = gr.createPattern(GN[Math.floor(t * 24) % 4], 'repeat');
   gr.fillStyle = pat; gr.fillRect(0, 0, W, H);
 };
+// Versão editada: ?cut=a_b,c_d,... junta só esses trechos da linha do tempo (o som acompanha).
+if (Q.get('cut')) {
+  const segs = Q.get('cut').split(',').map(x => x.split('_').map(Number));
+  const full = window.renderFrame;
+  let acc = 0;
+  const map = segs.map(([a, b]) => { const m = {a, b, o: acc}; acc += b - a; return m; });
+  window.DURATION = acc;
+  window.renderFrame = t => {
+    const m = map.find(m => t < m.o + (m.b - m.a)) || map[map.length - 1];
+    return full(m.a + Math.min(t - m.o, m.b - m.a - 1e-4));
+  };
+  window.SFX = SFX.flatMap(e => { const m = map.find(m => e.t >= m.a && e.t < m.b); return m ? [{...e, t: +(m.o + e.t - m.a).toFixed(3)}] : []; });
+}
 window.ready = async () => {
   await Promise.all(['600 40px "Inter Display"', '400 40px "Inter Display"', '700 40px "Inter Display"', '500 40px "Inter Display"', '800 40px "Inter Display"', '400 15px Inter'].map(f => document.fonts.load(f)));
   await document.fonts.ready;
