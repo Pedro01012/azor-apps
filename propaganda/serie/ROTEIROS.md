@@ -4,12 +4,12 @@ São 6 vídeos verticais (9:16, 1080×1920, 30 fps), cada um num formato viral d
 
 | # | Arquivo | Formato | Público | Duração |
 |---|---|---|---|---|
-| 1 | `s1_antes_de_comprar.mp4` | Aviso "assista antes de comprar" + economia | Adulto e pais que pagam o PC | 22,7 s |
-| 2 | `s2_pov_ranked.mp4` | POV com gamer animado + drop de phonk | Jovem competitivo | 16,6 s |
-| 3 | `s3_chat_squad.mp4` | História em conversa de grupo | Jovem | ~22 s |
-| 4 | `s4_3_coisas.mp4` | "3 coisas que ninguém te conta" (educativo) | Todos | 25,4 s |
-| 5 | `s5_limpeza_asmr.mp4` | ASMR satisfatório | Todos | 16 s |
-| 6 | `s6_split.mp4` | Tela dividida antes e depois + pergunta | Jovem | 14,6 s |
+| 1 | `videos/s1_antes_de_comprar.mp4` | Aviso "assista antes de comprar" + economia | Adulto e pais que pagam o PC | 22,7 s |
+| 2 | `videos/s2_pov_ranked.mp4` | POV com gamer animado + drop de phonk | Jovem competitivo | 16,6 s |
+| 3 | `videos/s3_chat_squad.mp4` | História em conversa de grupo | Jovem | 21 s |
+| 4 | `videos/s4_3_coisas.mp4` | "3 coisas que ninguém te conta" (educativo) | Todos | 25,4 s |
+| 5 | `videos/s5_limpeza_asmr.mp4` | ASMR satisfatório | Todos | 16 s |
+| 6 | `videos/s6_split.mp4` | Tela dividida antes e depois + pergunta | Jovem | 14,6 s |
 
 **Por que esses formatos.** Em 2026, o que mais funciona no TikTok tem cara de post orgânico, e não de comercial. Também ajuda muito:
 - deixar a mensagem clara nos 3 primeiros segundos, com gancho escrito na tela;
