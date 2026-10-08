@@ -1,0 +1,138 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Limpeza ASMR</title>
+<style>
+#cv{position:absolute;inset:0}
+#cnt{position:absolute;left:90px;right:90px;top:1450px;height:150px;border-radius:30px;background:rgba(255,255,255,.06);border:2px solid rgba(255,47,200,.45);
+  display:flex;align-items:center;justify-content:space-around;box-shadow:0 0 40px rgba(255,47,200,.2)}
+#cnt div{text-align:center}
+#cnt b{display:block;font:900 64px Orb;color:#fff;text-shadow:0 0 20px rgba(255,47,200,.8)}
+#cnt span{font:800 24px Mont;color:#ff66d9;letter-spacing:3px}
+</style></head><body><div id="stage">
+<canvas id="cv" width="1080" height="1920"></canvas>
+<div id="cnt"><div><b id="nf">0</b><span>ARQUIVOS INÚTEIS</span></div><div><b id="gb">0,0 GB</b><span>LIBERADOS</span></div></div>
+</div>
+<script src="lib.js"></script>
+<script>
+AZ.init({dram: 'valores ilustrativos'});
+const T = {sweep0: 2.0, sweep1: 9.0, clean: 9.4, end: 13.0};
+window.DURATION = 16.0;
+const caps = AZ.caps([
+  [0.1, 1.9, 'liga o som 🔊'],
+  [1.9, 4.6, 'isso é o *azor* limpando o lixo do teu pc'],
+  [4.6, 7.4, 'temporário, cache velho, app que ninguém usa…'],
+  [7.4, 9.3, 'tudo pro ralo 🌀'],
+  [9.3, 12.9, '_pc_ _leve_ de novo ✨'],
+], 150, {size: 64});
+const end = AZ.endCard(T.end, 'Teu PC<br><span style="color:#3dff9a">respirando de novo.</span>');
+music(0, 'ambient', T.end + 3);
+const NAMES = ['temp_8812.tmp', 'cache_web', 'log_2023.old', 'update_bkp', 'driver_old', 'thumbs.db', 'crash_dump', 'Notícias', 'Clima', 'Jogo pré-inst.', 'Assistente', 'Atualizador',
+  'setup_tmp', 'cache_shader', 'relatorio.etl', 'backup_win', 'logs_rede', 'install.tmp', 'Dicas', 'Promoções', 'Barra extra', 'Sincronizador', 'Widget', 'temp_0042',
+  'cache_loja', 'kb_old.cab', 'dump_mem', 'prefetch_old', 'Lixeira cheia', 'Jogo demo', 'Teste grátis', 'Toolbar', 'cache_icones', 'log_erros', 'temp_9931', 'sobras_driver'];
+const COLS = 6, ROWS = 6, GX = 90, GY = 400, CW = 150, CH = 150;
+const JUNK = NAMES.map((n, i) => {
+  const c = i % COLS, r = Math.floor(i / COLS);
+  const x = GX + c * CW + CW / 2, y = GY + r * CH + 58;
+  const app = /^[A-ZÁÉ]/.test(n);
+  return {n, x, y, app, hue: (i * 47) % 360};
+});
+// cada ícone some quando o laser passa por ele
+const laserY = t => lerp(GY - 20, GY + ROWS * CH + 10, eIO(prog(t, T.sweep0, T.sweep1)));
+JUNK.forEach(ic => {
+  let lo = T.sweep0, hi = T.sweep1;
+  for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; if (laserY(m) < ic.y - 10) lo = m; else hi = m; }
+  ic.td = hi + (hash(ic.x) - .5) * .05;
+  sfx(ic.td, 'crunch', .55 + hash(ic.y + ic.x) * .4);
+});
+sfx(T.sweep0 - .1, 'vacuum', .7, {d: 7.5}); sfx(T.sweep0, 'laser', .8, {d: T.sweep1 - T.sweep0 + .2});
+sfx(T.clean, 'success', .9); sfx(T.clean, 'sparkle', .9); sfx(T.clean + .1, 'boop', .5);
+const VX = 540, VY = 1300;
+const cv = $('cv').getContext('2d');
+function fileIcon(x, y, s, ic, a) {
+  cv.save(); cv.globalAlpha = a; cv.translate(x, y); cv.scale(s, s);
+  if (ic.app) {
+    cv.fillStyle = `hsl(${ic.hue},65%,55%)`; cv.beginPath(); cv.roundRect(-38, -38, 76, 76, 18); cv.fill();
+    cv.fillStyle = 'rgba(255,255,255,.85)'; cv.beginPath(); cv.arc(0, -4, 16, 0, 6.283); cv.fill();
+  } else {
+    cv.fillStyle = '#e9e6ef'; cv.beginPath(); cv.moveTo(-30, -40); cv.lineTo(14, -40); cv.lineTo(32, -22); cv.lineTo(32, 40); cv.lineTo(-30, 40); cv.closePath(); cv.fill();
+    cv.fillStyle = '#b9b4c4'; cv.beginPath(); cv.moveTo(14, -40); cv.lineTo(14, -22); cv.lineTo(32, -22); cv.closePath(); cv.fill();
+    cv.fillStyle = `hsl(${ic.hue},70%,50%)`; cv.fillRect(-30, 8, 62, 18);
+  }
+  cv.fillStyle = 'rgba(255,255,255,.75)'; cv.font = '600 17px Inter'; cv.textAlign = 'center'; cv.fillText(ic.n, 0, 66);
+  cv.restore();
+}
+window.renderFrame = t => {
+  let flash = 0, shake = 0;
+  const done = t >= T.clean;
+  const g = cv.createRadialGradient(540, 900, 50, 540, 960, 1300);
+  g.addColorStop(0, done ? '#0f2a20' : '#1a0d24'); g.addColorStop(1, '#060508');
+  cv.fillStyle = g; cv.fillRect(0, 0, W, H);
+  // janela
+  cv.fillStyle = 'rgba(255,255,255,.05)'; cv.strokeStyle = 'rgba(255,255,255,.12)'; cv.lineWidth = 2;
+  cv.beginPath(); cv.roundRect(60, 300, 960, 1000, 30); cv.fill(); cv.stroke();
+  cv.fillStyle = 'rgba(255,255,255,.08)'; cv.beginPath(); cv.roundRect(60, 300, 960, 80, [30, 30, 0, 0]); cv.fill();
+  cv.fillStyle = '#fff'; cv.font = '800 32px Inter'; cv.textAlign = 'left'; cv.fillText('Limpeza · AZOR', 100, 352);
+  // ícones
+  JUNK.forEach(ic => {
+    if (t < ic.td) { const wob = t > ic.td - .25 ? (hash(t * 99 + ic.x) - .5) * 6 : 0; fileIcon(ic.x + wob, ic.y, 1, ic, 1); }
+    else if (t < ic.td + .12) { const k = prog(t, ic.td, ic.td + .12); fileIcon(ic.x, ic.y, 1 + k * .3, ic, 1 - k);
+      cv.fillStyle = `rgba(255,190,240,${1 - k})`; cv.beginPath(); cv.arc(ic.x, ic.y, 40 + k * 30, 0, 6.283); cv.fill(); }
+  });
+  // redemoinho
+  const vort = t > T.sweep0 - .3 && t < T.clean + .6 ? clamp((t - T.sweep0 + .3) * 3) * (1 - prog(t, T.clean, T.clean + .6)) : 0;
+  if (vort > 0) {
+    AZ.blob(cv, VX, VY, 220, 120, '255,47,200', .5 * vort);
+    for (let r = 0; r < 4; r++) {
+      cv.strokeStyle = `rgba(255,${100 + r * 30},230,${.6 * vort})`; cv.lineWidth = 6 - r;
+      cv.beginPath(); cv.ellipse(VX, VY, 120 - r * 24, 40 - r * 8, 0, t * (3 + r) , t * (3 + r) + 4.5); cv.stroke();
+    }
+    cv.fillStyle = `rgba(0,0,0,${.9 * vort})`; cv.beginPath(); cv.ellipse(VX, VY, 34, 12, 0, 0, 6.283); cv.fill();
+  }
+  // partículas indo para o ralo
+  JUNK.forEach((ic, i) => {
+    if (t < ic.td || t > ic.td + 1.3) return;
+    for (let j = 0; j < 14; j++) {
+      const p = eIn(prog(t, ic.td + j * .015, ic.td + 1.1 + j * .015));
+      if (p <= 0 || p >= 1) continue;
+      const sx = ic.x + (hash(i * 31 + j) - .5) * 80, sy = ic.y + (hash(i * 17 + j * 3) - .5) * 80;
+      const ang = (1 - p) * 5 + j;
+      const rad = (1 - p) * 90;
+      const x = lerp(sx, VX, p) + Math.cos(ang) * rad * p, y = lerp(sy, VY, p) + Math.sin(ang) * rad * .4 * p;
+      cv.fillStyle = j % 3 ? `hsla(${ic.hue},80%,70%,${1 - p * .5})` : `rgba(255,255,255,${1 - p})`;
+      const sz = (6 + hash(j + i) * 6) * (1 - p * .6);
+      cv.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+    }
+  });
+  // laser
+  if (between(t, T.sweep0, T.sweep1 + .1)) {
+    const y = laserY(t);
+    const lg = cv.createLinearGradient(0, y - 60, 0, y + 6);
+    lg.addColorStop(0, 'rgba(255,47,200,0)'); lg.addColorStop(1, 'rgba(255,47,200,.35)');
+    cv.fillStyle = lg; cv.fillRect(70, y - 60, 940, 66);
+    cv.fillStyle = '#ffc6f1'; cv.shadowColor = '#ff2fc8'; cv.shadowBlur = 30; cv.fillRect(70, y - 3, 940, 6); cv.shadowBlur = 0;
+  }
+  // limpo
+  if (done) {
+    const k = eBack(prog(t, T.clean, T.clean + .45));
+    cv.save(); cv.translate(540, 800); cv.scale(k, k);
+    AZ.blob(cv, 0, 0, 380, 380, '61,255,154', .35);
+    cv.fillStyle = '#22d07a'; cv.beginPath(); cv.arc(0, 0, 150, 0, 6.283); cv.fill();
+    cv.strokeStyle = '#fff'; cv.lineWidth = 26; cv.lineCap = 'round'; cv.lineJoin = 'round';
+    cv.beginPath(); cv.moveTo(-70, 0); cv.lineTo(-20, 52); cv.lineTo(78, -50); cv.stroke();
+    cv.restore();
+    cv.globalAlpha = clamp((t - T.clean - .3) * 4);
+    cv.fillStyle = '#fff'; cv.font = '400 110px Anton'; cv.textAlign = 'center'; cv.fillText('PC LEVE', 540, 1110);
+    cv.globalAlpha = 1; cv.textAlign = 'left';
+    for (let i = 0; i < 24; i++) { const a = hash(i) * 6.283, r = (t - T.clean) * (200 + hash(i + 3) * 300);
+      cv.fillStyle = `rgba(160,255,210,${clamp(1 - (t - T.clean) / 1.5)})`; cv.beginPath(); cv.arc(540 + Math.cos(a) * r, 800 + Math.sin(a) * r, 5, 0, 6.283); cv.fill(); }
+  }
+  // contadores
+  const removed = JUNK.filter(ic => t >= ic.td).length / JUNK.length;
+  $('nf').textContent = Math.round(2481 * removed).toLocaleString('pt-BR');
+  $('gb').textContent = (6.7 * removed).toFixed(1).replace('.', ',') + ' GB';
+  const ck = eOut(prog(t, T.sweep0 - .3, T.sweep0));
+  show($('cnt'), ck); $('cnt').style.transform = `translateY(${(1 - ck) * 60}px) scale(${1 + Math.max(0, 1 - Math.abs(t - T.clean) / .15) * .06})`;
+  if (between(t, T.clean, T.clean + .25)) flash = .35 * (1 - prog(t, T.clean, T.clean + .25));
+  caps(t);
+  end(t);
+  AZ.post(t, flash, shake);
+};
+</script></body></html>

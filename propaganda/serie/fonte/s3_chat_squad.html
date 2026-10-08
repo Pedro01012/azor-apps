@@ -1,0 +1,161 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Chat do squad</title>
+<style>
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,#24123a 0%,#0f0c16 55%,#0a090e 100%)}
+#bgp{position:absolute;inset:0;opacity:.05;background-image:radial-gradient(circle at 20px 20px,#fff 2px,transparent 3px);background-size:60px 60px}
+#hdr{position:absolute;left:0;right:0;top:0;height:250px;background:rgba(18,15,24,.94);border-bottom:1px solid rgba(255,255,255,.08);z-index:10;
+  display:flex;align-items:flex-end;gap:26px;padding:0 40px 34px;backdrop-filter:blur(12px)}
+#hdr .bk{font:300 64px Inter;color:#c9a8ff;margin-bottom:6px}
+#hdr .av{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,#ff2fc8,#8b6cff);display:grid;place-items:center;font-size:58px}
+#hdr h2{font:800 46px Inter;line-height:1.1}
+#hdr p{font:500 30px Inter;color:rgba(255,255,255,.55);margin-top:6px}
+#view{position:absolute;left:0;right:0;top:250px;height:1430px;overflow:hidden}
+#col{position:absolute;left:0;right:0;top:0;padding:40px 34px 0}
+.m{display:flex;gap:18px;margin-bottom:22px;align-items:flex-end}
+.m.me{justify-content:flex-end}
+.m .a{width:76px;height:76px;border-radius:50%;flex:none;display:grid;place-items:center;font:800 32px Inter;color:#fff}
+.m.cont .a{visibility:hidden}
+.b{max-width:780px;padding:22px 30px 18px;border-radius:38px;font:500 44px/1.28 Inter,"Noto Color Emoji";position:relative;background:#26222f;color:#f2eef8}
+.m:not(.me) .b{border-bottom-left-radius:12px}
+.m.me .b{background:linear-gradient(135deg,#d92fbf,#7b55f0);border-bottom-right-radius:12px}
+.b .n{display:block;font:800 30px Inter;margin-bottom:6px}
+.b .tm{font:500 22px Inter;color:rgba(255,255,255,.5);margin-left:16px;float:right;margin-top:22px}
+.m.me .b .tm{color:rgba(255,255,255,.75)}
+.big{font-size:84px !important;line-height:1.1 !important}
+.lk{display:flex;gap:22px;align-items:center;background:rgba(0,0,0,.28);border-radius:22px;padding:18px;margin-top:10px;border-left:6px solid #ff2fc8}
+.lk img{width:120px;height:120px;border-radius:26px}
+.lk b{display:block;font:800 36px Inter}.lk span{display:block;font:500 28px/1.25 Inter;color:rgba(255,255,255,.7)}.lk i{display:block;font:500 24px Inter;color:#c9a8ff;font-style:normal;margin-top:6px}
+.shot{width:660px;height:362px;border-radius:24px;margin-top:6px;background-image:url(shots/result.png);background-size:1228px auto;background-position:-284px -165px;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.1)}
+.div{display:flex;justify-content:center;margin:30px 0 34px}
+.div span{background:rgba(255,255,255,.12);font:700 32px Inter;padding:12px 30px;border-radius:30px;color:rgba(255,255,255,.85)}
+#typ{position:absolute;left:128px;padding:28px 34px;border-radius:38px;border-bottom-left-radius:12px;background:#26222f;display:flex;gap:12px}
+#typ i{width:18px;height:18px;border-radius:50%;background:#bbb;display:block}
+#cmp{position:absolute;left:30px;right:30px;top:1700px;height:110px;border-radius:55px;background:#1d1a24;border:1px solid rgba(255,255,255,.08);
+  display:flex;align-items:center;padding:0 40px;font:500 38px Inter;color:rgba(255,255,255,.35)}
+#hook{position:absolute;inset:0;z-index:40;background:rgba(6,4,10,.6);backdrop-filter:blur(14px)}
+</style></head><body><div id="stage">
+<div id="bg"></div><div id="bgp"></div>
+<div id="view"><div id="col"></div><div id="typ"><i></i><i></i><i></i></div></div>
+<div id="hdr"><div class="bk">‹</div><div class="av">🎮</div><div><h2>squad do ranked</h2><p>Lu, Davi, Kaio, você</p></div></div>
+<div id="cmp">Mensagem</div>
+<div id="hook"></div>
+</div>
+<script src="lib.js"></script>
+<script>
+AZ.init({dram: '*dramatização'});
+const P = {Davi: '#4fb3ff', Lu: '#ffb347', Kaio: '#3dff9a'};
+// [quem, conteúdo, pausa antes]
+const MSG = [
+  ['Davi', 'bora ranked hj? 🔥', .3],
+  ['Lu', 'boraaa', .5],
+  ['me', 'n dá mano 😭 meu pc tá travando dms', .6],
+  ['Davi', 'de novo?? kkkkkk', .55],
+  ['Lu', 'vai comprar outro pc é 💸', .55],
+  ['me', 'com que dinheiro kkkk', .55],
+  ['Davi', 'testa o AZOR, usei semana passada', .7],
+  ['Davi', '@link', .35],
+  ['Davi', '1 clique no BOOST e dá pra desfazer tudo', .5],
+  ['me', 'vou testar 👀', .6],
+  ['div', '15 minutos depois', .45],
+  ['me', '@shot', .5],
+  ['me', 'MANO 😳', .45],
+  ['me', 'meu monitor tava em 60hz esse tempo todo', .55],
+  ['Lu', 'KKKKKKKKKK', .45],
+  ['Davi', 'falei 😎', .45],
+  ['me', '@big:BORA RANKED', .55],
+  ['Lu', '🔥🔥🔥', .35],
+];
+const HOOK = 2.1;
+const col = $('col');
+let t = HOOK, prev = null;
+const items = MSG.map(([who, txt, pause], i) => {
+  let el;
+  if (who === 'div') {
+    el = mk('div', {class: 'div'}, col, `<span>${txt}</span>`);
+  } else {
+    const me = who === 'me';
+    el = mk('div', {class: 'm' + (me ? ' me' : '') + (prev === who ? ' cont' : '')}, col);
+    if (!me) mk('div', {class: 'a', style: {background: P[who]}}, el, who[0]);
+    const tm = `<span class="tm">21:${String(14 + Math.floor(i / 3)).padStart(2, '0')}${me ? ' ✓✓' : ''}</span>`;
+    let inner;
+    if (txt === '@link') inner = `<span class="n" style="color:${P[who]}">${who}</span><div class="lk"><img src="web/assets/Azor_icon.png"><div><b>AZOR Optimization 3.2</b><span>Mais FPS, menos delay, Windows leve. 1 clique.</span><i>instagram.com/azortweaks</i></div></div>${tm}`;
+    else if (txt === '@shot') inner = `<div class="shot"></div>${tm}`;
+    else if (txt.startsWith('@big:')) inner = `<span class="big">${txt.slice(5)}</span>${tm}`;
+    else inner = (!me && prev !== who ? `<span class="n" style="color:${P[who]}">${who}</span>` : '') + txt + tm;
+    mk('div', {class: 'b'}, el, inner);
+  }
+  const typing = who !== 'me' && who !== 'div' ? .55 : 0;
+  t += pause + typing;
+  const it = {el, who, t, typing};
+  prev = who === 'div' ? null : who;
+  return it;
+});
+const LAST = items[items.length - 1].t;
+const T = {end: LAST + 1.4};
+window.DURATION = T.end + 3.1;
+const end = AZ.endCard(T.end, 'Teu squad<br><span style="color:#3dff9a">te espera.</span>');
+const hookCap = AZ.caps([[0.15, HOOK, 'ele tava quase ~vendendo~ o pc…']], 860, {size: 84});
+// som
+music(HOOK - .3, 'lofi', items[16].t, {bpm: 84});
+music(items[16].t, 'phonk', T.end + 3.1, {bpm: 130});
+sfx(.15, 'scratch', .6); sfx(HOOK - .1, 'swipe', .6);
+items.forEach((it, i) => {
+  if (it.who === 'div') sfx(it.t, 'whoosh', .6);
+  else if (it.who === 'me') sfx(it.t, 'msg_out', .9);
+  else { sfx(it.t - it.typing, 'typing', .35); sfx(it.t, 'msg_in', .9); }
+});
+sfx(items[11].t + .1, 'success', .7); sfx(items[12].t, 'hit', .8); sfx(items[16].t, 'hit', 1); sfx(items[16].t, 'drop', .6);
+
+let layout = null;
+const VIEW_H = 1430;
+function measure() {
+  items.forEach(it => { it.el.style.display = ''; });
+  layout = items.map(it => ({top: it.el.offsetTop, h: it.el.offsetHeight}));
+}
+window.renderFrame = tt => {
+  if (!layout) measure();
+  let flash = 0, shake = 0;
+  // mensagens visíveis
+  let lastVis = -1;
+  items.forEach((it, i) => {
+    const k = prog(tt, it.t, it.t + .22);
+    const on = tt >= it.t;
+    it.el.style.visibility = on ? 'visible' : 'hidden';
+    if (on) { lastVis = i; it.el.style.transform = `translateY(${(1 - eOut(k)) * 40}px) scale(${lerp(.92, 1, eBack(k))})`; it.el.style.opacity = clamp(k * 3);
+      it.el.style.transformOrigin = it.who === 'me' ? '100% 100%' : '0% 100%'; }
+  });
+  // digitando…
+  const nx = items[lastVis + 1];
+  const typing = nx && nx.typing && tt >= nx.t - nx.typing && tt < nx.t;
+  const typ = $('typ');
+  show(typ, typing ? 1 : 0);
+  // rolagem: a última coisa visível fica acima do campo de mensagem
+  const targetFor = idx => {
+    if (idx < 0) return 0;
+    let bottom = layout[idx].top + layout[idx].h + 40;
+    return Math.max(0, bottom - (VIEW_H - 150));
+  };
+  let sc;
+  if (lastVis < 0) sc = 0;
+  else {
+    const it = items[lastVis];
+    const k = eOut(prog(tt, it.t, it.t + .3));
+    sc = lerp(targetFor(lastVis - 1), targetFor(lastVis), k);
+  }
+  if (typing) {
+    const ti = lastVis + 1, tk = eOut(prog(tt, nx.t - nx.typing, nx.t - nx.typing + .2));
+    const want = Math.max(0, layout[ti].top + 140 - (VIEW_H - 150));
+    sc = Math.max(sc, lerp(sc, want, tk));
+    typ.style.top = (40 + layout[ti].top - sc) + 'px';
+    [...typ.children].forEach((d, j) => { d.style.transform = `translateY(${Math.sin(tt * 10 - j * .8) * 6}px)`; d.style.opacity = .5 + .5 * Math.sin(tt * 10 - j * .8); });
+  }
+  col.style.transform = `translateY(${-sc}px)`;
+  // gancho
+  show($('hook'), 1 - prog(tt, HOOK - .2, HOOK));
+  hookCap(tt);
+  if (between(tt, items[16].t, items[16].t + .3)) { shake = 18 * (1 - prog(tt, items[16].t, items[16].t + .3)); flash = .3 * (1 - prog(tt, items[16].t, items[16].t + .25)); }
+  if (between(tt, items[12].t, items[12].t + .25)) shake = Math.max(shake, 12);
+  end(tt);
+  AZ.post(tt, flash, shake);
+};
+</script></body></html>

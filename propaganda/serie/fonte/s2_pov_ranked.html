@@ -1,0 +1,180 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — POV ranked</title>
+<style>
+#room{position:absolute;inset:0}
+#mon{position:absolute;left:50px;top:380px;width:980px;height:590px;border-radius:22px;background:#050507;padding:24px;box-shadow:0 0 0 3px #1c1b22,0 0 120px rgba(150,80,255,.35)}
+#scr{width:932px;height:524px;border-radius:6px;display:block}
+#stand{position:absolute;left:470px;top:968px;width:140px;height:90px;background:linear-gradient(#18171d,#0c0b0f)}
+#standb{position:absolute;left:380px;top:1048px;width:320px;height:22px;border-radius:12px;background:#121117}
+#guy{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:visible}
+</style></head><body><div id="stage">
+<canvas id="room" width="1080" height="1920"></canvas>
+<div id="stand"></div><div id="standb"></div>
+<div id="mon"><canvas id="scr" width="932" height="524"></canvas></div>
+<svg id="guy" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="hood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2b2733"/><stop offset="1" stop-color="#121016"/></linearGradient>
+    <linearGradient id="chair" x1="0" x2="1"><stop offset="0" stop-color="#0d0c10"/><stop offset=".5" stop-color="#1d1b22"/><stop offset="1" stop-color="#0d0c10"/></linearGradient>
+    <radialGradient id="hair" cx=".45" cy=".25" r=".8"><stop offset="0" stop-color="#3a2a20"/><stop offset=".6" stop-color="#1c140f"/><stop offset="1" stop-color="#0c0907"/></radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+    <radialGradient id="rim" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="rgba(190,150,255,.55)"/><stop offset="1" stop-color="rgba(190,150,255,0)"/></radialGradient>
+  </defs>
+  <g id="body">
+    <path id="torso" d="M170 1920 C180 1560 250 1400 360 1340 L720 1340 C830 1400 900 1560 910 1920 Z" fill="url(#hood)"/>
+    <path id="armL" fill="none" stroke="#24212b" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+    <path id="armR" fill="none" stroke="#24212b" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle id="handL" r="40" fill="#c98f6b"/><circle id="handR" r="40" fill="#c98f6b"/>
+    <g id="head">
+      <rect x="492" y="1190" width="96" height="120" rx="30" fill="#5a3a2c"/>
+      <path d="M392 1330 C410 1262 670 1262 688 1330 C640 1300 440 1300 392 1330 Z" fill="#1d1a22"/>
+      <ellipse cx="540" cy="1105" rx="118" ry="136" fill="url(#hair)"/>
+      <path d="M440 1060 C470 1010 520 1000 560 1004 M455 1090 C490 1040 560 1030 610 1046 M470 1130 C520 1090 590 1088 632 1104 M430 1110 C450 1150 470 1180 500 1210 M650 1110 C640 1150 620 1185 590 1212"
+        fill="none" stroke="rgba(255,255,255,.07)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M432 1060 C450 990 520 965 545 968 C600 970 640 1000 652 1050" fill="none" stroke="#ff7ae0" stroke-width="7" stroke-linecap="round" opacity=".75" filter="url(#soft)"/>
+      <path d="M414 1098 C404 950 676 950 666 1098" fill="none" stroke="#0e0d12" stroke-width="30" stroke-linecap="round"/>
+      <path d="M440 1000 C500 962 580 962 640 1000" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="5" stroke-linecap="round"/>
+      <rect x="388" y="1070" width="58" height="116" rx="27" fill="#0e0d12"/><rect x="634" y="1070" width="58" height="116" rx="27" fill="#0e0d12"/>
+      <rect x="394" y="1086" width="11" height="84" rx="5" fill="#ff2fc8" filter="url(#soft)"/><rect x="675" y="1086" width="11" height="84" rx="5" fill="#ff2fc8" filter="url(#soft)"/>
+    </g>
+    <path d="M330 1920 L330 1290 C330 1240 360 1215 410 1215 L670 1215 C720 1215 750 1240 750 1290 L750 1920 Z" fill="url(#chair)"/>
+    <path d="M372 1920 L372 1300 L410 1300 L410 1920 Z M670 1920 L670 1300 L708 1300 L708 1920 Z" fill="#ff2fc8" opacity=".85"/>
+    <rect x="455" y="1500" width="170" height="70" rx="14" fill="#141217"/><text x="540" y="1548" text-anchor="middle" font-family="Orb" font-weight="900" font-size="34" fill="#ff2fc8">AZ</text>
+  </g>
+</svg>
+</div>
+<script src="lib.js"></script>
+<script>
+AZ.init({dram: '*dramatização'});
+const T = {app: 5.2, click: 6.65, smooth: 8.6, win: 11.9, end: 13.6};
+window.DURATION = 16.6;
+const B1 = AZ.tbox(['POV: tua ranked começa em 5 min', 'e o PC resolve travar 💀'], 150);
+const B2 = AZ.tbox(['aí tu lembra do AZOR…'], 150);
+const B3 = AZ.tbox(['1 clique depois:'], 150);
+const B4 = AZ.tbox(['ranked: GG 🏆'], 150);
+const end = AZ.endCard(T.end, 'Teu PC no<br><span style="color:#ff3fd0">modo ranked.</span>');
+music(0, 'tension', T.app, {bpm: 130});
+music(T.smooth, 'phonk', T.end + 3, {bpm: 130});
+for (const g of [1.1, 2.3, 3.0, 4.4]) sfx(g, 'glitch', .7);
+sfx(3.6, 'stamp', .9); sfx(3.62, 'buzz', .5);
+sfx(T.app, 'swipe', .7); sfx(T.app, 'pop', .5); sfx(T.click, 'click'); sfx(T.click + .02, 'boost', .9);
+sfx(T.smooth - .05, 'riser', .8, {d: 1.9}); sfx(T.smooth, 'hit', 1); sfx(T.smooth, 'drop', .7);
+sfx(T.win, 'success', .9); sfx(T.win, 'burst', .8); sfx(T.win + .1, 'sparkle', .8);
+
+const room = $('room').getContext('2d'), scr = $('scr').getContext('2d');
+const home = new Image(); home.src = 'shots/home_before.png';
+const job = new Image(); job.src = 'shots/job_6.png';
+const res = new Image(); res.src = 'shots/result.png';
+const CONF = Array.from({length: 70}, (_, i) => ({x: hash(i) * 932, v: 200 + hash(i + 5) * 300, c: ['#ff2fc8', '#3dff9a', '#ffd34d', '#8b6cff', '#50e6ff'][i % 5], d: hash(i + 9) * .5, r: hash(i + 2) * 6}));
+const A = (x, y) => ({x, y});
+const lerpP = (a, b, k) => A(lerp(a.x, b.x, k), lerp(a.y, b.y, k));
+function arm(id, sh, hand, out) {
+  const mid = A((sh.x + hand.x) / 2 + out, (sh.y + hand.y) / 2 + 40);
+  $(id).setAttribute('d', `M${sh.x} ${sh.y} Q${mid.x} ${mid.y} ${hand.x} ${hand.y}`);
+}
+
+window.renderFrame = t => {
+  let flash = 0, shake = 0;
+  const lag = t < T.app, smooth = t >= T.smooth;
+  // ----- quarto -----
+  const g = room.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#120a1e'); g.addColorStop(.5, '#1a0c26'); g.addColorStop(1, '#050407');
+  room.fillStyle = g; room.fillRect(0, 0, W, H);
+  // fita de LED atrás do monitor (pisca vermelho no lag)
+  const ledCol = lag ? '255,60,80' : '255,47,200';
+  AZ.blob(room, 540, 650, 720, 520, ledCol, lag ? .35 + .15 * Math.sin(t * 9) : .55);
+  AZ.blob(room, 540, 650, 420, 300, smooth ? '139,108,255' : ledCol, .3);
+  // mesa
+  room.fillStyle = '#0d0b10'; room.beginPath(); room.moveTo(0, 1050); room.lineTo(W, 1050); room.lineTo(W, H); room.lineTo(0, H); room.fill();
+  room.fillStyle = 'rgba(255,255,255,.04)'; room.fillRect(0, 1050, W, 6);
+  // teclado RGB e mousepad
+  room.fillStyle = '#16141b'; room.beginPath(); room.roundRect(250, 1120, 440, 110, 16); room.fill();
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 14; j++) {
+    const hue = (j * 22 + t * (smooth ? 220 : 60)) % 360;
+    room.fillStyle = `hsla(${hue},90%,60%,${smooth ? .9 : .45})`;
+    room.fillRect(266 + j * 30, 1134 + i * 23, 22, 15);
+  }
+  room.fillStyle = '#100e14'; room.beginPath(); room.roundRect(720, 1100, 300, 180, 18); room.fill();
+  room.strokeStyle = `rgba(${ledCol},.8)`; room.lineWidth = 4; room.stroke();
+  // ----- tela do monitor -----
+  scr.clearRect(0, 0, 932, 524);
+  if (t < T.app) {
+    // jogo travando: o tempo do jogo anda em pulos e congela
+    let gt = Math.floor(t * 9) / 9;
+    if ((t > 1.0 && t < 1.45) || (t > 2.2 && t < 2.8) || (t > 4.3 && t < 4.9)) gt = Math.min(gt, [1.0, 2.2, 4.3].find(x => t > x && t < x + .7));
+    AZ.game(scr, 0, 0, 932, 524, gt * 1.4);
+    AZ.perf(scr, 16, 16, .8, t, true);
+    if (Math.floor(t * 10) % 7 === 0 || (t > 2.2 && t < 2.8)) {
+      for (let i = 0; i < 5; i++) { const y = hash(Math.floor(t * 20) + i) * 524; scr.drawImage($('scr'), 0, y, 932, 24, (hash(i + t) - .5) * 60, y, 932, 24); }
+      scr.fillStyle = 'rgba(255,40,60,.18)'; scr.fillRect(0, 0, 932, 524);
+    }
+    if (t > 2.2 && t < 2.8 || t > 4.3) { scr.font = '400 120px Anton'; scr.fillStyle = '#ff2a3d'; scr.textAlign = 'center'; scr.fillText('LAG', 466, 300); scr.textAlign = 'left'; }
+  } else if (t < T.smooth) {
+    // o AZOR na tela
+    const lt = t - T.app;
+    scr.fillStyle = '#0c0a12'; scr.fillRect(0, 0, 932, 524);
+    const z = lerp(.5825, .9, eIO(prog(lt, .2, 1.2)));
+    const cx = lerp(800, 470, eIO(prog(lt, .2, 1.2))), cy = lerp(450, 380, eIO(prog(lt, .2, 1.2)));
+    const img = t < T.click + .35 ? home : t < 7.75 ? job : res;
+    const zz = img === home ? z : img === job ? 1.05 : lerp(1.3, 1.1, prog(t, 7.75, T.smooth));
+    const ccx = img === home ? cx : img === job ? 720 : 800, ccy = img === home ? cy : img === job ? 470 : 420;
+    scr.drawImage(img, 466 - ccx * zz, 262 - ccy * zz, 1600 * zz, 900 * zz);
+    if (img === home) {
+      const ck = eIO(prog(lt, .6, T.click - T.app - .05));
+      const ux = lerp(1300, 440, ck), uy = lerp(820, 372, ck);
+      const px = 466 + (ux - cx) * z, py = 262 + (uy - cy) * z;
+      scr.fillStyle = '#fff'; scr.strokeStyle = '#111'; scr.lineWidth = 2;
+      scr.beginPath(); scr.moveTo(px, py); scr.lineTo(px, py + 34); scr.lineTo(px + 9, py + 26); scr.lineTo(px + 16, py + 40); scr.lineTo(px + 22, py + 37); scr.lineTo(px + 15, py + 24); scr.lineTo(px + 26, py + 24); scr.closePath(); scr.fill(); scr.stroke();
+      const rk = prog(t, T.click, T.click + .4);
+      if (rk > 0 && rk < 1) { scr.strokeStyle = `rgba(255,255,255,${1 - rk})`; scr.lineWidth = 4; scr.beginPath(); scr.arc(px, py, 20 + rk * 140, 0, 6.283); scr.stroke(); }
+    }
+    if (between(t, T.click, T.click + .3)) flash = Math.max(flash, .2 * (1 - prog(t, T.click, T.click + .3)));
+  } else {
+    // jogo liso + vitória
+    const gt = (t - T.smooth) * 2.2 + 5;
+    AZ.game(scr, 0, 0, 932, 524, gt);
+    AZ.perf(scr, 16, 16, .8, t, false);
+    if (t > T.win) {
+      const k = eBack(prog(t, T.win, T.win + .4));
+      scr.save(); scr.translate(466, 250); scr.scale(lerp(2.5, 1, k), lerp(2.5, 1, k)); scr.globalAlpha = clamp((t - T.win) * 6);
+      scr.fillStyle = 'rgba(0,0,0,.55)'; scr.fillRect(-466, -70, 932, 140);
+      scr.font = '400 120px Anton'; scr.textAlign = 'center'; scr.fillStyle = '#ffd34d'; scr.shadowColor = '#ffd34d'; scr.shadowBlur = 30;
+      scr.fillText('VITÓRIA', 0, 44); scr.restore();
+      for (const c of CONF) {
+        const ct = t - T.win - c.d; if (ct < 0) continue;
+        const y = ct * c.v - 20, x = c.x + Math.sin(ct * 4 + c.r) * 20;
+        scr.save(); scr.translate(x, y); scr.rotate(ct * 6 + c.r); scr.fillStyle = c.c; scr.fillRect(-7, -4, 14, 8); scr.restore();
+      }
+    }
+  }
+  // brilho da tela no rosto/quarto
+  // ----- personagem -----
+  const headG = $('head');
+  let hx = 0, hy = 0, hr = 0;
+  if (lag) { hr = Math.sin(t * 7) * (t > 1 ? 6 : 2); hx = Math.sin(t * 7) * 8; }
+  if (smooth) { const lean = eOut(prog(t, T.smooth, T.smooth + .6)); hy = -30 * lean; }
+  const shL = A(330, 1380), shR = A(750, 1380);
+  let hL = A(420, 1180), hR = A(820, 1190);
+  // socar a mesa
+  const slam = prog(t, 3.3, 3.6), back = prog(t, 3.6, 4.0);
+  if (t > 3.3 && t < 4.0) { const up = Math.sin(Math.PI * slam); hL = A(420, 1180 - up * 160 + back * 0); hR = A(800, 1190 - up * 160); }
+  if (between(t, 3.6, 3.85)) shake = Math.max(shake, (1 - prog(t, 3.6, 3.85)) * 26);
+  // mão no mouse durante o app
+  if (between(t, T.app, T.smooth)) hR = A(830 + Math.sin(t * 3) * 10, 1185 - (Math.abs(t - T.click) < .08 ? 8 : 0));
+  // comemoração
+  if (t > T.win) { const k = eBack(prog(t, T.win, T.win + .35)); const bob = Math.sin((t - T.win) * 12) * 18; hL = lerpP(hL, A(300, 950 + bob), k); hR = lerpP(hR, A(780, 950 - bob), k); hy -= 20; }
+  arm('armL', shL, hL, -70); arm('armR', shR, hR, 70);
+  $('handL').setAttribute('cx', hL.x); $('handL').setAttribute('cy', hL.y);
+  $('handR').setAttribute('cx', hR.x); $('handR').setAttribute('cy', hR.y);
+  headG.setAttribute('transform', `translate(${hx} ${hy}) rotate(${hr} 540 1230)`);
+  // monitor: leve zoom de câmera
+  const camZ = 1 + (smooth ? .04 * eOut(prog(t, T.smooth, T.smooth + .5)) : 0) + smooth * 0;
+  const camY = lag ? 0 : 0;
+  $('stage').style.transformOrigin = '540px 700px';
+  // ----- textos POV -----
+  show(B1, between(t, .15, T.app) ? 1 : 0); show(B2, between(t, T.app + .2, T.smooth) ? 1 : 0);
+  show(B3, between(t, T.smooth, T.win) ? 1 : 0); show(B4, between(t, T.win, T.end) ? 1 : 0);
+  if (between(t, T.smooth, T.smooth + .3)) { flash = Math.max(flash, .7 * (1 - prog(t, T.smooth, T.smooth + .3))); shake = Math.max(shake, 20); }
+  end(t);
+  AZ.post(t, flash, shake);
+  if (t < T.end && shake < .3) $('stage').style.transform = `scale(${camZ})`;
+};
+</script></body></html>
