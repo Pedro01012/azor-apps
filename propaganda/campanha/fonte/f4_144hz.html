@@ -1,0 +1,117 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — 144 Hz</title>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body><div id="stage"></div>
+<script type="module">
+import {THREE, W, H, createStage, studioEnv, mountType, headline, label, lockup, fontsReady, keys, ease, prog, lerp, clamp, hash, sfx, loadTex} from '/engine.js';
+import {buildMonitor, floor, contactShadow, halo, dust, mirror} from '/assets.js';
+
+mountType();
+const st = createStage({bloom: [.45, .55, .88], exposure: .95});
+const {scene, camera, renderer} = st;
+scene.environment = studioEnv(renderer); scene.environmentIntensity = .5;
+scene.fog = new THREE.Fog(0x050407, 2.4, 6.5);
+const D = 14.6;
+const T = {s2: 4.6, fix: 8.6, s3: 8.2, end: 11.6};
+
+/* ---------- tela: teste de movimento desenhado a cada quadro ---------- */
+const logo = new Image(); logo.src = '/web/assets/Azor_icon.png'; await logo.decode();
+const cv = document.createElement('canvas'); cv.width = 1920; cv.height = 1080;
+const g = cv.getContext('2d');
+const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+const scrMat = new THREE.MeshBasicMaterial({map: tex, toneMapped: false});
+const mon = buildMonitor(scrMat, {w: .62});
+mon.group.position.set(0, .5, 0); scene.add(mon.group);
+const refl = mirror(mon.group); scene.add(refl.group);
+scene.add(floor({opacity: .88}));
+const cs = contactShadow(.45, .3, .8); cs.position.set(0, .0009, -.03); scene.add(cs);
+const backGlow = halo(2.2, 1.4, [[0, 'rgba(255,47,200,.45)'], [.5, 'rgba(120,70,255,.12)'], [1, 'rgba(0,0,0,0)']], .35); backGlow.position.set(0, .55, -.35); scene.add(backGlow);
+const key = new THREE.RectAreaLight(0xfff1e6, 1.6, 1.2, .7); key.position.set(-.8, 1.2, 1.0); key.lookAt(0, .45, 0); scene.add(key);
+const rim = new THREE.SpotLight(0xcfd8ff, 3, 3, .45, .9, 2); rim.position.set(.9, 1.0, -.7); rim.target.position.set(0, .5, 0); scene.add(rim, rim.target);
+const dst = dust(80, [1.4, .9, 1], [0, .5, .6]); dst.material.uniforms.opacity.value = .1; dst.material.uniforms.size.value = 60; scene.add(dst);
+const screenLight = new THREE.RectAreaLight(0xff9ae6, 0, .6, .34); screenLight.position.set(0, .5, .02); screenLight.lookAt(0, .5, 1); scene.add(screenLight);
+
+function drawScreen(t) {
+  const fixed = t >= T.fix;
+  // 60 Hz "preso": a imagem só atualiza ~12 vezes por segundo, com espera irregular (judder)
+  let ts = t;
+  if (!fixed) { const q = Math.floor(t * 12); ts = q / 12 + (hash(q) > .78 ? -1 / 12 : 0); }
+  g.fillStyle = '#09070d'; g.fillRect(0, 0, 1920, 1080);
+  const bgG = g.createRadialGradient(960, 620, 50, 960, 620, 1100); bgG.addColorStop(0, 'rgba(70,24,90,.55)'); bgG.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = bgG; g.fillRect(0, 0, 1920, 1080);
+  // grade que se move (deixa o "engasgo" visível)
+  g.strokeStyle = 'rgba(255,255,255,.13)'; g.lineWidth = 5;
+  const off = (ts * 520) % 160;
+  for (let x = -off; x < 1920; x += 160) { g.beginPath(); g.moveTo(x, 240); g.lineTo(x, 920); g.stroke(); }
+  g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(0, 578, 1920, 5);
+  // orbe com a marca
+  const R = 150, ox = 960 + Math.sin(ts * 2.1) * 640;
+  if (fixed) for (let i = 6; i >= 1; i--) { const gx = 960 + Math.sin((t - i * .012) * 2.1) * 640; g.globalAlpha = .1 * (7 - i) / 6; g.drawImage(logo, gx - R, 580 - R, R * 2, R * 2); }
+  g.globalAlpha = 1;
+  const glow = g.createRadialGradient(ox, 580, 30, ox, 580, 340); glow.addColorStop(0, 'rgba(255,60,200,.6)'); glow.addColorStop(1, 'rgba(255,60,200,0)');
+  g.fillStyle = glow; g.fillRect(ox - 360, 220, 720, 720);
+  g.save(); g.beginPath(); g.roundRect(ox - R, 580 - R, R * 2, R * 2, 64); g.clip(); g.drawImage(logo, ox - R, 580 - R, R * 2, R * 2); g.restore();
+  // textos de interface
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.font = '500 30px GeistMono'; g.fillText('TESTE DE MOVIMENTO', 80, 110);
+  g.fillStyle = 'rgba(255,255,255,.3)'; g.font = '500 22px GeistMono'; g.fillText('SIMULAÇÃO', 80, 150);
+  // OSD da taxa de atualização
+  const hzK = ease.out(prog(t, T.fix, T.fix + .25));
+  g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.roundRect(1530, 70, 320, 130, 22); g.fill();
+  g.strokeStyle = fixed ? 'rgba(255,95,216,.9)' : 'rgba(255,255,255,.18)'; g.lineWidth = 3; g.stroke();
+  g.fillStyle = fixed ? '#ffd6f4' : '#ffffff'; g.font = '600 76px Geist'; g.textAlign = 'right';
+  g.fillText(fixed ? '144' : '60', 1760, 162); g.font = '500 34px Geist'; g.fillText('Hz', 1822, 162); g.textAlign = 'left';
+  if (fixed && hzK < 1) { g.fillStyle = `rgba(255,140,226,${(1 - hzK) * .5})`; g.fillRect(0, 0, 1920, 1080); }
+  // aviso do AZOR (canto inferior)
+  const tk = ease.expo(prog(t, T.fix - .25, T.fix + .35));
+  if (tk > 0) {
+    const y = lerp(1100, 860, tk);
+    g.fillStyle = 'rgba(22,18,30,.96)'; g.beginPath(); g.roundRect(1120, y, 720, 130, 26); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,.1)'; g.lineWidth = 2; g.stroke();
+    g.drawImage(logo, 1150, y + 30, 70, 70);
+    g.fillStyle = '#fff'; g.font = '600 34px Geist'; g.fillText('Monitor na taxa máxima', 1245, y + 60);
+    g.fillStyle = '#ff8ae2'; g.font = '500 28px Geist'; g.fillText('144 Hz · aplicado pelo AZOR', 1245, y + 102);
+  }
+  tex.needsUpdate = true;
+}
+
+/* ---------- câmera ---------- */
+const V = (x, y, z) => [x, y, z];
+const SHOTS = [
+  {a: 0, b: T.s2, k: [{t: 0, pos: V(1.85, .68, 2.08), look: V(.02, .5, 0), fov: 24}, {t: T.s2, pos: V(1.55, .64, 1.74), look: V(.02, .5, 0), fov: 24}], ease: ease.sine},
+  {a: T.s2, b: T.s3, k: [{t: T.s2, pos: V(.4, .665, .5), look: V(.215, .618, 0), fov: 24}, {t: T.s3, pos: V(.36, .66, .44), look: V(.215, .618, 0), fov: 24}], ease: ease.sine},
+  {a: T.s3, b: T.end + .5, k: [{t: T.s3, pos: V(.36, .42, .58), look: V(.17, .385, 0), fov: 24}, {t: 9.4, pos: V(.4, .43, .66), look: V(.16, .39, 0), fov: 24},
+    {t: T.end, pos: V(1.45, .62, 1.6), look: V(.02, .5, 0), fov: 24, ease: ease.io}], ease: ease.sine},
+];
+function setCam(t) {
+  const sh = SHOTS.find(s => t >= s.a && t < s.b) || SHOTS[SHOTS.length - 1];
+  const c = keys(t, sh.k, sh.ease);
+  camera.position.set(...c.pos); camera.lookAt(...c.look);
+  if (camera.fov !== c.fov) { camera.fov = c.fov; camera.updateProjectionMatrix(); }
+}
+
+/* ---------- textos ---------- */
+const A = headline('Você pagou por|<em>144 Hz.</em>', {top: 250, size: 120});
+const B = headline('O Windows te|entregou <em>60.</em>', {top: 250, size: 120});
+const C = headline('O AZOR corrige|em <em>um clique.</em>', {top: 250, size: 104});
+const END = lockup('Use cada hertz que você pagou.');
+
+/* ---------- som ---------- */
+sfx(0, 'amb', .9, {d: D}); sfx(0, 'drone', .45, {d: T.fix, f: 41}); sfx(.5, 'air', .5);
+sfx(T.s2, 'cut', .4); sfx(4.9, 'air', .5);
+for (let q = Math.ceil(T.s2 * 12); q < T.fix * 12; q++) if (hash(q) > .78) sfx(q / 12, 'tick', .35);
+sfx(T.fix - .3, 'swell', .6, {d: .3}); sfx(T.fix, 'toggle', 1); sfx(T.fix, 'impact', .8, {soft: 1}); sfx(T.fix + .05, 'shimmer', .5, {d: 2.6});
+sfx(T.fix, 'drone', .55, {d: D - T.fix, f: 55, bright: 1}); sfx(T.s3 + .4, 'whoosh', .4, {d: 2});
+sfx(T.end, 'impact', .65, {soft: 1}); sfx(T.end + .7, 'tone', .55, {d: 2.4});
+
+window.renderFrame = t => {
+  setCam(t);
+  drawScreen(t);
+  dst.material.uniforms.time.value = t;
+  screenLight.intensity = .5 + .4 * ease.out(prog(t, T.fix, T.fix + .5));
+  backGlow.material.opacity = .28 + .12 * ease.out(prog(t, T.fix, T.fix + .6));
+  A.anim(t, .5, 4.1, {stagger: .12}); B.anim(t, 4.9, 7.9, {stagger: .12}); C.anim(t, T.fix + .3, 11.1, {stagger: .12});
+  st.grade.uniforms.fade.value = Math.max(ease.io(prog(t, T.end - .35, T.end + .05)), 1 - ease.out(prog(t, 0, .6)));
+  END.anim(t, T.end);
+  st.render(t);
+};
+window.ready = async () => { await fontsReady(); return {D}; };
+</script></body></html>

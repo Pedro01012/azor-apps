@@ -1,0 +1,119 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Antes de comprar</title>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body><div id="stage"></div>
+<script type="module">
+import {THREE, W, H, createStage, mountType, headline, label, lockup, fontsReady, keys, ease, prog, lerp, clamp, sfx} from '/engine.js';
+import {buildGPU, buildPanel, ledTex, M, contactShadow, halo, mirror} from '/assets.js';
+import {pcStudio} from '/pcscene.js';
+
+mountType(`#note{position:absolute;left:84px;top:1480px;font:500 20px GeistMono;letter-spacing:.28em;color:rgba(246,243,248,.42);text-transform:uppercase}`);
+const st = createStage({bloom: [.42, .55, .9], exposure: .95});
+const {scene, camera} = st;
+const S = await pcStudio(st);
+const D = 19.6;
+const T = {s2: 4.4, s3: 8.4, s4: 12.4, end: 16.6};
+
+/* ---------- placa de vídeo sozinha, em outro "set" do estúdio ---------- */
+const GX = -3.2;
+const gLine = new THREE.MeshStandardMaterial({color: 0, emissive: new THREE.Color(0xff2fc8), emissiveIntensity: 2});
+const gRing = M.led(ledTex(), 1.6);
+const gpu = buildGPU(gLine, {fanRing: gRing});
+const gpuPivot = new THREE.Group(); gpuPivot.position.set(GX, .3, 0); scene.add(gpuPivot);
+gpu.group.position.set(-gpu.L / 2, -gpu.Hh / 2, 0);
+const gpuTilt = new THREE.Group(); gpuTilt.add(gpu.group); gpuTilt.rotation.set(-.18, Math.PI + .5, 0); gpuPivot.add(gpuTilt);
+const gs = contactShadow(.5, .3, .7); gs.position.set(GX, .0009, 0); scene.add(gs);
+const gm = mirror(gpuPivot); scene.add(gm.group);
+const gKey = new THREE.RectAreaLight(0xfff1e6, 3.2, .9, .5); gKey.position.set(GX - .5, 1.0, .9); gKey.lookAt(GX, .3, 0); scene.add(gKey);
+const gRim = new THREE.SpotLight(0xff2fc8, 3, 3, .4, .9, 2); gRim.position.set(GX + .7, .8, -.8); gRim.target.position.set(GX, .3, 0); scene.add(gRim, gRim.target);
+const gHalo = halo(2.4, 2.4, [[0, 'rgba(255,47,200,.3)'], [.5, 'rgba(110,60,255,.08)'], [1, 'rgba(0,0,0,0)']], .18); gHalo.position.set(GX, .45, -1.2); scene.add(gHalo);
+
+/* ---------- painel com o Diagnóstico real ---------- */
+const img = new Image(); img.src = '/shots2/plan_before_tall.png'; await img.decode();   // 3200 x 3000 (1600 x 1500 css)
+const cv = document.createElement('canvas'); cv.width = 1600; cv.height = 1500;
+const cx = cv.getContext('2d');
+const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+const PW = .5;
+const panel = buildPanel(tex, PW, 1600 / 1500, {radius: .012, glow: .3});
+const PX = 3.2;   // set do painel
+panel.group.position.set(PX, .45, 0); scene.add(panel.group);
+const ROWS = {mon: [517, 627], xmp: [637, 744], ch: [755, 861]};
+function drawPanel(t) {
+  cx.drawImage(img, 0, 0, 1600, 1500);
+  // escurece o que não é foco e marca as 3 linhas, uma de cada vez
+  const marks = [['mon', 8.75], ['xmp', 9.75], ['ch', 10.75]];
+  const dim = ease.out(prog(t, 8.5, 9.0)) * (1 - ease.out(prog(t, 12.0, 12.4)));
+  if (dim > 0) {
+    cx.fillStyle = `rgba(3,2,6,${.55 * dim})`;
+    cx.beginPath(); cx.rect(0, 0, 1600, 1500);
+    marks.forEach(([k, tm]) => { if (t > tm) { const [a, b] = ROWS[k]; cx.roundRect(287, a + 4, 1277, b - a - 8, 18); } });
+    cx.fill('evenodd');
+    marks.forEach(([k, tm]) => {
+      const kk = ease.expo(prog(t, tm, tm + .5)); if (kk <= 0) return;
+      const [a, b] = ROWS[k];
+      cx.strokeStyle = `rgba(255,95,216,${kk})`; cx.lineWidth = 4; cx.beginPath(); cx.roundRect(287, a + 4, 1277 * kk, b - a - 8, 18); cx.stroke();
+    });
+  }
+  tex.needsUpdate = true;
+}
+const PH = panel.h;
+const panelPoint = (u, v) => [PX + (u / 1600 - .5) * PW, .45 + (.5 - v / 1500) * PH, 0];
+
+/* ---------- câmera ---------- */
+const V = (x, y, z) => [x, y, z];
+const pp = (u, v, dz) => { const p = panelPoint(u, v); return [p[0], p[1], dz]; };
+const SHOTS = [
+  {a: 0, b: T.s2, k: [{t: 0, pos: V(GX + .66, .54, 1.5), look: V(GX, .4, 0), fov: 24}, {t: T.s2, pos: V(GX + .5, .5, 1.26), look: V(GX, .39, 0), fov: 24}], ease: ease.sine},
+  {a: T.s2, b: T.s3, k: [{t: T.s2, pos: pp(700, 330, 1.05), look: pp(700, 350, 0), fov: 24}, {t: T.s3, pos: pp(640, 620, .78), look: pp(640, 640, 0), fov: 24}], ease: ease.io},
+  {a: T.s3, b: T.s4, k: [{t: T.s3, pos: pp(535, 640, .64), look: pp(535, 650, 0), fov: 24}, {t: T.s4, pos: pp(545, 770, .6), look: pp(545, 770, 0), fov: 24}], ease: ease.sine},
+  {a: T.s4, b: T.end + .5, orbit: true},
+];
+function setCam(t) {
+  const sh = SHOTS.find(s => t >= s.a && t < s.b) || SHOTS[SHOTS.length - 1];
+  let c;
+  if (sh.orbit) {
+    const k = ease.io(prog(t, sh.a, T.end));
+    const ang = lerp(.35, .78, k), r = lerp(3.15, 2.75, k);
+    c = {pos: [Math.sin(ang) * r, lerp(.56, .48, k), Math.cos(ang) * r], look: [0, .27, 0], fov: 22};
+  } else c = keys(t, sh.k, sh.ease);
+  camera.position.set(...c.pos); camera.lookAt(...c.look);
+  if (camera.fov !== c.fov) { camera.fov = c.fov; camera.updateProjectionMatrix(); }
+}
+
+/* ---------- textos ---------- */
+const A = headline('Antes de gastar|<em>milhares</em> numa|placa nova,', {top: 250, size: 104});
+const B = headline('veja o que está|<em>segurando</em> a sua.', {top: 250, size: 98});
+const L1 = label('AZOR <b>·</b> DIAGNÓSTICO', {top: 200});
+const C = headline('3 problemas.|<em>Nenhuma</em> peça nova.', {top: 250, size: 92});
+const E = headline('Às vezes, o upgrade|que faltava era de|<em>configuração.</em>', {top: 250, size: 92});
+const note = document.createElement('div'); note.id = 'note'; note.textContent = 'Tela real do AZOR · PC de teste'; document.getElementById('ov').appendChild(note);
+const END = lockup('Descubra antes de gastar.');
+
+/* ---------- som ---------- */
+sfx(0, 'amb', .9, {d: D}); sfx(0, 'drone', .5, {d: T.s4, f: 41});
+sfx(.5, 'air', .5); sfx(.2, 'shimmer', .3, {d: 3.6});
+sfx(T.s2, 'panel', .7); sfx(4.7, 'air', .5);
+sfx(T.s3, 'cut', .35); sfx(8.7, 'air', .45); [8.75, 9.75, 10.75].forEach(t => sfx(t, 'toggle', .9));
+sfx(T.s4, 'impact', .7, {soft: 1}); sfx(T.s4 + .05, 'powerup', .7, {d: 1.4}); sfx(T.s4 + .1, 'spinup', .6, {d: 4});
+sfx(T.s4, 'drone', .55, {d: D - T.s4, f: 55, bright: 1}); sfx(12.8, 'air', .5);
+sfx(T.end, 'impact', .65, {soft: 1}); sfx(T.end + .7, 'tone', .55, {d: 2.4});
+
+window.renderFrame = t => {
+  setCam(t);
+  S.power(t, T.s4 - .1, 1.2);
+  S.fans(t, .55, 10, T.s4, 1.8);
+  S.dust.material.uniforms.time.value = t;
+  gpuPivot.rotation.y = lerp(-.25, .2, ease.sine(prog(t, 0, T.s2)));
+  gm.group.rotation.y = gpuPivot.rotation.y;
+  gpu.fans.forEach((f, i) => f.rotor.rotation.z = t * 2.4 + i);
+  gm.rotors.forEach((r, i) => r.rotation.z = t * 2.4 + i);
+  panel.group.visible = t >= T.s2 - .1 && t < T.s4 + .1;
+  if (panel.group.visible) drawPanel(t);
+  A.anim(t, .5, 4.0, {stagger: .12}); B.anim(t, 4.7, 7.9); L1.anim(t, 8.6, 12.0); C.anim(t, 9.0, 12.0, {stagger: .14}); E.anim(t, 12.8, 16.1, {stagger: .14});
+  note.style.opacity = t > 4.6 && t < 12.2 ? .9 * ease.out(prog(t, 4.6, 5.2)) : 0;
+  st.grade.uniforms.fade.value = Math.max(ease.io(prog(t, T.end - .35, T.end + .05)), 1 - ease.out(prog(t, 0, .6)),
+    Math.sin(Math.PI * prog(t, T.s2 - .2, T.s2 + .2)) * .9, Math.sin(Math.PI * prog(t, T.s4 - .2, T.s4 + .2)) * .9);
+  END.anim(t, T.end);
+  st.render(t);
+};
+window.ready = async () => { await fontsReady(); return {D}; };
+</script></body></html>

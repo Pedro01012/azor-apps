@@ -1,0 +1,179 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Limpeza</title>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+</head><body><div id="stage"></div>
+<script type="module">
+import {THREE, W, H, createStage, mountType, headline, label, lockup, fontsReady, keys, ease, prog, lerp, clamp, hash, sfx} from '/engine.js';
+import {pcStudio} from '/pcscene.js';
+
+mountType(`
+#list{position:absolute;left:84px;top:236px}
+#list div{font:500 30px GeistMono;letter-spacing:.16em;text-transform:uppercase;color:rgba(246,243,248,.88);height:62px;display:flex;align-items:center;gap:20px}
+#list div i{display:block;width:12px;height:12px;border-radius:3px;background:#ff5fd8;box-shadow:0 0 18px #ff2fc8}
+#gb{position:absolute;left:84px;top:200px;font:300 250px/1 Geist;letter-spacing:-.06em;color:#f6f3f8}
+#gb small{font-size:.42em;letter-spacing:-.02em;margin-left:14px;font-weight:400}
+#gbs{position:absolute;left:90px;top:470px;font:500 58px Geist;letter-spacing:-.03em;color:#f6f3f8}
+#gbs em{font-family:Serif;font-style:italic;font-weight:400;color:#ff8ae2}
+#gbn{position:absolute;left:92px;top:560px;font:500 20px GeistMono;letter-spacing:.3em;color:rgba(246,243,248,.4)}
+`);
+const st = createStage({bloom: [.5, .5, .86], exposure: .95});
+const {scene, camera} = st;
+const S = await pcStudio(st);
+const D = 18.0;
+const T = {s2: 3.6, s3: 7.2, sw0: 7.4, sw1: 10.4, s4: 11.2, end: 15.0};
+const {y0, CD} = S.pc.dims;
+const FAN = new THREE.Vector3(0, y0 + .37, -CD / 2 + .025);
+
+/* ---------- partículas de lixo ---------- */
+const NP = 3600;
+const zScan = t => lerp(.21, -.23, ease.io(prog(t, T.sw0, T.sw1)));
+const geo = new THREE.BufferGeometry();
+const pos = new Float32Array(NP * 3), rnd = new Float32Array(NP * 4), ta = new Float32Array(NP), fd = new Float32Array(NP);
+for (let i = 0; i < NP; i++) {
+  const x = lerp(-.075, .1, hash(i * 1.1)), y = y0 + lerp(.045, .455, hash(i * 2.3)), z = lerp(-.2, .19, hash(i * 3.7));
+  pos.set([x, y, z], i * 3);
+  rnd.set([hash(i * 4.1), hash(i * 5.3), hash(i * 6.7), hash(i * 7.9)], i * 4);
+  let lo = T.sw0, hi = T.sw1 + .01;
+  for (let k = 0; k < 30; k++) { const m = (lo + hi) / 2; if (zScan(m) > z) lo = m; else hi = m; }
+  ta[i] = hi + hash(i * 8.3) * .12;
+  fd[i] = .9 + hash(i * 9.1) * .9;
+}
+geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+geo.setAttribute('rnd', new THREE.BufferAttribute(rnd, 4));
+geo.setAttribute('ta', new THREE.BufferAttribute(ta, 1));
+geo.setAttribute('fd', new THREE.BufferAttribute(fd, 1));
+const pmat = new THREE.ShaderMaterial({
+  uniforms: {time: {value: 0}, size: {value: 9}, fan: {value: FAN}},
+  vertexShader: `attribute vec4 rnd; attribute float ta, fd; uniform float time, size; uniform vec3 fan;
+    varying float vA, vSoft, vBig; varying vec3 vC; varying float vAng;
+    void main(){
+      vec3 p = position + vec3(sin(time*.31 + rnd.x*60.)*.004, sin(time*.23 + rnd.y*70.)*.006, cos(time*.27 + rnd.w*80.)*.004);
+      float u = clamp((time - ta) / fd, 0., 1.);
+      float ue = u * u * (3. - 2. * u);
+      vec3 tgt = fan + vec3((rnd.y - .5) * .07, (rnd.z - .5) * .07, -.28 * smoothstep(.55, 1., u));
+      vec3 q = mix(p, tgt, ue);
+      float ang = rnd.x * 6.283 + ue * 11.;
+      float rad = .045 * sin(3.14159 * ue) * (1. - ue);
+      q.x += cos(ang) * rad; q.y += sin(ang) * rad;
+      vec4 mv = modelViewMatrix * vec4(q, 1.);
+      gl_Position = projectionMatrix * mv;
+      float heat = smoothstep(0., .12, time - ta);
+      float gone = smoothstep(.5, .92, u);
+      float big = step(.86, rnd.w);
+      gl_PointSize = size * (.4 + .8 * rnd.y) * (1. + big * 2.4) * (1. + heat * .5) * (1. - .6 * ue) * (1. - gone) / -mv.z;
+      vA = (.1 + .3 * rnd.z) * (1. - .7 * big) * (1. - gone) * (1. + heat * .45) * (1. - .85 * ue) * (1. - .85 * ue);
+      vBig = big;
+      vSoft = .14 + big * .3;
+      vC = mix(vec3(.42, .4, .5), mix(vec3(1., .32, .84), vec3(1., .8, .96), smoothstep(.1, .45, u)), heat);
+      vAng = rnd.w * 6.283 + time * (rnd.x - .5) * 2.;
+    }`,
+  fragmentShader: `varying float vA, vSoft, vBig; varying vec3 vC; varying float vAng;
+    void main(){
+      vec2 c = gl_PointCoord - .5; float s = sin(vAng), co = cos(vAng);
+      c = vec2(c.x * co - c.y * s, c.x * s + c.y * co);
+      vec2 d = abs(c) - vec2(.2, .26);
+      float box = length(max(d, 0.)) + min(max(d.x, d.y), 0.);
+      float a = mix(smoothstep(vSoft, .0, box + vSoft * .2), smoothstep(.5, .32, length(gl_PointCoord - .5)) * .8 + smoothstep(.5, .0, length(gl_PointCoord - .5)) * .2, vBig);
+      gl_FragColor = vec4(vC, a * vA);
+    }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const parts = new THREE.Points(geo, pmat);
+parts.frustumCulled = false;
+scene.add(parts);
+
+/* ---------- plano de luz que varre o gabinete ---------- */
+const scanTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 512; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 64, 0); gr.addColorStop(0, 'rgba(255,60,200,0)'); gr.addColorStop(.46, 'rgba(255,90,215,.55)'); gr.addColorStop(.5, 'rgba(255,240,252,1)');
+  gr.addColorStop(.54, 'rgba(255,90,215,.55)'); gr.addColorStop(1, 'rgba(255,60,200,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 512);
+  const v = g.createLinearGradient(0, 0, 0, 512); v.addColorStop(0, 'rgba(0,0,0,1)'); v.addColorStop(.08, 'rgba(0,0,0,0)'); v.addColorStop(.92, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,1)');
+  g.globalCompositeOperation = 'destination-out'; g.fillStyle = v; g.fillRect(0, 0, 64, 512);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+const scan = new THREE.Mesh(new THREE.PlaneGeometry(.06, .43), new THREE.MeshBasicMaterial({map: scanTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide, opacity: 0}));
+const scanWall = new THREE.Mesh(new THREE.PlaneGeometry(.2, .43), new THREE.MeshBasicMaterial({color: 0xff4fd6, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide, opacity: 0}));
+scan.rotation.y = Math.PI / 2; scanWall.rotation.y = 0;
+const scanG = new THREE.Group(); scanG.add(scan); scanG.add(scanWall); scene.add(scanG);
+const scanLight = new THREE.PointLight(0xff8ae6, 0, .5, 2); scene.add(scanLight);
+
+/* ---------- câmera ---------- */
+const V = (x, y, z) => [x, y, z];
+const SHOTS = [
+  {a: 0, b: T.s2, k: [{t: 0, pos: V(1.16, .36, .8), look: V(-.01, .27, -.02), fov: 24}, {t: T.s2, pos: V(1.03, .35, .66), look: V(-.01, .27, -.02), fov: 24}], ease: ease.sine},
+  {a: T.s2, b: T.s3, k: [{t: T.s2, pos: V(.37, .372, .17), look: V(-.05, .33, -.08), fov: 26}, {t: T.s3, pos: V(.31, .352, .04), look: V(-.05, .33, -.085), fov: 26}], ease: ease.sine},
+  {a: T.s3, b: T.s4, k: [{t: T.s3, pos: V(1.58, .38, .58), look: V(-.02, .27, -.03), fov: 24}, {t: T.s4, pos: V(1.44, .36, .4), look: V(-.02, .27, -.03), fov: 24}], ease: ease.sine},
+  {a: T.s4, b: T.end + .5, orbit: true},
+];
+function setCam(t) {
+  const sh = SHOTS.find(s => t >= s.a && t < s.b) || SHOTS[SHOTS.length - 1];
+  let c;
+  if (sh.orbit) {
+    const k = ease.io(prog(t, sh.a, T.end));
+    const ang = lerp(1.25, .62, k), r = lerp(2.7, 3.05, k);
+    c = {pos: [Math.sin(ang) * r, lerp(.4, .5, k), Math.cos(ang) * r], look: [0, .27, 0], fov: 22};
+  } else c = keys(t, sh.k, sh.ease);
+  camera.position.set(...c.pos); camera.lookAt(...c.look);
+  if (camera.fov !== c.fov) { camera.fov = c.fov; camera.updateProjectionMatrix(); }
+}
+
+/* ---------- textos ---------- */
+const A = headline('Todo PC acumula|<em>lixo.</em>', {top: 250, size: 112});
+const list = document.createElement('div'); list.id = 'list';
+['Arquivos temporários', 'Cache antigo', 'Apps que você nunca abriu', 'Processos à toa'].forEach(s => { const d = document.createElement('div'); d.innerHTML = `<i></i>${s}`; list.appendChild(d); });
+document.getElementById('ov').appendChild(list);
+const L1 = label('AZOR <b>·</b> LIMPEZA', {top: 200});
+const B = headline('Tudo para <em>fora.</em>', {top: 250, size: 116});
+const gb = document.createElement('div'); gb.id = 'gb'; document.getElementById('ov').appendChild(gb);
+const gbs = document.createElement('div'); gbs.id = 'gbs'; gbs.innerHTML = 'devolvidos ao seu <em>PC.</em>'; document.getElementById('ov').appendChild(gbs);
+const gbn = document.createElement('div'); gbn.id = 'gbn'; gbn.textContent = 'VALOR ILUSTRATIVO'; document.getElementById('ov').appendChild(gbn);
+const END = lockup('Leve como no primeiro dia.');
+
+/* ---------- som ---------- */
+sfx(0, 'amb', .9, {d: D}); sfx(0, 'drone', .45, {d: T.sw1, f: 38}); sfx(0, 'fanidle', .4, {d: T.sw0});
+sfx(0, 'grains', .5, {d: T.s2, rate: 35, a0: .2, a1: .6}); sfx(T.s2, 'grains', .8, {d: T.s3 - T.s2, rate: 60, a0: .7, a1: 1});
+sfx(.5, 'air', .5); sfx(T.s2, 'cut', .4); [3.9, 4.6, 5.3, 6.0].forEach(t => sfx(t, 'tick', 1));
+sfx(T.s3, 'cut', .4); sfx(T.sw0, 'scan', .9, {d: T.sw1 - T.sw0 + .3}); sfx(T.sw0 + .3, 'suck', .8, {d: 3.2});
+sfx(T.sw0, 'grains', 1, {d: 3.0, rate: 120, a0: 1, a1: .2}); sfx(T.sw0 + .2, 'spinup', .6, {d: 6});
+sfx(8.4, 'air', .5); sfx(T.sw1 + .05, 'impact', .8, {soft: 1}); sfx(T.sw1 + .1, 'powerup', .7, {d: 1.4}); sfx(T.sw1 + .1, 'drone', .55, {d: D - T.sw1, f: 55, bright: 1});
+sfx(T.s4, 'whoosh', .45, {d: 1.6}); sfx(11.6, 'shimmer', .5, {d: 2.5});
+sfx(T.end, 'impact', .65, {soft: 1}); sfx(T.end + .7, 'tone', .55, {d: 2.4});
+
+window.renderFrame = t => {
+  setCam(t);
+  S.power(t, T.sw1, 1.2);
+  S.fans(t, .5, 10, T.sw0 + .2, 2.2);
+  // a ventoinha traseira brilha enquanto "expulsa" o lixo
+  const ex = Math.sin(Math.PI * prog(t, T.sw0, T.sw1 + .6));
+  S.pc.fanRings[3].emissiveIntensity = Math.max(S.pc.fanRings[3].emissiveIntensity, 1.7 * (.12 + .9 * ex) * (t > T.sw0 ? 1 : 0));
+  S.dust.material.uniforms.time.value = t;
+  pmat.uniforms.time.value = t;
+  pmat.uniforms.size.value = 9;
+  parts.visible = t < T.sw1 + 2;
+  // varredura
+  const z = zScan(t), sv = t > T.sw0 - .1 && t < T.sw1 + .25;
+  scanG.visible = sv;
+  const so = clamp((t - T.sw0 + .1) * 6) * (1 - prog(t, T.sw1, T.sw1 + .25));
+  scanG.position.set(.012, y0 + .25, z);
+  scan.material.opacity = so; scanWall.material.opacity = 0;
+  scanLight.position.set(.03, y0 + .27, z); scanLight.intensity = so * .5;
+  // textos
+  A.anim(t, .5, 3.2, {stagger: .12});
+  const items = [...list.children];
+  list.style.visibility = t >= 3.85 && t < 7.4 ? 'visible' : 'hidden';
+  items.forEach((d, i) => { const k = ease.expo(prog(t, 3.9 + i * .7, 4.6 + i * .7)), o = prog(t, 6.9, 7.2);
+    d.style.opacity = k * (1 - o); d.style.transform = `translateX(${(1 - k) * -30}px)`; d.style.filter = `blur(${(1 - k) * 6}px)`; });
+  L1.anim(t, T.sw0, 10.8); B.anim(t, 8.4, 10.8);
+  const gv = t >= 11.5 && t < 14.9;
+  [gb, gbs, gbn].forEach(e => e.style.visibility = gv ? 'visible' : 'hidden');
+  if (gv) {
+    const k = ease.out(prog(t, 11.6, 12.7)), o = ease.in(prog(t, 14.4, 14.9));
+    gb.innerHTML = `${(6.7 * k).toFixed(1).replace('.', ',')}<small>GB</small>`;
+    gb.style.opacity = ease.out(prog(t, 11.6, 12)) * (1 - o); gb.style.filter = `blur(${o * 10}px)`;
+    const k2 = ease.expo(prog(t, 12.2, 13)); gbs.style.opacity = k2 * (1 - o); gbs.style.transform = `translateY(${(1 - k2) * 30}px)`;
+    gbn.style.opacity = ease.out(prog(t, 12.6, 13.2)) * (1 - o);
+  }
+  st.bloom.strength = (t > T.sw0 && t < T.sw1 ? .4 : .5) + .2 * Math.sin(Math.PI * prog(t, T.sw1, T.sw1 + 1.4));
+  st.grade.uniforms.fade.value = Math.max(ease.io(prog(t, T.end - .35, T.end + .05)), 1 - ease.out(prog(t, 0, .6)));
+  END.anim(t, T.end);
+  st.render(t);
+};
+window.ready = async () => { await fontsReady(); return {D}; };
+</script></body></html>
