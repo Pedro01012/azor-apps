@@ -1,0 +1,109 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Potência que já era sua</title></head><body><div id="stage"></div>
+<script type="module">
+import {W, H, stage, background, post, headline, label, lockup, ring, sparkles, ready, keys, ease, prog, lerp, clamp, hash, sfx, $, el} from '/kit.js';
+import {pcSVG, pcUpdate} from '/pc2d.js';
+
+const {fx} = stage(`
+#card{position:absolute;left:0;top:0;width:1600px;height:900px;border-radius:30px;overflow:hidden;z-index:20;transform-origin:0 0;
+  box-shadow:0 0 0 2px rgba(255,255,255,.14),0 60px 140px rgba(0,0,0,.75),0 0 120px rgba(255,47,200,.25)}
+#card img{width:1600px;height:900px;display:block}
+#card .shine{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,0) 40%,rgba(255,255,255,.12) 50%,rgba(255,255,255,0) 60%);background-size:300% 100%}
+#cur{position:absolute;width:30px;height:44px;z-index:3}
+#rip{position:absolute;border-radius:50%;border:4px solid rgba(255,255,255,.9);z-index:2;box-shadow:0 0 30px rgba(255,120,225,.9)}
+`);
+const D = 20.4;
+const T = {s2: 3.4, s3: 7.0, click: 9.4, s4: 10.4, s5: 15.0, end: 17.4};
+
+const cam = el('div', 'cam'); cam.style.zIndex = 10; cam.innerHTML = pcSVG();
+const svg = cam.querySelector('svg'); svg.style.position = 'absolute'; svg.style.transformOrigin = '0 0';
+const card = el('div'); card.id = 'card';
+card.innerHTML = `<img src="/shots/home_before.png"><div class="shine"></div>
+  <svg id="cur" viewBox="0 0 16 24"><path d="M1 1 V19 L5.5 15 L9 22.5 L12 21.2 L8.6 13.8 H14 Z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"/></svg><div id="rip"></div>`;
+
+/* ---------- câmera sobre a ilustração (coordenadas do PC 800x1000) ---------- */
+const CAM = [
+  {a: 0, b: T.s2, k: [{t: 0, z: 2.9, cx: 690, cy: 430}, {t: T.s2, z: 2.6, cx: 694, cy: 520}], e: ease.sine},
+  {a: T.s2, b: T.s3, k: [{t: T.s2, z: 1.75, cx: 430, cy: 470}, {t: T.s3, z: 1.12, cx: 400, cy: 500}], e: ease.io},
+  {a: T.s3, b: T.s4, k: [{t: T.s3, z: 1.12, cx: 400, cy: 500}, {t: T.s4, z: 1.2, cx: 400, cy: 490}], e: ease.sine},
+  {a: T.s4, b: T.s5, k: [{t: T.s4, z: 1.2, cx: 400, cy: 490}, {t: T.s5, z: 1.34, cx: 380, cy: 470}], e: ease.sine},
+  {a: T.s5, b: D, k: [{t: T.s5, z: 3.0, cx: 310, cy: 300}, {t: T.end, z: 3.25, cx: 312, cy: 302}], e: ease.sine},
+];
+let C = {z: 1, cx: 400, cy: 500};
+const P = (x, y) => [540 + (x - C.cx) * C.z, 1080 + (y - C.cy) * C.z];
+function setCam(t) {
+  const sh = CAM.find(s => t >= s.a && t < s.b) || CAM[CAM.length - 1];
+  C = keys(t, sh.k, sh.e);
+  svg.style.transform = `translate(${540 - C.cx * C.z}px,${1080 - C.cy * C.z}px) scale(${C.z})`;
+}
+function fanAngle(t, t0, dur, r0, r1) {
+  const sp = u => lerp(r0, r1, ease.io(prog(u, t0, t0 + dur)));
+  let a = 0; const n = 200, dt = t / n; for (let i = 0; i < n; i++) a += sp((i + .5) * dt) * dt;
+  return {ang: a * Math.PI * 2, rps: sp(t)};
+}
+
+/* ---------- textos ---------- */
+const A = headline('Seu PC tem mais|potência do que|ele <em>entrega.</em>', {top: 250, size: 100});
+const B = headline('O Windows vem pronto|para <em>qualquer</em> PC.', {top: 250, size: 88});
+const Cc = headline('Não para o <em>seu.</em>', {top: 250, size: 116});
+const L1 = label('AZOR OPTIMIZATION <b>·</b> 3.2', {top: 200});
+const Dd = headline('115 ajustes.|<em>Um clique.</em>', {top: 250, size: 112});
+const E = headline('Mais FPS.|Menos delay.|Menos <em>travadas.</em>', {top: 250, size: 106});
+const F = headline('Potência que|já era <em>sua.</em>', {top: 250, size: 120});
+const END = lockup('Potência que já era sua.').anim(T.end);
+
+/* ---------- som (leve) ---------- */
+sfx(0, 'pad', .9, {d: D, chords: [[57, 64, 67, 71, 74], [53, 60, 64, 67, 72], [60, 64, 67, 71, 76]]});
+[.5, 3.7, 5.6, 7.3, 12.0, 15.3].forEach(t => sfx(t, 'air', .8));
+sfx(T.s2 - .2, 'whoosh', .7, {d: 1.1}); sfx(3.9, 'scan', .5, {d: 1.8});
+sfx(T.s3, 'whoosh', .6, {d: .9}); sfx(T.s3 + .3, 'tick', 1);
+sfx(T.click, 'riser', .8, {d: 1.1}); sfx(T.click, 'click', 1); sfx(T.click + .05, 'pop', .8);
+sfx(T.s4 + .1, 'whoosh', .7, {d: 1.0}); sfx(T.s4 + .35, 'bloom', 1); sfx(T.s4 + .4, 'sparkle', .8, {d: 2.4});
+sfx(T.s5 - .15, 'whoosh', .5, {d: .8}); sfx(T.s5 + .3, 'sparkle', .6, {d: 2});
+sfx(T.end, 'whoosh', .5, {d: .9}); sfx(T.end + .5, 'tone', 1);
+
+window.renderFrame = t => {
+  setCam(t);
+  const pw = lerp(.1, 1, ease.out(prog(t, T.s4 + .3, T.s4 + 1.8)));
+  const fa = fanAngle(t, T.s4 + .3, 1.8, .45, 9);
+  pcUpdate(svg, {power: pw, ang: fa.ang, blur: clamp((fa.rps - 3) / 5), t, flow: t > T.s4 + .2 ? ((t - T.s4 - .2) * .9) % 1.7 : -1, sweep: prog(t, 3.9, 5.7) || -1});
+  background(t, {px: (C.cx - 400) * C.z * .3, py: (C.cy - 500) * C.z * .3, mood: .55 + .6 * pw});
+  // profundidade: PC desfoca quando o cartão está na frente
+  const cardIn = ease.expo(prog(t, T.s3 + .1, T.s3 + 1.0)), cardOut = ease.in(prog(t, T.s4, T.s4 + .55));
+  const cv = cardIn * (1 - cardOut);
+  svg.style.filter = cv > .01 ? `blur(${(cv * 7).toFixed(1)}px) brightness(${1 - cv * .35})` : (t > T.s4 - .1 && t < T.s4 + .35 ? `blur(${(4 * (1 - prog(t, T.s4, T.s4 + .35))).toFixed(1)}px)` : 'none');
+  // cartão com a interface real
+  card.style.visibility = cv > .002 ? 'visible' : 'hidden';
+  if (cv > .002) {
+    const zin = ease.io(prog(t, 8.0, 9.25));
+    const sc = lerp(.6, 1.65, zin) * lerp(.9, 1, cardIn) * lerp(1, 1.4, cardOut);
+    const fx0 = lerp(800, 446, zin), fy0 = lerp(450, 382, zin);   // ponto da interface que fica no centro
+    card.style.transform = `translate(${540 - fx0 * sc}px,${lerp(1240, 1100, cardIn) - fy0 * sc}px) scale(${sc})`;
+    card.style.opacity = cv;
+    card.querySelector('.shine').style.backgroundPosition = `${lerp(120, -20, prog(t, 7.2, 8.6))}% 0`;
+    const ck = ease.io(prog(t, 8.2, T.click - .05));
+    const ux = lerp(1280, 446, ck), uy = lerp(800, 380, ck), press = Math.max(0, 1 - Math.abs(t - T.click) / .08);
+    const cur = card.querySelector('#cur'); cur.style.left = ux + 'px'; cur.style.top = uy + 'px'; cur.style.transform = `scale(${1.6 * (1 - press * .15)})`; cur.style.transformOrigin = '0 0';
+    const rk = prog(t, T.click, T.click + .5), rip = card.querySelector('#rip'), rs = 30 + rk * 300;
+    Object.assign(rip.style, {left: (446 - rs / 2) + 'px', top: (380 - rs / 2) + 'px', width: rs + 'px', height: rs + 'px', opacity: rk > 0 && rk < 1 ? 1 - rk : 0});
+  }
+  // efeitos de energia
+  fx.clearRect(0, 0, W, H);
+  const [px, py] = P(310, 300);
+  [0, .18, .36].forEach(d => ring(fx, px, py, prog(t, T.s4 + .3 + d, T.s4 + 1.7 + d), {r1: 1100}));
+  sparkles(fx, t, T.s4 + .4, px, py, {n: 34, spread: 420, dur: 1.8, seed: 2});
+  sparkles(fx, t, T.s5 + .3, 540, 1080, {n: 26, spread: 380, dur: 1.8, seed: 5});
+  // partículas de energia subindo depois do BOOST
+  if (t > T.s4 + .5) { fx.save(); fx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 40; i++) { const life = ((t - T.s4) * .35 + hash(i)) % 1, x = 120 + hash(i * 7) * 840, y = 1700 - life * 1300;
+      fx.fillStyle = `rgba(255,${150 + hash(i + 2) * 100 | 0},240,${Math.sin(Math.PI * life) * .55 * clamp((t - T.s4 - .5) * 2)})`; fx.beginPath(); fx.arc(x, y, 1.5 + hash(i + 4) * 2.5, 0, 6.283); fx.fill(); }
+    fx.restore(); }
+  // textos
+  A.anim(t, .5, 3.0, {stagger: .12}); B.anim(t, 3.7, 5.3); Cc.anim(t, 5.6, 6.8);
+  L1.anim(t, 7.2, 9.0); Dd.anim(t, 7.3, 9.0, {stagger: .14});
+  E.anim(t, 12.0, 14.6, {stagger: .16}); F.anim(t, 15.3, 17.0, {stagger: .14});
+  END(t);
+  const flash = Math.max(.55 * (1 - prog(t, T.click, T.click + .3)) * (t >= T.click ? 1 : 0), .35 * Math.sin(Math.PI * prog(t, T.s4 + .3, T.s4 + .8)));
+  post(t, {fade: Math.max(1 - ease.out(prog(t, 0, .5)), .9 * Math.sin(Math.PI * prog(t, T.s5 - .2, T.s5 + .15)), ease.io(prog(t, T.end - .3, T.end)) * (t < T.end ? 1 : 0)), flash});
+};
+window.ready = async () => { await ready(); return {D}; };
+</script></body></html>

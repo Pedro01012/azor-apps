@@ -1,0 +1,132 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Limpeza</title></head><body><div id="stage"></div>
+<script type="module">
+import {W, H, stage, background, post, headline, label, lockup, ring, sparkles, ready, keys, ease, prog, lerp, clamp, hash, sfx, $, el} from '/kit.js';
+import {pcSVG, pcUpdate} from '/pc2d.js';
+
+const {fx} = stage(`
+#list{position:absolute;left:84px;top:236px;z-index:50}
+#list div{font:500 30px GeistMono;letter-spacing:.16em;text-transform:uppercase;color:rgba(247,243,250,.9);height:62px;display:flex;align-items:center;gap:20px}
+#list div i{display:block;width:12px;height:12px;border-radius:3px;background:#ff5fd8;box-shadow:0 0 18px #ff2fc8}
+#gb{position:absolute;left:84px;top:196px;font:300 250px/1 Geist;letter-spacing:-.06em;z-index:50}
+#gb small{font-size:.42em;letter-spacing:-.02em;margin-left:14px;font-weight:400}
+#gbs{position:absolute;left:90px;top:466px;font:500 58px Geist;letter-spacing:-.03em;z-index:50}
+#gbs em{font-family:Serif;font-style:italic;font-weight:400;color:#ff8ae2}
+#gbn{position:absolute;left:92px;top:556px;font:500 20px GeistMono;letter-spacing:.3em;color:rgba(247,243,250,.42);z-index:50}
+`);
+const D = 18.0;
+const T = {s2: 3.4, s3: 6.8, sw0: 7.1, sw1: 10.1, s4: 10.6, end: 15.0};
+const cam = el('div', 'cam'); cam.style.zIndex = 10; cam.innerHTML = pcSVG();
+const svg = cam.querySelector('svg'); svg.style.position = 'absolute'; svg.style.transformOrigin = '0 0';
+const CAM = [
+  {a: 0, b: T.s2, k: [{t: 0, z: 1.28, cx: 380, cy: 470}, {t: T.s2, z: 1.2, cx: 390, cy: 480}], e: ease.sine},
+  {a: T.s2, b: T.s3, k: [{t: T.s2, z: 2.3, cx: 340, cy: 360}, {t: T.s3, z: 2.5, cx: 320, cy: 380}], e: ease.sine},
+  {a: T.s3, b: T.s4, k: [{t: T.s3, z: 1.18, cx: 400, cy: 490}, {t: T.s4, z: 1.14, cx: 400, cy: 495}], e: ease.sine},
+  {a: T.s4, b: D, k: [{t: T.s4, z: 1.14, cx: 400, cy: 495}, {t: T.end, z: 1.3, cx: 390, cy: 480}], e: ease.sine},
+];
+let C = {z: 1, cx: 400, cy: 500};
+const P = (x, y) => [540 + (x - C.cx) * C.z, 1080 + (y - C.cy) * C.z];
+function setCam(t) { const sh = CAM.find(s => t >= s.a && t < s.b) || CAM[CAM.length - 1]; C = keys(t, sh.k, sh.e);
+  svg.style.transform = `translate(${540 - C.cx * C.z}px,${1080 - C.cy * C.z}px) scale(${C.z})`; }
+function fanAngle(t, t0, dur, r0, r1) { const sp = u => lerp(r0, r1, ease.io(prog(u, t0, t0 + dur))); let a = 0; const n = 200, dt = t / n; for (let i = 0; i < n; i++) a += sp((i + .5) * dt) * dt; return {ang: a * Math.PI * 2, rps: sp(t)}; }
+
+/* ---------- lixo: fragmentos (arquivinhos e chips) ---------- */
+const xScan = t => lerp(640, 70, ease.io(prog(t, T.sw0, T.sw1)));
+const EX = {x: 98, y: 236};
+const JUNK = Array.from({length: 900}, (_, i) => {
+  const x = lerp(84, 620, hash(i * 1.3)), y = lerp(160, 900, hash(i * 2.7));
+  let lo = T.sw0, hi = T.sw1 + .01; for (let k = 0; k < 26; k++) { const m = (lo + hi) / 2; if (xScan(m) > x) lo = m; else hi = m; }
+  return {x, y, s: 2.5 + hash(i * 4.1) * 5, r: hash(i * 5.3) * 6.28, kind: hash(i * 6.1) > .55 ? 1 : 0, ta: hi + hash(i * 7.7) * .1, fd: .8 + hash(i * 8.9) * .8, a: .25 + hash(i * 9.7) * .5, ph: hash(i * 3.3) * 50};
+});
+const GLOW = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
+  const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,170,235,.9)'); r.addColorStop(.35, 'rgba(255,79,214,.35)'); r.addColorStop(1, 'rgba(255,79,214,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 64, 64); return c; })();
+function drawJunk(t) {
+  const [gx0, gy0] = P(76, 92), [gx1, gy1] = P(628, 908);
+  fx.save(); fx.beginPath(); fx.rect(gx0 - 400, gy0, (gx1 - gx0) + 400, gy1 - gy0); fx.clip();
+  JUNK.forEach(j => {
+    const u = clamp((t - j.ta) / j.fd);
+    if (u >= 1) return;
+    let x = j.x + Math.sin(t * .4 + j.ph) * 5, y = j.y + Math.cos(t * .33 + j.ph) * 6;
+    const heat = clamp((t - j.ta) / .15);
+    if (u > 0) {
+      const ue = ease.in(u);
+      const tx = EX.x - 60 * clamp((u - .6) / .4), ty = EX.y;
+      const sw = Math.sin(Math.PI * ue) * 50 * (1 - ue), ang = j.ph + ue * 10;
+      x = lerp(x, tx, ue) + Math.cos(ang) * sw; y = lerp(y, ty, ue) + Math.sin(ang) * sw;
+    }
+    const [sx, sy] = P(x, y);
+    const sc = C.z * (1 - .6 * ease.in(u)), s = j.s * sc;
+    const al = j.a * (1 - ease.in(u)) * (heat > 0 ? 1.4 : 1);
+    fx.save(); fx.translate(sx, sy); fx.rotate(j.r + t * (hash(j.ph) - .5));
+    if (heat > 0) { fx.globalCompositeOperation = 'lighter'; fx.globalAlpha = Math.min(1, al); fx.drawImage(GLOW, -s * 3, -s * 3, s * 6, s * 6); fx.globalAlpha = 1; fx.fillStyle = `rgba(255,${170 + 80 * u | 0},240,${al})`; }
+    else fx.fillStyle = `rgba(150,140,175,${al})`;
+    if (j.kind) { fx.beginPath(); fx.moveTo(-s, -s * 1.3); fx.lineTo(s * .4, -s * 1.3); fx.lineTo(s, -s * .7); fx.lineTo(s, s * 1.3); fx.lineTo(-s, s * 1.3); fx.closePath(); fx.fill(); }
+    else fx.fillRect(-s, -s * .7, s * 2, s * 1.4);
+    fx.restore();
+  });
+  fx.restore();
+}
+function drawScan(t) {
+  if (t < T.sw0 - .05 || t > T.sw1 + .2) return;
+  const o = clamp((t - T.sw0 + .05) * 6) * (1 - prog(t, T.sw1, T.sw1 + .2));
+  const [x] = P(xScan(t), 0), [, y0] = P(0, 92), [, y1] = P(0, 908);
+  fx.save(); fx.globalCompositeOperation = 'lighter';
+  const g = fx.createLinearGradient(x - 160, 0, x + 40, 0);
+  g.addColorStop(0, 'rgba(255,60,200,0)'); g.addColorStop(.75, `rgba(255,90,215,${.18 * o})`); g.addColorStop(.97, `rgba(255,235,252,${.9 * o})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+  fx.fillStyle = g; fx.fillRect(x - 160, y0, 200, y1 - y0);
+  fx.shadowColor = '#ff4fd6'; fx.shadowBlur = 40; fx.fillStyle = `rgba(255,245,253,${o})`; fx.fillRect(x - 2, y0, 4, y1 - y0);
+  fx.restore();
+}
+
+/* ---------- textos ---------- */
+const A = headline('Todo PC acumula|<em>lixo.</em>', {top: 250, size: 118});
+const list = el('div'); list.id = 'list';
+['Arquivos temporários', 'Cache antigo', 'Apps que você nunca abriu', 'Processos à toa'].forEach(s => el('div', '', list, `<i></i>${s}`));
+const L1 = label('AZOR <b>·</b> LIMPEZA', {top: 200});
+const B = headline('Tudo para <em>fora.</em>', {top: 250, size: 120});
+const gb = el('div'); gb.id = 'gb'; const gbs = el('div', '', $('stage'), 'devolvidos ao seu <em>PC.</em>'); gbs.id = 'gbs';
+const gbn = el('div', '', $('stage'), 'VALOR ILUSTRATIVO'); gbn.id = 'gbn';
+const END = lockup('Leve como no primeiro dia.').anim(T.end);
+
+/* ---------- som ---------- */
+sfx(0, 'pad', .8, {d: D, chords: [[57, 60, 64, 67, 71], [53, 57, 60, 64, 67], [60, 64, 67, 71, 74]]});
+sfx(0, 'grains', .6, {d: T.s3, rate: 30, a0: .3, a1: .8}); sfx(.5, 'air', .8);
+sfx(T.s2 - .15, 'whoosh', .6, {d: .9}); [3.7, 4.3, 4.9, 5.5].forEach(t => sfx(t, 'tick', 1));
+sfx(T.s3 - .15, 'whoosh', .6, {d: .9}); sfx(T.sw0, 'scan', 1, {d: T.sw1 - T.sw0 + .2}); sfx(T.sw0 + .3, 'suck', .9, {d: 3.0});
+sfx(T.sw0, 'grains', .9, {d: 3.0, rate: 90, a0: 1, a1: .2}); sfx(8.0, 'air', .8);
+sfx(T.s4 - .1, 'riser', .6, {d: .8}); sfx(T.s4, 'bloom', 1); sfx(T.s4 + .1, 'sparkle', .8, {d: 2.2});
+sfx(11.2, 'count', .9, {d: 1.1}); sfx(11.8, 'air', .7);
+sfx(T.end, 'whoosh', .5, {d: .9}); sfx(T.end + .5, 'tone', 1);
+
+window.renderFrame = t => {
+  setCam(t);
+  const pw = lerp(.16, 1, ease.out(prog(t, T.s4 - .1, T.s4 + 1.2)));
+  const fa = fanAngle(t, T.sw0 + .3, 1.8, .45, 8);
+  pcUpdate(svg, {power: pw, ang: fa.ang, blur: clamp((fa.rps - 3) / 5), t, flow: t > T.s4 ? ((t - T.s4) * .9) % 1.7 : -1});
+  background(t, {px: (C.cx - 400) * C.z * .3, py: (C.cy - 500) * C.z * .3, mood: .5 + .6 * pw});
+  fx.clearRect(0, 0, W, H);
+  drawJunk(t);
+  drawScan(t);
+  // brilho na saída traseira enquanto o lixo é expulso
+  const ex = Math.sin(Math.PI * prog(t, T.sw0 + .3, T.sw1 + .9));
+  if (ex > 0) { const [ex0, ey0] = P(EX.x, EX.y); const g = fx.createRadialGradient(ex0, ey0, 0, ex0, ey0, 160 * C.z);
+    g.addColorStop(0, `rgba(255,120,225,${.35 * ex})`); g.addColorStop(1, 'rgba(255,120,225,0)'); fx.save(); fx.globalCompositeOperation = 'lighter'; fx.fillStyle = g; fx.fillRect(ex0 - 200 * C.z, ey0 - 200 * C.z, 400 * C.z, 400 * C.z); fx.restore(); }
+  const [px, py] = P(310, 300);
+  [0, .2].forEach(d => ring(fx, px, py, prog(t, T.s4 + d, T.s4 + 1.4 + d), {r1: 1000}));
+  sparkles(fx, t, T.s4 + .1, px, py, {n: 30, spread: 420, dur: 1.8, seed: 3});
+  // textos
+  A.anim(t, .5, 3.0, {stagger: .12});
+  const items = [...list.children]; list.style.visibility = t >= 3.6 && t < 6.9 ? 'visible' : 'hidden';
+  items.forEach((d, i) => { const k = ease.expo(prog(t, 3.7 + i * .6, 4.4 + i * .6)), o = prog(t, 6.4, 6.8);
+    d.style.opacity = k * (1 - o); d.style.transform = `translateX(${(1 - k) * -30}px)`; d.style.filter = `blur(${(1 - k) * 6}px)`; });
+  L1.anim(t, T.sw0, 10.2); B.anim(t, 8.0, 10.2);
+  const gv = t >= 11.0 && t < 14.7; [gb, gbs, gbn].forEach(e => e.style.visibility = gv ? 'visible' : 'hidden');
+  if (gv) { const k = ease.out(prog(t, 11.2, 12.3)), o = ease.in(prog(t, 14.2, 14.7));
+    gb.innerHTML = `${(6.7 * k).toFixed(1).replace('.', ',')}<small>GB</small>`; gb.style.opacity = ease.out(prog(t, 11.1, 11.5)) * (1 - o); gb.style.filter = `blur(${o * 10}px)`;
+    const k2 = ease.expo(prog(t, 11.8, 12.6)); gbs.style.opacity = k2 * (1 - o); gbs.style.transform = `translateY(${(1 - k2) * 30}px)`; gbn.style.opacity = ease.out(prog(t, 12.2, 12.8)) * (1 - o); }
+  END(t);
+  post(t, {fade: Math.max(1 - ease.out(prog(t, 0, .5)), .85 * Math.sin(Math.PI * prog(t, T.s2 - .15, T.s2 + .12)), .85 * Math.sin(Math.PI * prog(t, T.s3 - .15, T.s3 + .12)), ease.io(prog(t, T.end - .3, T.end)) * (t < T.end ? 1 : 0)),
+    flash: .3 * Math.sin(Math.PI * prog(t, T.s4, T.s4 + .5))});
+};
+window.ready = async () => { await ready(); return {D}; };
+</script></body></html>
