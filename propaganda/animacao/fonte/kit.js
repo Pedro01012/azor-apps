@@ -117,10 +117,10 @@ export function sparkles(g, t, t0, x, y, {n = 26, spread = 260, dur = 1.4, seed 
   g.restore();
 }
 // assinatura final
-export function lockup(tagline) {
+export function lockup(tagline, sub = 'OPTIMIZATION') {
   const e = el('div', '', $('stage'));
   e.id = 'lock';
-  e.innerHTML = `<div class="lk-glow"></div><img class="lk-ic" src="/web/assets/Azor_icon.png"><div class="lk-w">AZOR</div><div class="lk-s">OPTIMIZATION</div><div class="lk-t">${tagline}</div>
+  e.innerHTML = `<div class="lk-glow"></div><img class="lk-ic" src="/web/assets/Azor_icon.png"><div class="lk-w">AZOR</div><div class="lk-s">${sub}</div><div class="lk-t">${tagline}</div>
     <div class="lk-soc"><span><svg viewBox="0 0 24 24"><path fill="currentColor" d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.6 2.6 0 0 1-2.6-2.6 2.6 2.6 0 0 1 3.4-2.47V9.67a5.73 5.73 0 0 0-.81-.06 5.69 5.69 0 0 0-5.69 5.69A5.69 5.69 0 0 0 9.85 21a5.69 5.69 0 0 0 5.69-5.69V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3a4.3 4.3 0 0 1-3.24-1.48z"/></svg>@azorwrld</span>
     <span><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.2" cy="6.8" r="1.2" fill="currentColor"/></svg>@azortweaks</span></div><div class="lk-b">Link na bio</div>`;
   const st = document.createElement('style');

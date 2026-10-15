@@ -1,0 +1,101 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Ao vivo</title></head><body><div id="stage"></div>
+<script type="module">
+import {W, H, stage, background, post, headline, label, lockup, ring, sparkles, ready, keys, ease, prog, lerp, clamp, hash, sfx, $, el} from '/kit.js';
+import {pcSVG, pcUpdate} from '/pc2d.js';
+import {chip, note} from '/ui.js';
+
+const {fx} = stage(`
+#steps{position:absolute;left:84px;right:84px;top:560px;z-index:45}
+#steps .s{position:absolute;left:0;right:0;height:250px}
+#steps .c{position:absolute;left:0;top:0;width:110px;height:110px;border-radius:50%;border:3px solid #ff5fd8;display:flex;align-items:center;justify-content:center;
+  font:600 50px Geist;color:#ffe6f8;background:rgba(20,10,26,.9);box-shadow:0 0 40px rgba(255,47,200,.35)}
+#steps h3{position:absolute;left:150px;top:8px;font:600 56px Geist;letter-spacing:-.035em}
+#steps p{position:absolute;left:150px;top:84px;right:0;font:400 34px/1.3 Geist;color:rgba(247,243,250,.68)}
+#steps p b{color:#ff9be6;font-weight:500}
+#line{position:absolute;left:138px;top:670px;width:4px;height:780px;background:linear-gradient(#ff3fcf,#b44dff);transform-origin:50% 0;z-index:44;box-shadow:0 0 20px #ff2fc8}
+#wu{position:absolute;left:84px;top:600px;width:912px;border-radius:36px;z-index:44;overflow:hidden;
+  background:linear-gradient(160deg,rgba(36,20,46,.92),rgba(12,8,18,.96));border:1.5px solid rgba(255,255,255,.12);box-shadow:0 60px 140px rgba(0,0,0,.7),0 0 120px rgba(255,47,200,.18)}
+#wu .bar{display:flex;align-items:center;gap:14px;padding:26px 34px;border-bottom:1.5px solid rgba(255,255,255,.08);font:600 26px GeistMono;letter-spacing:.24em;color:#ffe6f8}
+#wu .bar i{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.2);display:block}#wu .bar i:first-child{background:#ff5fd8}
+#wu .bar span{margin-left:auto;font-weight:500;font-size:20px;color:rgba(247,243,250,.45)}
+#wu .ok{display:flex;align-items:center;gap:16px;padding:24px 34px 8px;font:500 30px Geist;color:#9dffcf}
+#wu .r{display:flex;justify-content:space-between;align-items:center;margin:12px 26px;padding:20px 24px;border-radius:20px;background:rgba(255,255,255,.04);font:500 32px Geist;letter-spacing:-.01em}
+#wu .tg{position:relative;width:96px;height:52px;border-radius:30px;background:#2a2631;flex:none}
+#wu .tg i{position:absolute;left:6px;top:6px;width:40px;height:40px;border-radius:50%;background:#f7f3fa}
+#wu .pg{margin:22px 34px 10px;height:10px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}
+#wu .pg b{display:block;height:100%;background:linear-gradient(90deg,#ff3fcf,#b44dff);transform-origin:0 50%}
+#wu .ft{padding:6px 34px 30px;font:500 20px GeistMono;letter-spacing:.18em;color:rgba(247,243,250,.45);text-transform:uppercase}
+`);
+const D = 22.4;
+const T = {s2: 3.2, step: 1.75, s3: 10.6, s4: 16.4, end: 19.6};
+const STEPS = [['Entra no Discord', 'Entra no servidor <b>azortweaks</b> e abre um ticket.'], ['Manda as specs', 'Um print da aba Desempenho já resolve.'],
+  ['Combina o horário', 'Valor e horário acertados no ticket, antes de tudo.'], ['Otimização ao vivo', 'Acesso remoto no Windows e chamada guiada na BIOS.']];
+const ROWS = ['Plano Desempenho Máximo', 'Game DVR: desativar', 'Telemetria: desativar', 'Multiplane Overlay (MPO)', 'Aceleração do mouse', 'Apps em segundo plano: desativar', 'Agendamento de GPU (HAGS)'];
+const cam = el('div', 'cam'); cam.style.zIndex = 10; cam.innerHTML = pcSVG();
+const svg = cam.querySelector('svg'); svg.style.position = 'absolute'; svg.style.transformOrigin = '0 0';
+const st = el('div', '', $('stage')); st.id = 'steps';
+st.innerHTML = STEPS.map(([h, p], i) => `<div class="s" style="top:${i * 270}px"><div class="c">${i + 1}</div><h3>${h}</h3><p>${p}</p></div>`).join('');
+const ln = el('div', '', $('stage')); ln.id = 'line';
+const SE = [...st.querySelectorAll('.s')];
+const wu = el('div', '', $('stage')); wu.id = 'wu';
+wu.innerHTML = `<div class="bar"><i></i><i></i><i></i>&nbsp;AZOR WINUTIL<span>ao vivo</span></div><div class="ok">✓ Ponto de restauração criado</div>
+  ${ROWS.map(r => `<div class="r">${r}<div class="tg"><i></i></div></div>`).join('')}<div class="pg"><b></b></div><div class="ft">Aplicando ajustes de desempenho</div>`;
+const RE = [...wu.querySelectorAll('.r')];
+const A = headline('Não é script|baixado da <em>internet.</em>', {top: 250, size: 104});
+const L = label('COMO FUNCIONA <b>·</b> DO TICKET AO PC AFINADO', {top: 200});
+const B = headline('Do ticket ao|PC <em>afinado.</em>', {top: 250, size: 104});
+const Cc = headline('Você vê cada ajuste|<em>acontecendo.</em>', {top: 250, size: 92});
+const nt = note('Ilustração do Azor WinUtil, a ferramenta própria usada nos ajustes', 1700);
+const E = headline('Não gostou de algo?|O PC <em>volta</em>|como estava.', {top: 250, size: 92});
+const c1 = chip('Ponto de restauração antes de tudo', {top: 640});
+const END = lockup('Ao vivo, com você.', 'TWEAKS').anim(T.end);
+const tStep = i => T.s2 + .5 + i * T.step, tRow = i => T.s3 + 1.2 + i * .52;
+
+sfx(0, 'pad', .85, {d: D, chords: [[55, 62, 66, 69, 74], [57, 64, 67, 71, 76], [53, 60, 64, 67, 72], [60, 64, 67, 71, 76]]});
+sfx(.4, 'air', .8); sfx(T.s2 - .2, 'whoosh', .6, {d: .9});
+STEPS.forEach((_, i) => { sfx(tStep(i), 'pop', .9); sfx(tStep(i) + .1, 'air', .5); });
+sfx(T.s3 - .2, 'whoosh', .7, {d: 1}); sfx(T.s3 + .6, 'chime', .6);
+ROWS.forEach((_, i) => { sfx(tRow(i), 'click', .8); sfx(tRow(i) + .04, 'tick', .6); });
+sfx(T.s4 - .2, 'whoosh', .7, {d: 1}); sfx(T.s4 + .2, 'bloom', 1); sfx(T.s4 + .3, 'sparkle', .8, {d: 2});
+sfx(T.end, 'whoosh', .5, {d: .9}); sfx(T.end + .5, 'tone', 1);
+
+window.renderFrame = t => {
+  fx.clearRect(0, 0, W, H);
+  const pw = lerp(.12, 1, ease.out(prog(t, T.s4, T.s4 + 1.2)));
+  const C = keys(t, [{t: 0, z: 1.3, cx: 400, cy: 480}, {t: T.s4, z: 1.15, cx: 400, cy: 470}, {t: T.s4 + .01, z: 1.35, cx: 390, cy: 400}, {t: T.end, z: 1.18, cx: 400, cy: 420}], ease.sine);
+  svg.style.transform = `translate(${540 - C.cx * C.z}px,${1180 - C.cy * C.z}px) scale(${C.z})`;
+  const back = ease.io(prog(t, T.s2 - .3, T.s2 + .4)) * (1 - ease.io(prog(t, T.s4 - .3, T.s4 + .2)));
+  svg.style.filter = back > .01 ? `blur(${(back * 10).toFixed(1)}px) brightness(${(1 - back * .6).toFixed(2)})` : 'none';
+  let a = 0; { const n = 200, dt = t / n; for (let i = 0; i < n; i++) a += lerp(.4, 8.5, ease.io(prog((i + .5) * dt, T.s4, T.s4 + 1.6))) * dt; }
+  pcUpdate(svg, {power: pw, ang: a * 6.283, blur: clamp((pw - .5) * 2), t, flow: t > T.s4 ? ((t - T.s4) * .9) % 1.7 : -1});
+  background(t, {mood: .5 + .5 * pw});
+  // passos
+  const sv = t > T.s2 && t < T.s3 + .1, so = ease.in(prog(t, T.s3 - .4, T.s3));
+  st.style.visibility = ln.style.visibility = sv ? 'visible' : 'hidden';
+  if (sv) { st.style.opacity = ln.style.opacity = 1 - so; st.style.filter = so > 0 ? `blur(${so * 10}px)` : 'none';
+    SE.forEach((s, i) => { const k = ease.expo(prog(t, tStep(i), tStep(i) + .7)); s.style.opacity = k; s.style.transform = `translateX(${(1 - k) * 60}px)`;
+      const c = s.querySelector('.c'); c.style.transform = `scale(${lerp(.4, 1, ease.back(prog(t, tStep(i), tStep(i) + .45)))})`;
+      c.style.background = t > tStep(i) + .2 ? 'linear-gradient(135deg,#ff3fcf,#b44dff)' : 'rgba(20,10,26,.9)'; });
+    ln.style.transform = `scaleY(${clamp((t - tStep(0)) / (tStep(3) - tStep(0))) * 810 / 780})`;
+    SE.forEach((s, i) => { const k = prog(t, tStep(i), tStep(i) + .9); if (k > 0 && k < 1) ring(fx, 139, 615 + i * 270, k, {r0: 50, r1: 240, w: 4}); }); }
+  // WinUtil
+  const wv = t > T.s3 - .1 && t < T.s4 + .1, win = ease.expo(prog(t, T.s3, T.s3 + .8)), wout = ease.in(prog(t, T.s4 - .35, T.s4 + .1));
+  wu.style.visibility = wv ? 'visible' : 'hidden';
+  if (wv) { wu.style.opacity = win * (1 - wout); wu.style.transform = `translateY(${(1 - win) * 80}px) scale(${lerp(.95, 1, win) * lerp(1, 1.08, wout)})`; wu.style.filter = wout > 0 ? `blur(${wout * 10}px)` : 'none';
+    RE.forEach((r, i) => { const k = ease.back(prog(t, tRow(i), tRow(i) + .3)), on = t > tRow(i);
+      const tg = r.querySelector('.tg'); tg.querySelector('i').style.transform = `translateX(${k * 44}px)`;
+      tg.style.background = on ? 'linear-gradient(90deg,#ff3fcf,#b44dff)' : '#2a2631'; tg.style.boxShadow = on ? '0 0 26px rgba(255,47,200,.6)' : 'none';
+      r.style.background = on ? `rgba(255,47,200,${.1 * (1 - prog(t, tRow(i), tRow(i) + .8)) + .05})` : 'rgba(255,255,255,.04)'; });
+    wu.querySelector('.pg b').style.transform = `scaleX(${clamp((t - tRow(0)) / (tRow(ROWS.length - 1) + .3 - tRow(0)))})`;
+    wu.querySelector('.ft').textContent = t > tRow(ROWS.length - 1) + .3 ? 'Ajustes aplicados ✓' : 'Aplicando ajustes de desempenho'; }
+  const [px, py] = [540 + (310 - C.cx) * C.z, 1180 + (300 - C.cy) * C.z];
+  [0, .2].forEach(d => ring(fx, px, py, prog(t, T.s4 + .1 + d, T.s4 + 1.4 + d), {r1: 1000}));
+  sparkles(fx, t, T.s4 + .2, px, py, {n: 30, spread: 420, dur: 1.7, seed: 8});
+  A.anim(t, .4, T.s2 - .4, {stagger: .12}); L.anim(t, T.s2 + .1, T.s3 - .4); B.anim(t, T.s2 + .1, T.s3 - .4, {stagger: .12});
+  Cc.anim(t, T.s3 + .1, T.s4 - .4, {stagger: .12}); nt.anim(t, T.s3 + .6, T.s4 - .4);
+  E.anim(t, T.s4 + .2, T.end - .4, {stagger: .12}); c1.anim(t, T.s4 + .9, T.end - .4);
+  END(t);
+  post(t, {fade: Math.max(1 - ease.out(prog(t, 0, .5)), ease.io(prog(t, T.end - .3, T.end)) * (t < T.end ? 1 : 0)), flash: .3 * Math.sin(Math.PI * prog(t, T.s4 + .1, T.s4 + .6))});
+};
+window.ready = async () => { await ready(); return {D}; };
+</script></body></html>

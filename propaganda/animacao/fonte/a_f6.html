@@ -1,0 +1,121 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — XMP</title></head><body><div id="stage"></div>
+<script type="module">
+import {W, H, stage, background, post, headline, label, lockup, ring, sparkles, ready, keys, ease, prog, lerp, clamp, hash, sfx, $, el} from '/kit.js';
+import {pcSVG, pcUpdate} from '/pc2d.js';
+import {chip, note, ramSVG, ramUpdate, keycap} from '/ui.js';
+
+const {fx} = stage(`
+#rw{position:absolute;left:90px;top:1060px;width:900px;height:270px;z-index:20;perspective:1600px}
+#rw svg{position:absolute;left:0;top:0;transform-origin:50% 50%}
+#num{position:absolute;left:0;right:0;top:620px;text-align:center;font:300 230px/1 Geist;letter-spacing:-.06em;z-index:45}
+#num small{font:500 54px GeistMono;letter-spacing:0;margin-left:16px;color:rgba(247,243,250,.6)}
+#keys{position:absolute;left:0;top:700px;width:1080px;height:200px;z-index:45}
+#keys .plus{position:absolute;top:36px;font:300 70px Geist;color:rgba(247,243,250,.4)}
+#path{position:absolute;left:84px;right:84px;top:960px;display:flex;flex-wrap:wrap;gap:18px;align-items:center;z-index:45;font:500 30px GeistMono;color:rgba(247,243,250,.5)}
+#path i{font-style:normal}
+#path span{padding:16px 26px;border-radius:20px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.14);color:#f7f3fa}
+#path span.hi{background:rgba(255,47,200,.16);border-color:rgba(255,120,225,.6);color:#ffe6f8;box-shadow:0 0 40px rgba(255,47,200,.25)}
+#bios{position:absolute;left:84px;top:640px;width:912px;border-radius:36px;padding:40px 44px;z-index:44;
+  background:linear-gradient(160deg,rgba(40,22,52,.88),rgba(14,9,20,.94));border:1.5px solid rgba(255,255,255,.12);box-shadow:0 60px 140px rgba(0,0,0,.7)}
+#bios .h{font:500 22px GeistMono;letter-spacing:.26em;color:rgba(247,243,250,.55);margin-bottom:30px}
+#bios .r{display:flex;justify-content:space-between;align-items:center;padding:26px 0;border-top:1.5px solid rgba(255,255,255,.08);font:500 40px Geist;letter-spacing:-.02em}
+#bios .r b{font:500 38px GeistMono;letter-spacing:0;color:#ffe6f8}
+#sw{position:relative;width:150px;height:76px;border-radius:40px;background:#2a2631}
+#sw i{position:absolute;left:8px;top:8px;width:60px;height:60px;border-radius:50%;background:#f7f3fa;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+`);
+const D = 20.4;
+const T = {s2: 3.4, s3: 6.8, s4: 10.6, on: 11.7, s5: 14.6, end: 17.4};
+const rw = el('div'); rw.id = 'rw'; rw.innerHTML = ramSVG(); const rsv = rw.querySelector('svg');
+const cam = el('div', 'cam'); cam.style.zIndex = 10; cam.innerHTML = pcSVG();
+const svg = cam.querySelector('svg'); svg.style.position = 'absolute'; svg.style.transformOrigin = '0 0';
+const num = el('div', '', $('stage')); num.id = 'num';
+const kb = el('div', '', $('stage')); kb.id = 'keys';
+kb.innerHTML = keycap('Ctrl', 230) + '<div class="plus">+</div>' + keycap('Shift', 260) + '<div class="plus">+</div>' + keycap('Esc', 200);
+const kc = [...kb.querySelectorAll('.key')], pl = [...kb.querySelectorAll('.plus')];
+[[70, 0], [380, 1], [720, 2]].forEach(([x, i]) => kc[i].style.left = x + 'px'); pl[0].style.left = '316px'; pl[1].style.left = '656px';
+const pth = el('div', '', $('stage')); pth.id = 'path'; pth.innerHTML = '<span>Desempenho</span><i>→</i><span>Memória</span><i>→</i><span class="hi">Velocidade</span>';
+const ps = [...pth.children];
+const bios = el('div', '', $('stage')); bios.id = 'bios';
+bios.innerHTML = `<div class="h">BIOS · MEMÓRIA</div><div class="r">Perfil XMP / EXPO <div id="sw"><i></i></div></div><div class="r">Frequência <b class="fq">2133 MHz</b></div>`;
+
+const A = headline('Você pagou|<em>3200 MHz.</em>', {top: 250, size: 120});
+const B = headline('Mas ela roda|a <em>2133.</em>', {top: 250, size: 120});
+const c1 = chip('Um terço mais lenta do que na caixa', {top: 900});
+const Cc = headline('Confira em|<em>10 segundos:</em>', {top: 250, size: 108});
+const L = label('GERENCIADOR DE TAREFAS', {top: 640});
+const nt1 = note('Se mostrar 2133 ou 2400 numa memória de 3200, o XMP está desligado', 1150);
+const E = headline('XMP ligado:|a RAM na velocidade|que você <em>pagou.</em>', {top: 250, size: 92});
+const F = headline('Ajuste guiado por|chamada, <em>com você.</em>', {top: 250, size: 98});
+const c2 = chip('BIOS · R$ 45 ou inclusa no Extremo', {top: 530});
+const nt2 = note('Valores de referência · confirmados no ticket do Discord', 1790);
+const END = lockup('A velocidade que você pagou.', 'TWEAKS').anim(T.end);
+
+sfx(0, 'pad', .8, {d: D, chords: [[57, 64, 67, 72, 76], [53, 60, 64, 69, 72], [60, 64, 67, 71, 76]]});
+sfx(.4, 'air', .8); sfx(1.1, 'scan', .4, {d: 1.6});
+sfx(T.s2 - .2, 'whoosh', .6, {d: .9}); sfx(T.s2 + .4, 'count', .6, {d: 1.1}); sfx(T.s2 + 1.8, 'pop', .7);
+sfx(T.s3 - .2, 'whoosh', .6, {d: .9}); [7.4, 7.75, 8.1].forEach(x => sfx(x, 'click', 1)); [8.8, 9.15, 9.5].forEach(x => sfx(x, 'tick', .8));
+sfx(T.s4 - .2, 'whoosh', .7, {d: 1}); sfx(T.on - .9, 'riser', .7, {d: .9}); sfx(T.on, 'click', 1); sfx(T.on + .05, 'bloom', 1); sfx(T.on + .1, 'sparkle', .8, {d: 2.2}); sfx(T.on + .3, 'count', .6, {d: 1});
+sfx(T.s5 - .2, 'whoosh', .6, {d: .9}); sfx(T.s5 + .5, 'air', .8);
+sfx(T.end, 'whoosh', .5, {d: .9}); sfx(T.end + .5, 'tone', 1);
+
+let RY = 0;
+window.renderFrame = t => {
+  fx.clearRect(0, 0, W, H);
+  const on = ease.out(prog(t, T.on, T.on + .8));
+  // pente de RAM em destaque
+  const rv = t < T.s5 + .2, rin = ease.expo(prog(t, 0, 1.2)), rout = ease.in(prog(t, T.s5 - .3, T.s5 + .2));
+  rw.style.visibility = rv ? 'visible' : 'hidden';
+  if (rv) {
+    const yy = t < T.s3 ? 0 : t < T.s4 ? 330 : 260;
+    RY = lerp(140, 0, rin) + yy * ease.io(prog(t, T.s3 - .2, T.s3 + .5)) - (yy - 260) * ease.io(prog(t, T.s4 - .2, T.s4 + .5));
+    rsv.style.transform = `translateY(${RY}px) rotateX(${lerp(30, 12, rin) + 4 * Math.sin(t * .8)}deg) rotateY(${-10 + 14 * Math.sin(t * .35)}deg) scale(${lerp(.85, .95, rin) * lerp(1, 1.4, rout)})`;
+    rw.style.opacity = rin * (1 - rout); rw.style.filter = rout > 0 ? `blur(${rout * 10}px)` : 'none';
+    const flick = t > T.s2 && t < T.on ? .25 + .1 * Math.sin(t * 23) * hash(Math.floor(t * 12)) : .5;
+    ramUpdate(rsv, {power: t < T.on ? flick : lerp(.5, 1, on), t});
+  }
+  if (rv) { const pw = t < T.on ? .35 : lerp(.35, 1, on), rg = fx.createRadialGradient(540, 1330 + RY, 0, 540, 1330 + RY, 560);
+    rg.addColorStop(0, `rgba(255,47,200,${.28 * pw * rw.style.opacity})`); rg.addColorStop(1, 'rgba(255,47,200,0)');
+    fx.save(); fx.globalCompositeOperation = 'lighter'; fx.fillStyle = rg; fx.translate(540, 1330 + RY); fx.scale(1, .32); fx.translate(-540, -1330 - RY); fx.fillRect(-20, 770 + RY, 1120, 1120); fx.restore(); }
+  // velocidade
+  const nv = t > T.s2 - .1 && t < T.s3 - .1;
+  num.style.visibility = nv ? 'visible' : 'hidden';
+  if (nv) { const k = ease.io(prog(t, T.s2 + .4, T.s2 + 1.5)); num.innerHTML = `${Math.round(lerp(3200, 2133, k))}<small>MHz</small>`;
+    num.style.color = k > .99 ? '#ff9bb8' : '#f7f3fa'; num.style.opacity = ease.out(prog(t, T.s2, T.s2 + .4)) * (1 - prog(t, T.s3 - .5, T.s3 - .1)); }
+  // atalho e caminho
+  const kv = t > T.s3 && t < T.s4; kb.style.visibility = pth.style.visibility = kv ? 'visible' : 'hidden';
+  if (kv) {
+    const ko = 1 - prog(t, T.s4 - .4, T.s4 - .05);
+    kc.forEach((k, i) => { const t0 = 7.1 + i * .35, a = ease.back(prog(t, t0 - .25, t0)), press = Math.max(0, 1 - Math.abs(t - (t0 + .3)) / .12);
+      k.style.opacity = clamp(prog(t, t0 - .25, t0 - .1)) * ko; k.style.transform = `translateY(${(1 - a) * 40 + press * 8}px) scale(${lerp(.7, 1, a)})`;
+      k.style.boxShadow = press > 0 || t > 8.2 && t < 8.6 ? `0 2px 0 #0b0a0e,0 0 50px rgba(255,47,200,.6),inset 0 2px 0 rgba(255,255,255,.12)` : ''; });
+    pl.forEach((p, i) => p.style.opacity = clamp(prog(t, 7.3 + i * .35, 7.5 + i * .35)) * ko);
+    ps.forEach((p, i) => { const a = ease.expo(prog(t, 8.7 + Math.floor(i / 2) * .35, 9.2 + Math.floor(i / 2) * .35)); if (p.style) { p.style.opacity = a * ko; p.style.transform = `translateY(${(1 - a) * 20}px)`; } });
+    pth.style.opacity = ko;
+  }
+  // BIOS
+  const bv = t > T.s4 - .1 && t < T.s5 + .1, bin = ease.expo(prog(t, T.s4, T.s4 + .8)), bout = ease.in(prog(t, T.s5 - .3, T.s5 + .1));
+  bios.style.visibility = bv ? 'visible' : 'hidden';
+  if (bv) { bios.style.opacity = bin * (1 - bout); bios.style.transform = `translateY(${(1 - bin) * 60}px) scale(${lerp(.96, 1, bin)})`;
+    const sw = bios.querySelector('#sw'), k = ease.back(prog(t, T.on - .05, T.on + .25));
+    sw.querySelector('i').style.transform = `translateX(${k * 74}px)`;
+    sw.style.background = on > 0 ? `linear-gradient(90deg,#ff3fcf,#b44dff)` : '#2a2631'; sw.style.boxShadow = on > 0 ? `0 0 ${40 * on}px rgba(255,47,200,.7)` : 'none';
+    bios.querySelector('.fq').textContent = Math.round(lerp(2133, 3200, ease.io(prog(t, T.on + .3, T.on + 1.3)))) + ' MHz'; }
+  // PC: aproxima na RAM no fim
+  const pv = t > T.s5 - .3;
+  cam.style.visibility = pv ? 'visible' : 'hidden';
+  const C = keys(t, [{t: T.s5 - .3, z: 2.4, cx: 440, cy: 330}, {t: T.end, z: 1.45, cx: 410, cy: 330}], ease.out);
+  svg.style.transform = `translate(${540 - C.cx * C.z}px,${1320 - C.cy * C.z}px) scale(${C.z})`;
+  if (pv) pcUpdate(svg, {power: 1, ang: t * 40, blur: 1, t, flow: ((t - T.s5) * .9) % 1.7});
+  background(t, {mood: .55 + .5 * on});
+  // efeitos do XMP ligando
+  const [rx, ry] = [540, 1195 + RY];
+  [0, .2].forEach(d => ring(fx, rx, ry, prog(t, T.on + d, T.on + 1.3 + d), {r1: 1000}));
+  sparkles(fx, t, T.on + .05, rx, ry, {n: 34, spread: 440, dur: 1.7, seed: 7});
+  A.anim(t, .5, T.s2 - .3, {stagger: .12}); B.anim(t, T.s2 + .1, T.s3 - .4, {stagger: .12}); c1.anim(t, T.s2 + 1.8, T.s3 - .4);
+  Cc.anim(t, T.s3 + .1, T.s4 - .4, {stagger: .12}); L.anim(t, 7.0, T.s4 - .4); nt1.anim(t, 9.4, T.s4 - .4);
+  E.anim(t, T.s4 + .1, T.s5 - .4, {stagger: .12}); F.anim(t, T.s5 + .1, T.end - .4, {stagger: .12}); c2.anim(t, T.s5 + .6, T.end - .4); nt2.anim(t, T.s5 + .8, T.end - .4);
+  END(t);
+  post(t, {fade: Math.max(1 - ease.out(prog(t, 0, .5)), ease.io(prog(t, T.end - .3, T.end)) * (t < T.end ? 1 : 0)), flash: .35 * Math.sin(Math.PI * prog(t, T.on, T.on + .5))});
+};
+window.ready = async () => { await ready(); return {D}; };
+</script></body></html>

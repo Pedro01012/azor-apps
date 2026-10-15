@@ -1,0 +1,87 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Pacotes</title></head><body><div id="stage"></div>
+<script type="module">
+import {W, H, stage, background, post, headline, label, lockup, ring, sparkles, ready, keys, ease, prog, lerp, clamp, hash, sfx, $, el} from '/kit.js';
+import {pcSVG, pcUpdate} from '/pc2d.js';
+import {phone, chip, note} from '/ui.js';
+
+const {fx} = stage(`
+.tier{position:absolute;left:84px;right:84px;top:220px;z-index:50}
+.tier .n{font:600 140px/1 Geist;letter-spacing:-.05em}
+.tier .p{font:400 54px/1.1 Serif;font-style:italic;color:#ffd6f4;margin-top:18px}
+.tier .pr{position:absolute;right:0;top:6px;text-align:right;font:500 26px GeistMono;letter-spacing:.14em;color:rgba(247,243,250,.55)}
+.tier .pr b{display:block;font:600 92px/1 Geist;letter-spacing:-.04em;color:#f7f3fa;margin-top:8px}
+.tier .pr b small{font-size:.45em;margin-right:8px;color:rgba(247,243,250,.6)}
+.tier ul{list-style:none;margin-top:34px;display:flex;flex-direction:column;gap:14px}
+.tier li{font:500 34px Geist;letter-spacing:-.01em;color:rgba(247,243,250,.88);display:flex;gap:18px;align-items:center}
+.tier li i{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#ff3fcf,#b44dff);display:block;flex:none;box-shadow:0 0 20px rgba(255,47,200,.5)}
+.tier .badge{display:inline-block;font:600 22px GeistMono;letter-spacing:.2em;padding:10px 18px;border-radius:14px;background:linear-gradient(90deg,#ff3fcf,#b44dff);color:#fff;margin-bottom:22px}
+#meter{position:absolute;left:84px;right:84px;top:1846px;height:14px;display:flex;gap:14px;z-index:50}
+#meter i{flex:1;border-radius:8px;background:rgba(255,255,255,.1);display:block;position:relative;overflow:hidden}
+#meter i b{position:absolute;inset:0;background:linear-gradient(90deg,#ff3fcf,#b44dff);box-shadow:0 0 20px #ff2fc8;transform-origin:0 50%}
+#mlab{position:absolute;left:84px;right:84px;top:1796px;display:flex;justify-content:space-between;font:500 20px GeistMono;letter-spacing:.2em;color:rgba(247,243,250,.4);z-index:50}
+`);
+const D = 22.4;
+const TIERS = [
+  {n: 'Essencial', p: 'Windows leve e rápido pro dia a dia.', pr: 45, it: ['Inicialização e segundo plano enxutos', 'Plano Desempenho Máximo', 'Ponto de restauração antes de tudo']},
+  {n: 'Gamer', p: 'FPS estável pra jogar com os amigos.', pr: 60, it: ['Tudo do Essencial', 'Modo de Jogo, HAGS e Game DVR', 'Painel NVIDIA/AMD + 1 jogo']},
+  {n: 'Pro', p: 'Menos input lag pra subir no ranked.', pr: 75, it: ['Tudo do Gamer', 'Mouse, MPO e timer', 'Rede e DNS pra jogo online']},
+  {n: 'Extremo', p: 'Tudo liberado. Desempenho divino.', pr: 95, it: ['Tudo do Pro', 'BIOS: XMP, Resizable BAR e C-States', 'Até 5 jogos e revisão em até 7 dias'], badge: 'RECOMENDADO · BIOS INCLUSA'},
+];
+const T = {s2: 3.0, slot: 2.75, s3: 14.0, s4: 16.6, end: 19.4};
+const cam = el('div', 'cam'); cam.style.zIndex = 10; cam.innerHTML = pcSVG();
+const svg = cam.querySelector('svg'); svg.style.position = 'absolute'; svg.style.transformOrigin = '0 0';
+const TE = TIERS.map((x, i) => { const e = el('div', 'tier', $('stage'), `${x.badge ? `<div class="badge">${x.badge}</div>` : ''}<div class="n">${x.n}</div><div class="p">${x.p}</div>
+  <div class="pr">OTIMIZAÇÃO<b><small>R$</small>${x.pr}</b></div><ul>${x.it.map(s => `<li><i></i>${s}</li>`).join('')}</ul>`);
+  if (x.badge) e.querySelector('.pr').style.top = '64px'; return e; });
+const mt = el('div', '', $('stage')); mt.id = 'meter'; mt.innerHTML = '<i><b></b></i>'.repeat(4);
+const ml = el('div', '', $('stage')); ml.id = 'mlab'; ml.innerHTML = TIERS.map(x => `<span>${x.n}</span>`).join('');
+const ph = phone('/shots_site/d_tiers.png');
+const A = headline('Qual é o nível|do seu <em>PC?</em>', {top: 250, size: 116});
+const B = headline('Preço fixo.|Sem <em>surpresa.</em>', {top: 230, size: 112});
+const c1 = chip('Combo Extremo + Windows otimizado · R$ 115', {top: 500});
+const nt = note('Valores de referência do site · pacote e valor confirmados no ticket do Discord', 1800);
+const END = lockup('Escolha seu nível.', 'TWEAKS').anim(T.end);
+const t0 = i => T.s2 + i * T.slot;
+const lvl = t => { let p = .1; TIERS.forEach((_, i) => p += .225 * ease.out(prog(t, t0(i) + .2, t0(i) + .9))); return Math.min(1, p); };
+
+sfx(0, 'pad', .85, {d: D, chords: [[53, 60, 64, 67, 72], [55, 62, 67, 71, 74], [57, 64, 67, 72, 76], [60, 64, 67, 71, 76]]});
+sfx(.4, 'air', .8);
+TIERS.forEach((_, i) => { sfx(t0(i) - .15, 'whoosh', .55, {d: .8}); sfx(t0(i) + .25, i === 3 ? 'bloom' : 'chime', i === 3 ? 1 : .55); sfx(t0(i) + .3, 'sparkle', .3 + i * .15, {d: 1.2 + i * .3});
+  [0, 1, 2].forEach(j => sfx(t0(i) + .75 + j * .16, 'tick', .55)); });
+sfx(T.s3 - .2, 'whoosh', .7, {d: 1}); sfx(T.s3 + .6, 'scan', .4, {d: 2}); sfx(T.s4 - .1, 'pop', .8);
+sfx(T.end, 'whoosh', .5, {d: .9}); sfx(T.end + .5, 'tone', 1);
+
+window.renderFrame = t => {
+  fx.clearRect(0, 0, W, H);
+  const p = lvl(t);
+  const C = keys(t, [{t: 0, z: 1.15, cx: 400, cy: 470}, {t: T.s2, z: 1.05, cx: 400, cy: 400}, {t: T.s3, z: 1.12, cx: 400, cy: 380}, {t: T.end, z: 1.0, cx: 400, cy: 420}], ease.sine);
+  svg.style.transform = `translate(${540 - C.cx * C.z}px,${1150 - C.cy * C.z}px) scale(${C.z})`;
+  const ph_on = ease.io(prog(t, T.s3 - .2, T.s3 + .6));
+  svg.style.filter = `brightness(${(1 - ph_on * .5).toFixed(2)}) blur(${(ph_on * 8).toFixed(1)}px)`;
+  let a = 0; { const n = 240, dt = t / n; for (let i = 0; i < n; i++) a += lerp(.35, 9, lvl((i + .5) * dt) ** 1.6) * dt; }
+  pcUpdate(svg, {power: p, ang: a * 6.283, blur: clamp((p - .5) * 2), t, flow: t > t0(3) + .2 ? ((t - t0(3) - .2) * .9) % 1.7 : -1});
+  background(t, {mood: .45 + .65 * p});
+  // níveis
+  TE.forEach((e, i) => { const a0 = t0(i), a1 = a0 + T.slot - .2, v = t > a0 - .05 && t < a1 + .35;
+    e.style.visibility = v ? 'visible' : 'hidden'; if (!v) return;
+    const k = ease.expo(prog(t, a0, a0 + .7)), o = ease.in(prog(t, a1, a1 + .35));
+    e.querySelector('.n').style.transform = `translateY(${(1 - k) * 80}px)`; e.style.opacity = k * (1 - o); e.style.filter = o > 0 ? `blur(${o * 10}px)` : 'none';
+    e.querySelector('.pr').style.transform = `translateY(${(1 - ease.expo(prog(t, a0 + .15, a0 + .8))) * 40}px)`;
+    e.querySelectorAll('li').forEach((li, j) => { const kk = ease.expo(prog(t, a0 + .7 + j * .16, a0 + 1.3 + j * .16)); li.style.opacity = kk; li.style.transform = `translateX(${(1 - kk) * -30}px)`; });
+    const [px, py] = [540 + (310 - C.cx) * C.z, 1150 + (300 - C.cy) * C.z];
+    ring(fx, px, py, prog(t, a0 + .2, a0 + 1.4), {r1: 700 + i * 200, w: 4 + i * 1.5});
+    sparkles(fx, t, a0 + .25, px, py, {n: 14 + i * 8, spread: 260 + i * 70, dur: 1.4, seed: i + 2});
+  });
+  const mv = t > T.s2 - .2 && t < T.s3; mt.style.opacity = ml.style.opacity = mv ? ease.out(prog(t, T.s2 - .2, T.s2 + .3)) * (1 - prog(t, T.s3 - .4, T.s3)) : 0;
+  [...mt.querySelectorAll('b')].forEach((b, i) => b.style.transform = `scaleX(${ease.expo(prog(t, t0(i) + .2, t0(i) + .9))})`);
+  [...ml.children].forEach((s, i) => s.style.color = t > t0(i) + .2 ? '#ff9be6' : '');
+  // celular com os pacotes reais do site
+  const pin = ease.expo(prog(t, T.s3, T.s3 + 1.0)), pout = ease.in(prog(t, T.end - .35, T.end));
+  ph.set({x: 540, y: lerp(1950, 1200, pin), s: .9 * (1 + .06 * pout), ry: lerp(14, 4, pin), rz: lerp(-4, 0, pin), o: pin * (1 - pout),
+    scroll: lerp(-110, 1150, ease.io(prog(t, T.s3 + .8, T.end - .4))), shine: prog(t, T.s3 + .5, T.s3 + 1.8)});
+  A.anim(t, .4, T.s2 - .4, {stagger: .12}); B.anim(t, T.s3 + .1, T.end - .4, {stagger: .12}); c1.anim(t, T.s4 - .1, T.end - .4); nt.anim(t, T.s3 + .4, T.end - .4);
+  END(t);
+  post(t, {fade: Math.max(1 - ease.out(prog(t, 0, .5)), ease.io(prog(t, T.end - .3, T.end)) * (t < T.end ? 1 : 0)), flash: .3 * Math.sin(Math.PI * prog(t, t0(3) + .2, t0(3) + .7))});
+};
+window.ready = async () => { await ready(); return {D}; };
+</script></body></html>
