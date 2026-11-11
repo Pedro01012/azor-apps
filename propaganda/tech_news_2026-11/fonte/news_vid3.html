@@ -1,0 +1,133 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Tech news (narrado)</title>
+<style>
+html,body{width:1080px;height:1920px;overflow:hidden;background:#ece8e2}
+#p{position:relative;width:1080px;height:1920px;overflow:hidden;background:#ece8e2;color:#141215;font-family:Geist,sans-serif;-webkit-font-smoothing:antialiased}
+.x{position:absolute}
+#bars{left:56px;right:56px;top:56px;display:flex;gap:10px}
+#bars i{flex:1;height:7px;border-radius:4px;background:rgba(20,18,21,.14);overflow:hidden;position:relative}
+#bars i b{position:absolute;left:0;top:0;bottom:0;width:0;background:#141215;border-radius:4px}
+#hd{left:56px;right:56px;top:96px;display:flex;align-items:center;gap:20px}
+#hd img{width:84px;height:84px;border-radius:50%;background:#141215;padding:12px}
+#hd b{display:block;font:700 34px Geist;letter-spacing:-.01em}
+#hd span{display:block;font:400 27px Geist;color:#6f6a70;margin-top:2px}
+#hd .dt{margin-left:auto;font:500 26px Geist;color:#6f6a70}
+#card{left:40px;right:40px;top:224px;height:1500px;border-radius:52px;background:#fff;box-shadow:0 2px 0 rgba(20,18,21,.04),0 30px 80px rgba(60,40,50,.10)}
+#tg{left:96px;top:290px;display:flex;align-items:center;gap:14px;font:600 28px Geist;color:#141215}
+#tg i{width:14px;height:14px;border-radius:50%;background:#ff3fbf;box-shadow:0 0 0 6px #ffe0f4}
+.hl{left:96px;right:96px;top:360px;font:700 88px/1.05 Geist;letter-spacing:-.04em}
+mark{background:linear-gradient(#ffc6ee,#ffc6ee) no-repeat 0 78%;background-size:0% 40%;color:inherit;padding:0 .05em}
+#ic{left:540px;top:1180px}
+#ic>svg{position:absolute;transform:translate(-50%,-50%)}
+#ol{left:96px;right:96px;display:flex;flex-direction:column;gap:22px}
+#ol div,#st div{position:relative;display:flex;gap:26px;align-items:flex-start;padding:30px 32px 32px;border-radius:30px;background:#f7f4f0;font:500 44px/1.28 Geist;letter-spacing:-.015em}
+#ol div:before,#st div:before{content:'';position:absolute;left:0;top:26px;bottom:26px;width:6px;border-radius:3px;background:#ff3fbf;opacity:var(--on,0)}
+#ol i,#st i{flex:none;font:700 28px Geist;font-style:normal;width:56px;height:56px;border-radius:50%;background:#141215;color:#fff;display:flex;align-items:center;justify-content:center;margin-top:3px}
+#st{left:96px;right:96px;top:560px;display:flex;flex-direction:column;gap:22px}
+#st div{align-items:center;font-weight:600}
+#st .sw{margin-left:auto;width:120px;height:66px;border-radius:36px;position:relative;flex:none;background:#ff3fbf}
+#st .sw b{position:absolute;left:6px;top:6px;width:54px;height:54px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#wn{left:96px;right:96px;top:1260px;font:500 34px/1.38 Geist;padding:28px 32px;border-radius:26px;background:#fff1fa;color:#5b2a4c}
+#src{left:56px;right:56px;top:1752px;font:400 26px/1.35 Geist;color:#857f86}
+#cta{left:56px;right:56px;top:1830px;display:flex;justify-content:space-between;font:500 26px Geist;color:#141215}
+#cta span:last-child{color:#c01f8e}
+#end{left:40px;right:40px;top:224px;height:1500px;border-radius:52px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#end img{width:210px;height:210px;border-radius:50%;background:#141215;padding:28px}
+#end h3{font:700 86px/1.05 Geist;letter-spacing:-.04em;margin-top:60px}
+#end p{font:500 38px/1.35 Geist;color:#6f6a70;margin-top:26px}
+#end .bt{margin-top:60px;display:flex;gap:18px}
+#end .bt span{font:700 38px Geist;padding:24px 44px;border-radius:999px;background:#141215;color:#fff}
+#end .bt span+span{background:#ffe0f4;color:#141215}
+</style></head><body><div id="p"></div>
+<script type="module">
+import {sfx, ease, prog, lerp, clamp} from '/kit.js';
+import {STORIES} from '/news_data.js';
+import {ICON, AVATAR} from '/nat.js';
+const FONT = `@font-face{font-family:Geist;font-weight:400;src:url(/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2)}
+@font-face{font-family:Geist;font-weight:500;src:url(/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2)}
+@font-face{font-family:Geist;font-weight:600;src:url(/node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2)}
+@font-face{font-family:Geist;font-weight:700;src:url(/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2)}`;
+const st = document.createElement('style'); st.textContent = FONT; document.head.appendChild(st);
+const N = +new URLSearchParams(location.search).get('s') || 0, s = STORIES[N], hasPath = !!s.path;
+const mk = h => h.replace(/<em>/g, '<mark>').replace(/<\/em>/g, '</mark>');
+const p = document.getElementById('p'), $ = id => document.getElementById(id);
+let TL, SEG = {}, D = 30;
+
+function build() {
+  const nb = TL.segs.filter(x => x.k !== 'end').length;
+  p.innerHTML = `<div class="x" id="bars">${'<i><b></b></i>'.repeat(nb)}</div>
+  <div class="x" id="hd"><img src="${AVATAR}"><div><b>Azor Tweaks</b><span>@azortweaks · @azorwrld</span></div><div class="dt">Tech news · nov. 2026</div></div>
+  <div class="x" id="card"></div>
+  <div class="x" id="tg"><i></i>${s.tag}</div>
+  <h1 class="x hl" id="h">${mk(s.head)}</h1>
+  <div class="x" id="ic">${ICON[s.art]()}</div>
+  <div class="x" id="ol">${s.facts.map((f, i) => `<div><i>${i + 1}</i><span>${f}</span></div>`).join('')}</div>
+  ${hasPath ? `<h1 class="x hl" id="h2">Onde fica a <mark>opção</mark></h1><div class="x" id="st">${s.path.map((x, i) => `<div><i>${i + 1}</i>${x}${i === 3 ? '<span class="sw"><b></b></span>' : ''}</div>`).join('')}</div>
+    <div class="x" id="wn">Desativar remove uma camada de proteção do Windows. Se algum jogo exigir o recurso, mantenha ativo.</div>` : ''}
+  <h1 class="x hl" id="tk">${mk(s.take)}</h1>
+  <div class="x" id="src">${s.src}</div>
+  <div class="x" id="cta"><span>Salve para ver depois</span><span>Compartilhe com quem joga no PC</span></div>
+  <div class="x" id="end"><img src="${AVATAR}"><h3>Siga a Azor</h3><p>As notícias que importam<br>para o seu PC, toda semana.</p><div class="bt"><span>@azortweaks</span><span>@azorwrld</span></div></div>`;
+}
+const show = (e, k, dy = 30) => { e.style.opacity = k; e.style.transform = `translateY(${(1 - k) * dy}px)`; e.style.visibility = k > .001 ? 'visible' : 'hidden'; };
+const inout = (t, a, b, d = .45) => ease.out(prog(t, a - .15, a - .15 + d)) * (1 - ease.in(prog(t, b - .35, b)));
+const marks = (root, t, t0) => root.querySelectorAll('mark').forEach(m => m.style.backgroundSize = `${ease.io(prog(t, t0, t0 + .7)) * 100}% 40%`);
+let olTop = 0;
+
+window.renderFrame = t => {
+  const S = SEG, fEnd = hasPath ? S.path.start : S.take.start, endT = S.end.start;
+  // barras de progresso (uma por parte narrada)
+  const parts = TL.segs.filter(x => x.k !== 'end');
+  [...$('bars').children].forEach((b, i) => { const a = parts[i].start, z = i + 1 < parts.length ? parts[i + 1].start : endT; b.firstChild.style.width = clamp((t - a) / (z - a)) * 100 + '%'; });
+  $('bars').style.opacity = 1 - prog(t, endT - .2, endT + .2);
+  // manchete e ícone
+  show($('h'), inout(t, S.head.start, fEnd)); marks($('h'), t, S.head.start + .5);
+  show($('tg'), inout(t, S.head.start - .2, endT));
+  if (!olTop) olTop = 360 + $('h').getBoundingClientRect().height + 60;
+  const ol = $('ol'); ol.style.top = olTop + 'px';
+  const listBottom = olTop + ol.getBoundingClientRect().height;
+  const icBig = inout(t, S.head.start, S.f0.start + .2), icTake = inout(t, S.take.start, endT);
+  const icSmall = listBottom < 1500 ? inout(t, S.f0.start + .3, fEnd) : 0;
+  const ic = $('ic'), icv = Math.max(icBig, icTake, icSmall); ic.style.opacity = icv; ic.style.visibility = icv > .001 ? 'visible' : 'hidden';
+  const smallK = t > S.f0.start - .2 && t < S.take.start ? 1 : 0;
+  const tkTop = 360 + $('tk').getBoundingClientRect().height;
+  const y = smallK ? lerp(listBottom, 1724, .5) : (t >= S.take.start - .2 ? Math.max(1150, tkTop + 330) : 1150);
+  const sc = (smallK ? .62 : 1.2) * lerp(.9, 1, ease.out(prog(t, S.head.start, S.head.start + .8)));
+  ic.style.top = y + 'px';
+  ic.firstElementChild.style.transform = `translate(-50%,-50%) scale(${sc}) translateY(${Math.sin(t * 1.6) * 7}px)`;
+  if (s.art === 'gpu') ic.querySelectorAll('.fan').forEach(f => f.querySelector('.bl').setAttribute('transform', `rotate(${t * 240} ${f.dataset.x} 110)`));
+  if (s.art === 'cal') ic.querySelector('.day').textContent = Math.max(1, Math.round(lerp(1, 19, ease.out(prog(t, S.head.start + .6, S.head.start + 2)))));
+  if (s.art === 'cpu') ic.querySelector('.die').setAttribute('fill', `hsl(318,100%,${lerp(66, 80, (Math.sin(t * 2.6) + 1) / 2)}%)`);
+  // fatos: aparecem quando a voz começa cada um; o que está sendo lido fica em destaque
+  const lv = t > S.f0.start - .3 && t < fEnd; ol.style.visibility = lv ? 'visible' : 'hidden';
+  [...ol.children].forEach((d, i) => { const g = S['f' + i]; show(d, inout(t, g.start, fEnd), 40);
+    const on = t >= g.start - .1 && t < g.start + g.dur + .3; const was = t >= g.start + g.dur + .3;
+    d.style.setProperty('--on', on ? 1 : 0); d.style.opacity = parseFloat(d.style.opacity) * (on ? 1 : was ? .42 : 1); });
+  // caminho
+  if (hasPath) { const P = S.path; show($('h2'), inout(t, P.start, S.take.start)); marks($('h2'), t, P.start + .5);
+    const stv = t > P.start - .3 && t < S.take.start; $('st').style.visibility = stv ? 'visible' : 'hidden';
+    const per = (P.dur - 1.2) / 4;
+    [...$('st').children].forEach((d, i) => { const a = P.start + 1.2 + i * per; show(d, inout(t, a, S.take.start), 40);
+      const on = t >= a && t < a + per; d.style.setProperty('--on', on || (i === 3 && t >= a) ? 1 : 0); });
+    const k = ease.out(prog(t, P.start + P.dur - .2, P.start + P.dur + .2));
+    $('st').querySelector('.sw b').style.transform = `translateX(${(1 - k) * 54}px)`; $('st').querySelector('.sw').style.background = k > .5 ? '#d9d4cd' : '#ff3fbf';
+    show($('wn'), inout(t, P.start + P.dur, S.take.start)); }
+  // conclusão
+  show($('tk'), inout(t, S.take.start, endT)); marks($('tk'), t, S.take.start + .9);
+  $('src').style.opacity = inout(t, S.head.start + .5, endT);
+  $('cta').style.opacity = inout(t, S.head.start + .8, endT);
+  // fim
+  const ek = ease.out(prog(t, endT - .25, endT + .3)); show($('end'), ek, 20);
+  $('end').querySelector('img').style.transform = `scale(${lerp(.85, 1, ease.back(prog(t, endT, endT + .6)))})`;
+  $('card').style.opacity = 1 - ek;
+};
+window.ready = async () => {
+  TL = await (await fetch(`/vo/s${N}.json`)).json(); TL.segs.forEach(x => SEG[x.k] = x); D = TL.D;
+  build();
+  // cama sonora baixa (a voz vem por cima na mixagem)
+  sfx(0, 'pad', .38, {d: D, chords: [[60, 64, 67, 71, 74], [57, 64, 67, 72, 76], [55, 62, 67, 71, 74], [60, 64, 67, 71, 76]]});
+  TL.segs.forEach(x => { if (x.k[0] === 'f') sfx(x.start - .1, 'pop', .45); });
+  sfx(SEG.end.start - .2, 'whoosh', .3, {d: .7}); sfx(SEG.end.start + .2, 'chime', .4);
+  await document.fonts.ready; await Promise.all(['400 40px Geist', '500 40px Geist', '600 40px Geist', '700 40px Geist'].map(f => document.fonts.load(f)));
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {}))); return {D};
+};
+</script></body></html>
