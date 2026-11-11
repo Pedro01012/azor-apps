@@ -1,0 +1,91 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Tech news (vídeo)</title></head><body><div id="stage"></div>
+<script type="module">
+import {W, H, stage, background, post, headline, label, lockup, ring, sparkles, ready, keys, ease, prog, lerp, clamp, hash, sfx, $, el} from '/kit.js';
+import {gpuSVG, gpuUpdate} from '/pc2d.js';
+import {note} from '/ui.js';
+import {STORIES, shieldSVG, cpuSVG, calHTML, ART_CSS} from '/news_data.js';
+
+const s = STORIES[+new URLSearchParams(location.search).get('s') || 0];
+const hasPath = !!s.path;
+const {fx} = stage(ART_CSS + `
+#tag{position:absolute;left:84px;top:150px;font:600 24px GeistMono;letter-spacing:.22em;padding:12px 20px;border-radius:14px;background:linear-gradient(90deg,#ff3fcf,#b44dff);color:#fff;z-index:52}
+#art{position:absolute;left:540px;top:1180px;z-index:20}
+#art>*{position:absolute;transform:translate(-50%,-50%)}
+.fact{position:absolute;left:84px;right:84px;top:300px;z-index:50;font:600 66px/1.06 Geist;letter-spacing:-.04em}
+.fact b{display:block;font:500 24px GeistMono;letter-spacing:.24em;color:#ff8ae2;margin-bottom:26px}
+#path{position:absolute;left:84px;right:84px;top:700px;display:flex;flex-direction:column;gap:24px;z-index:45}
+#path div{display:flex;align-items:center;gap:26px;font:500 42px Geist;padding:30px 32px;border-radius:28px;background:rgba(14,8,20,.8);border:1.5px solid rgba(255,255,255,.12)}
+#path div i{font:600 28px GeistMono;font-style:normal;width:62px;height:62px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff3fcf,#b44dff);flex:none}
+#path div.hi{background:rgba(255,47,200,.16);border-color:rgba(255,120,225,.6);box-shadow:0 0 60px rgba(255,47,200,.3)}
+#path .sw{margin-left:auto;width:120px;height:66px;border-radius:36px;background:linear-gradient(90deg,#ff3fcf,#b44dff);position:relative;flex:none}
+#path .sw i{position:absolute;left:8px;top:8px;width:50px;height:50px;border-radius:50%;background:#f7f3fa}
+`);
+const T = {s1: .5, f0: 4.6, step: 2.4};
+T.p = T.f0 + 3 * T.step;            // caminho (só na notícia do Windows)
+T.take = T.p + (hasPath ? 3.0 : 0);
+T.end = T.take + 2.8;
+const D = T.end + 3.0;
+
+const tag = el('div', '', $('stage'), s.tag); tag.id = 'tag';
+const L = label('AZOR <b>·</b> TECH NEWS <b>·</b> NOV 2026', {top: 84});
+const A = headline(s.vhead[0], {top: 250, size: s.vhead[0].length > 50 ? 92 : 108});
+const FE = s.facts.map((f, i) => el('div', 'fact', $('stage'), `<b>0${i + 1} / 03</b>${f}`));
+const art = el('div', '', $('stage')); art.id = 'art';
+if (s.art === 'shield') art.innerHTML = shieldSVG();
+if (s.art === 'cpu') art.innerHTML = cpuSVG();
+if (s.art === 'cal') art.innerHTML = calHTML();
+if (s.art === 'gpu') art.innerHTML = gpuSVG();
+const ai = art.firstElementChild;
+let pth;
+if (hasPath) { pth = el('div', '', $('stage')); pth.id = 'path';
+  pth.innerHTML = s.path.map((x, i) => `<div class="${i === 3 ? 'hi' : ''}"><i>${i + 1}</i>${x}${i === 3 ? '<span class="sw"><i></i></span>' : ''}</div>`).join(''); }
+const P = hasPath ? headline('Onde fica|a <em>chave:</em>', {top: 250, size: 104}) : null;
+const K = headline(s.take, {top: 250, size: 92});
+const nt = note(s.src, 1800);
+const nt2 = hasPath ? note('Desligar tira uma camada de proteção. Se o jogo exigir, deixe ligada.', 1560) : null;
+const END = lockup('Segue pra não perder nada.', 'TECH NEWS').anim(T.end);
+
+sfx(0, 'pad', .8, {d: D, chords: [[57, 64, 67, 71, 76], [55, 62, 66, 69, 74], [60, 64, 67, 71, 76]]});
+sfx(.15, 'pop', .9); sfx(.2, 'sparkle', .5, {d: 1.2}); sfx(.5, 'air', .8); sfx(1.4, 'scan', .4, {d: 1.6});
+[0, 1, 2].forEach(i => { sfx(T.f0 + i * T.step - .15, 'whoosh', .5, {d: .7}); sfx(T.f0 + i * T.step + .1, 'tick', .8); });
+if (hasPath) { sfx(T.p - .15, 'whoosh', .6, {d: .8}); [0, 1, 2, 3].forEach(i => sfx(T.p + .5 + i * .3, 'pop', .7)); sfx(T.p + 1.9, 'click', 1); }
+sfx(T.take - .15, 'whoosh', .6, {d: .9}); sfx(T.take + .2, 'chime', .6);
+sfx(T.end, 'whoosh', .5, {d: .9}); sfx(T.end + .5, 'tone', 1);
+
+window.renderFrame = t => {
+  fx.clearRect(0, 0, W, H);
+  background(t, {mood: .9});
+  // ilustração
+  const ain = ease.back(prog(t, .3, 1.2)), aout = hasPath ? ease.in(prog(t, T.p - .4, T.p)) * (1 - ease.out(prog(t, T.take - .2, T.take + .5))) : 0;
+  const aback = hasPath ? 0 : 0, ay = lerp(1260, 1180, ease.out(prog(t, .3, 1.4))) + (t > T.f0 ? lerp(0, 120, ease.io(prog(t, T.f0 - .3, T.f0 + .4))) : 0);
+  art.style.top = ay + 'px'; art.style.opacity = clamp(prog(t, .3, .6)) * (1 - aout);
+  const bob = Math.sin(t * 1.4) * 10;
+  if (s.art === 'gpu') { ai.style.transform = `translate(-50%,-50%) perspective(1600px) rotateY(${-22 + 16 * Math.sin(t * .5)}deg) rotateX(8deg) scale(${.95 * lerp(.7, 1, ain)}) translateY(${bob}px)`; gpuUpdate(ai, {power: 1, ang: t * 6}); }
+  else ai.style.transform = `translate(-50%,-50%) scale(${lerp(.8, 1.5, ain)}) translateY(${bob}px) rotate(${Math.sin(t * .7) * 3}deg)`;
+  if (s.art === 'cpu') ai.querySelectorAll('.core').forEach((c, i) => { const r = Math.floor(i / 6), cc = i % 6; c.setAttribute('opacity', (.2 + .8 * Math.max(0, Math.sin(t * 3 - (r + cc) * .5))).toFixed(2)); });
+  if (s.art === 'shield') { const g = ai.querySelector('.glow'); g.setAttribute('opacity', (.5 + .4 * Math.sin(t * 3)).toFixed(2)); }
+  if (s.art === 'cal') { const d = ai.querySelector('.cal-d'); d.textContent = Math.max(1, Math.round(lerp(1, 19, ease.out(prog(t, .5, 1.8))))); }
+  // gráfico de preço subindo atrás da placa
+  if (s.art === 'gpu' && t > 1 && t < T.end) { const k = ease.io(prog(t, 1.2, 3.2)); fx.save(); fx.globalCompositeOperation = 'lighter'; fx.strokeStyle = '#ff5fd8'; fx.lineWidth = 8; fx.shadowColor = '#ff2fc8'; fx.shadowBlur = 24; fx.lineJoin = 'round';
+    fx.beginPath(); const pts = [[120, 1650], [300, 1610], [460, 1630], [620, 1520], [780, 1460], [960, 1300]]; const n = 1 + k * (pts.length - 1);
+    for (let i = 0; i < Math.floor(n); i++) fx[i ? 'lineTo' : 'moveTo'](pts[i][0], pts[i][1] + (t > T.f0 ? 120 : 0) * ease.io(prog(t, T.f0 - .3, T.f0 + .4)));
+    const fr = n - Math.floor(n), a = pts[Math.floor(n) - 1], b = pts[Math.min(pts.length - 1, Math.floor(n))]; fx.lineTo(lerp(a[0], b[0], fr), lerp(a[1], b[1], fr) + (t > T.f0 ? 120 : 0) * ease.io(prog(t, T.f0 - .3, T.f0 + .4))); fx.stroke(); fx.restore(); }
+  sparkles(fx, t, .4, 540, 1200, {n: 26, spread: 420, dur: 1.6, seed: 3});
+  ring(fx, 540, 1200, prog(t, .35, 1.6), {r1: 800});
+  // tag
+  const tk = ease.back(prog(t, .1, .5)); tag.style.transform = `scale(${lerp(.6, 1, tk)})`; tag.style.opacity = clamp(prog(t, .1, .25)) * (1 - prog(t, T.end - .4, T.end));
+  L.anim(t, .2, T.end - .4);
+  A.anim(t, T.s1, T.f0 - .4, {stagger: .12});
+  FE.forEach((e, i) => { const a0 = T.f0 + i * T.step, a1 = a0 + T.step - .3, v = t > a0 - .05 && t < a1 + .35; e.style.visibility = v ? 'visible' : 'hidden'; if (!v) return;
+    const k = ease.expo(prog(t, a0, a0 + .7)), o = ease.in(prog(t, a1, a1 + .35)); e.style.opacity = k * (1 - o); e.style.transform = `translateY(${(1 - k) * 50}px)`; e.style.filter = o > 0 ? `blur(${o * 10}px)` : 'none'; });
+  if (hasPath) { const v = t > T.p - .05 && t < T.take + .1, o = ease.in(prog(t, T.take - .35, T.take)); pth.style.visibility = v ? 'visible' : 'hidden';
+    if (v) { pth.style.opacity = 1 - o; [...pth.children].forEach((d, i) => { const k = ease.expo(prog(t, T.p + .5 + i * .3, T.p + 1.1 + i * .3)); d.style.opacity = k; d.style.transform = `translateX(${(1 - k) * 60}px)`; });
+      const sk = ease.back(prog(t, T.p + 1.9, T.p + 2.2)); pth.querySelector('.sw i').style.transform = `translateX(${(1 - sk) * 54}px)`; pth.querySelector('.sw').style.background = t > T.p + 1.9 ? '#2a2631' : ''; }
+    P.anim(t, T.p + .1, T.take - .4, {stagger: .12}); nt2.anim(t, T.p + 1.2, T.take - .4); }
+  K.anim(t, T.take + .1, T.end - .4, {stagger: .12});
+  nt.anim(t, 1.0, T.end - .4);
+  END(t);
+  post(t, {fade: Math.max(1 - ease.out(prog(t, 0, .3)), ease.io(prog(t, T.end - .3, T.end)) * (t < T.end ? 1 : 0)), flash: .35 * Math.sin(Math.PI * prog(t, .1, .5))});
+};
+window.ready = async () => { await ready(); return {D}; };
+</script></body></html>

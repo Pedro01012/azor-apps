@@ -3,7 +3,7 @@
 cd "$(dirname "$0")" || exit 1
 PAGE=$1; NAME=$2; P=${3:-2}
 mkdir -p out
-D=$(grep -o "const D = [0-9.]*" $PAGE | head -1 | awk '{print $4}')
+D=${DUR:-$(grep -o "const D = [0-9.]*" $PAGE | head -1 | awk '{print $4}')}
 N=$(python3 -c "print(round($D*30))")
 STEP=$(( (N + P - 1) / P ))
 rm -f out/$NAME.part*.mp4 out/$NAME.list

@@ -1,0 +1,71 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Tech news (post)</title>
+<style>
+@font-face{font-family:Geist;font-weight:400;src:url(/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2)}
+@font-face{font-family:Geist;font-weight:500;src:url(/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2)}
+@font-face{font-family:Geist;font-weight:600;src:url(/node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2)}
+@font-face{font-family:GeistMono;font-weight:500;src:url(/node_modules/@fontsource/geist-mono/files/geist-mono-latin-500-normal.woff2)}
+@font-face{font-family:Serif;font-style:italic;src:url(/node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-italic.woff2)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1080px;height:1350px;overflow:hidden;background:#07050b}
+#p{position:relative;width:1080px;height:1350px;overflow:hidden;color:#f7f3fa;font-family:Geist;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(ellipse 70% 50% at 78% 62%,rgba(255,47,200,.22),transparent 70%),radial-gradient(ellipse 60% 45% at 18% 85%,rgba(118,80,255,.2),transparent 70%),linear-gradient(180deg,#0e0717,#060409)}
+#p:after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(0,0,0,.5));pointer-events:none}
+.top{position:absolute;left:72px;right:72px;top:64px;display:flex;justify-content:space-between;align-items:center;font:500 22px GeistMono;letter-spacing:.24em;color:rgba(247,243,250,.6);z-index:5}
+.top .br{display:flex;align-items:center;gap:16px;color:#f7f3fa}.top img{width:48px;height:48px;border-radius:12px}
+.tag{position:absolute;left:72px;top:150px;font:600 22px GeistMono;letter-spacing:.22em;padding:12px 20px;border-radius:14px;background:linear-gradient(90deg,#ff3fcf,#b44dff);color:#fff;z-index:5}
+h1{position:absolute;left:72px;right:72px;top:224px;font:600 84px/1 Geist;letter-spacing:-.045em;z-index:5}
+h1 em,h2 em{font-family:Serif;font-style:italic;font-weight:400;letter-spacing:-.01em;color:#ff8ae2}
+.art{position:absolute;z-index:2}
+ul{position:absolute;left:72px;right:72px;bottom:190px;list-style:none;display:flex;flex-direction:column;gap:18px;z-index:5}
+li{display:flex;gap:20px;align-items:flex-start;font:500 33px/1.22 Geist;letter-spacing:-.015em;color:rgba(247,243,250,.92);padding:22px 26px;border-radius:24px;
+  background:rgba(14,8,20,.72);border:1.5px solid rgba(255,255,255,.1);backdrop-filter:blur(10px)}
+li b{flex:none;font:600 22px GeistMono;color:#ff8ae2;margin-top:8px}
+.src{position:absolute;left:72px;right:72px;bottom:118px;font:500 18px GeistMono;letter-spacing:.12em;color:rgba(247,243,250,.42);z-index:5}
+.foot{position:absolute;left:72px;right:72px;bottom:52px;display:flex;justify-content:space-between;font:500 22px GeistMono;letter-spacing:.1em;color:rgba(247,243,250,.7);z-index:5}
+.foot span:last-child{color:#ff9be6}
+.path{position:absolute;left:72px;right:72px;top:470px;display:flex;flex-direction:column;gap:22px;z-index:5}
+.path div{display:flex;align-items:center;gap:24px;font:500 38px Geist;padding:26px 30px;border-radius:26px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12)}
+.path div i{font:600 26px GeistMono;font-style:normal;width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff3fcf,#b44dff);flex:none}
+.path div.hi{background:rgba(255,47,200,.14);border-color:rgba(255,120,225,.6);box-shadow:0 0 50px rgba(255,47,200,.25)}
+.sw{margin-left:auto;width:110px;height:60px;border-radius:32px;background:#2a2631;position:relative;flex:none}.sw:after{content:'';position:absolute;left:7px;top:7px;width:46px;height:46px;border-radius:50%;background:#f7f3fa}
+h2{position:absolute;left:72px;right:72px;bottom:200px;font:600 58px/1.05 Geist;letter-spacing:-.035em;z-index:5}
+.warn{position:absolute;left:72px;right:72px;top:1000px;font:500 26px/1.35 Geist;color:rgba(247,243,250,.7);z-index:5}
+.cv{position:absolute;left:72px;right:72px;top:390px;display:flex;flex-direction:column;gap:22px;z-index:5}
+.cv div{display:flex;gap:26px;align-items:center;padding:30px 32px;border-radius:30px;background:rgba(14,8,20,.72);border:1.5px solid rgba(255,255,255,.1)}
+.cv b{flex:none;font:600 20px GeistMono;letter-spacing:.18em;padding:10px 14px;border-radius:12px;background:rgba(255,47,200,.16);color:#ffb3ee;width:290px;text-align:center;white-space:nowrap;font-size:18px}
+.cv span{font:600 40px/1.1 Geist;letter-spacing:-.03em}
+.cv span em{font-family:Serif;font-style:italic;font-weight:400;color:#ff8ae2}
+</style></head><body><div id="p"></div>
+<script type="module">
+import {STORIES, shieldSVG, cpuSVG, calHTML, ART_CSS} from '/news_data.js';
+import {gpuSVG, gpuUpdate} from '/pc2d.js';
+const q = new URLSearchParams(location.search), s = STORIES[+q.get('s') || 0], v = q.get('v') || 'main';
+const st = document.createElement('style'); st.textContent = ART_CSS; document.head.appendChild(st);
+const p = document.getElementById('p');
+const top = `<div class="top"><div class="br"><img src="/web/assets/Azor_icon.png">AZOR · TECH NEWS</div><div>NOV · 2026</div></div>`;
+const foot = `<div class="foot"><span>@azorwrld · @azortweaks</span><span>salva e manda pro duo</span></div>`;
+const H = h => h.split('|').join('<br>');
+if (v === 'cover') {
+  p.innerHTML = top + `<h1 style="top:170px;font-size:96px">Resumo tech<br>da <em>semana.</em></h1>
+    <div class="cv">${STORIES.map(x => `<div><b>${x.tag}</b><span>${H(x.head).replace(/<br>/g, ' ')}</span></div>`).join('')}</div>
+    <div class="src">Arraste para ver cada notícia →</div>` + foot;
+} else if (v === 'how') {
+  p.innerHTML = top + `<div class="tag">${s.tag} · COMO DESLIGAR</div><h1 style="font-size:76px">Onde fica<br>a <em>chave:</em></h1>
+    <div class="path">${s.path.map((x, i) => `<div class="${i === s.path.length - 1 ? 'hi' : ''}"><i>${i + 1}</i>${x}${i === s.path.length - 1 ? '<span class="sw"></span>' : ''}</div>`).join('')}</div>
+    <div class="warn">Desligar tira uma camada de proteção do Windows. Se o jogo exigir a Integridade da memória ligada, deixe ligada.</div>
+    <h2 style="bottom:118px;font-size:54px">${H(s.take)}</h2>` + foot;
+} else {
+  p.innerHTML = top + `<div class="tag">${s.tag}</div><h1>${H(s.head)}</h1><div class="art"></div>
+    <ul>${s.facts.map((f, i) => `<li><b>0${i + 1}</b>${f}</li>`).join('')}</ul><div class="src">${s.src}</div>` + foot;
+  const a = p.querySelector('.art');
+  const pos = {shield: [600, 440, 1], gpu: [150, 470, .86], cal: [610, 470, 1], cpu: [640, 440, .82]}[s.art];
+  a.style.left = pos[0] + 'px'; a.style.top = pos[1] + 'px'; a.style.transform = `scale(${pos[2]})`; a.style.transformOrigin = '0 0';
+  if (s.art === 'shield') a.innerHTML = shieldSVG();
+  if (s.art === 'cpu') { a.innerHTML = cpuSVG(); a.querySelectorAll('.core').forEach((c, i) => c.setAttribute('opacity', .25 + .75 * ((i * 7) % 5 === 0 ? 1 : .3))); }
+  if (s.art === 'cal') a.innerHTML = calHTML();
+  if (s.art === 'gpu') { a.innerHTML = gpuSVG(); const g = a.querySelector('svg'); g.style.transform = 'perspective(1600px) rotateY(-18deg) rotateX(6deg)'; gpuUpdate(g, {power: 1, ang: .3}); }
+}
+window.renderFrame = () => {};
+window.ready = async () => { await document.fonts.ready; await Promise.all(['500 40px Geist', '600 40px Geist', '500 40px GeistMono', 'italic 40px Serif'].map(f => document.fonts.load(f)));
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {}))); return {D: 1}; };
+</script></body></html>
