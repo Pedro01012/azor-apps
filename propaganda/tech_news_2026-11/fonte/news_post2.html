@@ -1,0 +1,45 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Tech news (post natural)</title>
+<style>html,body{width:1080px;height:1350px;overflow:hidden;background:#f5f3ef}#p{width:1080px;height:1350px}
+.cv{position:absolute;left:64px;right:64px;top:440px;display:flex;flex-direction:column}
+.cv div{display:flex;gap:24px;align-items:flex-start;padding:44px 0;border-top:2px solid #e2ded8}
+.cv div:first-child{border-top:none}
+.cv i{flex:none;font:700 24px Geist;font-style:normal;padding:8px 16px;border-radius:999px;background:#151316;color:#f5f3ef;margin-top:4px;white-space:nowrap}
+.cv span{font:700 50px/1.12 Geist;letter-spacing:-.025em}
+.st{position:absolute;left:64px;right:64px;top:430px;display:flex;flex-direction:column;gap:18px}
+.st div{display:flex;align-items:center;gap:22px;font:600 38px Geist;padding:26px 28px;border-radius:24px;background:#fff;border:3px solid #151316}
+.st div i{flex:none;font:700 26px Geist;font-style:normal;width:52px;height:52px;border-radius:50%;background:#ff4fcf;color:#fff;display:flex;align-items:center;justify-content:center}
+.st .sw{margin-left:auto;width:104px;height:58px;border-radius:30px;background:#d9d4cd;border:3px solid #151316;position:relative;flex:none}
+.st .sw:after{content:'';position:absolute;left:5px;top:5px;width:42px;height:42px;border-radius:50%;background:#fff;border:3px solid #151316}
+.warn{position:absolute;left:64px;right:64px;top:1000px;font:500 28px/1.35 Geist;padding:22px 26px;border-radius:20px;background:#ffe3f6;color:#4a2140}
+</style></head><body><div id="p" class="n"></div>
+<script type="module">
+import {STORIES} from '/news_data.js';
+import {NAT_CSS, ICON, header, plain} from '/nat.js';
+const st = document.createElement('style'); st.textContent = NAT_CSS; document.head.appendChild(st);
+const q = new URLSearchParams(location.search), s = STORIES[+q.get('s') || 0], v = q.get('v') || 'main';
+const p = document.getElementById('p');
+const ft = `<div class="ft" style="bottom:56px"><span>salva pra não esquecer</span><span>manda pro duo →</span></div>`;
+const one = h => plain(h).split('|').join(' ');
+if (v === 'cover') {
+  p.innerHTML = header(64) + `<h1 style="top:196px;font-size:104px">O que rolou<br>na <mark>tecnologia</mark> 👇</h1>`.replace(' 👇', '') +
+    `<div class="cv">${STORIES.map(x => `<div><i>${x.tag.toLowerCase()}</i><span>${one(x.head).replace(/<\/?mark>/g, '')}</span></div>`).join('')}</div>
+    <div class="src" style="bottom:120px">Arrasta pro lado pra ver cada uma</div>` + ft;
+} else if (v === 'how') {
+  p.innerHTML = header(64) + `<div class="tg" style="top:190px">como desligar</div><h1 style="top:262px;font-size:80px">Onde fica a <mark>opção</mark></h1>
+    <div class="st">${s.path.map((x, i) => `<div><i>${i + 1}</i>${x}${i === 3 ? '<span class="sw"></span>' : ''}</div>`).join('')}</div>
+    <div class="warn">Desligar tira uma camada de proteção do Windows. Se o jogo exigir a Integridade da memória ligada, deixa ligada.</div>
+    <h1 style="top:1140px;font-size:50px">${one(s.take)}</h1>` + ft;
+} else {
+  p.innerHTML = header(64) + `<div class="tg" style="top:190px">${s.tag.toLowerCase()}</div>
+    <h1 style="top:262px;font-size:${s.head.length > 60 ? 70 : 82}px;right:${s.art === 'gpu' ? 64 : 360}px">${s.art === 'gpu' ? plain(s.head).split('|').join('<br>') : one(s.head)}</h1>
+    <div class="ic"></div><ol>${s.facts.map((f, i) => `<li><i>${i + 1}</i>${f}</li>`).join('')}</ol><div class="src" style="bottom:116px">${s.src}</div>` + ft;
+  const ic = p.querySelector('.ic'); ic.innerHTML = ICON[s.art]();
+  if (s.art === 'gpu') Object.assign(ic.style, {left: '310px', top: '480px', transform: 'scale(.8)', transformOrigin: '50% 0'});
+  else Object.assign(ic.style, {left: '750px', top: '240px', transform: 'scale(.88)', transformOrigin: '0 0'});
+  const ol = p.querySelector('ol'); ol.querySelectorAll('li').forEach(li => { li.style.fontSize = s.art === 'gpu' ? '35px' : '38px'; li.style.padding = s.art === 'gpu' ? '24px 0' : '30px 0'; });
+  window.__lay = () => { const hb = p.querySelector('h1').getBoundingClientRect().bottom, ib = ic.getBoundingClientRect().bottom; ol.style.top = Math.max(hb, ib) + (s.art === 'gpu' ? 36 : 56) + 'px'; };
+}
+window.renderFrame = () => {};
+window.ready = async () => { await document.fonts.ready; await Promise.all(['400 40px Geist', '500 40px Geist', '600 40px Geist', '700 40px Geist'].map(f => document.fonts.load(f)));
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {}))); window.__lay && window.__lay(); return {D: 1}; };
+</script></body></html>
