@@ -59,13 +59,15 @@ const inout = (t, a, b, d = .45) => ease.out(prog(t, a, a + d)) * (1 - ease.in(p
 const marks = (root, t, t0) => root.querySelectorAll('mark').forEach(m => m.style.backgroundSize = `${ease.io(prog(t, t0, t0 + .6)) * 100}% 42%`);
 let olTop = 0;
 window.renderFrame = t => {
+  if (!olTop) olTop = $('h').getBoundingClientRect().height + 330 + 70;
   const listEnd = T.p;
   // manchete
   show($('h'), inout(t, .2, listEnd)); marks($('h'), t, .9);
   show($('tg'), inout(t, .1, T.end));
   // ícone: grande no começo, sai quando a lista entra, volta no fim
   const icA = hasPath ? inout(t, .3, T.p) : inout(t, .3, T.end), icB = hasPath ? inout(t, T.take + .2, T.end) : 0;
-  const ic = $('ic'), icv = Math.max(icA, icB); ic.style.opacity = icv; ic.style.visibility = icv > .001 ? 'visible' : 'hidden';
+  const tall = $('ol').getBoundingClientRect().height + olTop > 1480, hideMid = tall ? ease.io(prog(t, T.f0 - .4, T.f0)) * (1 - ease.io(prog(t, T.take - .2, T.take + .3))) : 0;
+  const ic = $('ic'), icv = Math.max(icA * (1 - hideMid), icB); ic.style.opacity = icv; ic.style.visibility = icv > .001 ? 'visible' : 'hidden';
   const small = ease.io(prog(t, T.f0 - .4, T.f0 + .2)) * (1 - ease.io(prog(t, T.take - .2, T.take + .4)));
   const sc = lerp(.85, 1.25, ease.out(prog(t, .3, 1.0))) * lerp(1, .62, small);
   ic.style.top = lerp(1250, 1640, small) + 'px';
