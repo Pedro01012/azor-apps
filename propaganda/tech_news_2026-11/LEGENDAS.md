@@ -4,7 +4,7 @@ Posts para o feed (1080×1350) e vídeos curtos (1080×1920) com as notícias da
 
 ## Como postar
 
-- **Carrossel no Instagram:** `posts/00` a `posts/05`, nessa ordem. A capa é o resumo, e cada slide seguinte é uma notícia. O slide 02 mostra onde conferir a Integridade da memória.
+- **Carrossel "Novidades da tecnologia":** as 7 imagens de `posts/`, na ordem dos números (01 a 07), num único post. A capa resume as quatro notícias, os slides 02 a 06 trazem cada uma (o 03 mostra onde conferir a Integridade da memória) e o 07 chama para seguir. Cada slide tem a numeração 1/7, 2/7 etc.
 - **TikTok, Reels e Shorts:** um vídeo por notícia, em `videos/`. Comece pelo do Windows, que é o que mais conversa com o seu público.
 
 ## Legendas prontas
@@ -13,8 +13,8 @@ O tom é o mesmo dos vídeos: claro e direto, sem gíria e sem formalidade.
 
 ### Carrossel (resumo da semana)
 
-> Resumo da semana em tecnologia:
-> 1. O Windows 11 está ativando um recurso que pode reduzir o FPS. O slide 2 mostra onde conferir.
+> Novidades da tecnologia: o que mudou nos últimos dias.
+> 1. O Windows 11 está ativando um recurso que pode reduzir o FPS. O slide 3 mostra onde conferir.
 > 2. As placas de vídeo estão mais caras, por causa da falta de memória.
 > 3. GTA VI chega em 19/11 no PS5 e no Xbox Series. A versão de PC ainda não tem data.
 > 4. A Intel diz que o Nova Lake está adiantado.
