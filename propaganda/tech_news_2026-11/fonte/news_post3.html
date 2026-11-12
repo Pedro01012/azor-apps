@@ -5,37 +5,38 @@
 @font-face{font-family:Geist;font-weight:600;src:url(/node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2)}
 @font-face{font-family:Geist;font-weight:700;src:url(/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2)}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:1080px;height:1350px;overflow:hidden;background:#ece8e2}
-#p{position:relative;width:1080px;height:1350px;overflow:hidden;background:#ece8e2;color:#141215;font-family:Geist,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{width:1080px;height:1350px;overflow:hidden;background:#ff3fc4}
+#p{position:relative;width:1080px;height:1350px;overflow:hidden;background:#ff3fc4;color:#f7f3fa;font-family:Geist,sans-serif;-webkit-font-smoothing:antialiased}
 .x{position:absolute}
 #hd{left:48px;right:48px;top:40px;display:flex;align-items:center;gap:18px}
-#hd img{width:70px;height:70px;border-radius:50%;background:#141215;padding:10px}
-#hd b{display:block;font:700 30px Geist}#hd span{display:block;font:400 24px Geist;color:#6f6a70;margin-top:2px}
-#hd .dt{margin-left:auto;font:500 23px Geist;color:#6f6a70}
-#card{left:32px;right:32px;top:140px;bottom:118px;border-radius:44px;background:#fff;box-shadow:0 2px 0 rgba(20,18,21,.04),0 24px 60px rgba(60,40,50,.10)}
+#hd img{width:70px;height:70px;border-radius:50%;background:#141215;padding:10px}#hd b{color:#141215}
+#hd b{display:block;font:700 30px Geist}#hd span{display:block;font:400 24px Geist;color:rgba(20,18,21,.7);margin-top:2px}
+#hd .dt{margin-left:auto;font:500 23px Geist;color:rgba(20,18,21,.7)}
+#card{left:32px;right:32px;top:140px;bottom:118px;border-radius:44px;background:#141215;box-shadow:0 24px 60px rgba(80,0,50,.35)}
 #tg{left:84px;top:200px;display:flex;align-items:center;gap:12px;font:600 25px Geist}
-#tg i{width:12px;height:12px;border-radius:50%;background:#ff3fbf;box-shadow:0 0 0 5px #ffe0f4}
+#tg i{width:12px;height:12px;border-radius:50%;background:#ff3fbf;box-shadow:0 0 0 5px rgba(255,63,196,.25)}
 h1{position:absolute;left:84px;font-weight:700;letter-spacing:-.04em;line-height:1.05}
-mark{background:linear-gradient(#ffc6ee,#ffc6ee) no-repeat 0 78%;background-size:100% 40%;color:inherit;padding:0 .05em}
+mark{background:linear-gradient(#ff3fc4,#ff3fc4) no-repeat 0 78%;background-size:100% 40%;color:inherit;padding:0 .05em}
 .ic{position:absolute}
 .ol{position:absolute;left:84px;right:84px;display:flex;flex-direction:column;gap:16px}
-.ol div{display:flex;gap:20px;align-items:flex-start;padding:26px 28px;border-radius:24px;background:#f7f4f0;font:500 35px/1.3 Geist;letter-spacing:-.01em}
-.ol i{flex:none;font:700 22px Geist;font-style:normal;width:42px;height:42px;border-radius:50%;background:#141215;color:#fff;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.ol div{display:flex;gap:20px;align-items:flex-start;padding:26px 28px;border-radius:24px;background:#221f25;font:500 35px/1.3 Geist;letter-spacing:-.01em}
+.ol i{flex:none;font:700 22px Geist;font-style:normal;width:42px;height:42px;border-radius:50%;background:#ff3fc4;color:#141215;display:flex;align-items:center;justify-content:center;margin-top:2px}
 .ol.big div{font-size:38px;padding:26px 28px;align-items:center}
 .ol.big i{width:50px;height:50px;font-size:24px}
-.sw{margin-left:auto;width:96px;height:54px;border-radius:30px;background:#d9d4cd;position:relative;flex:none}.sw:after{content:'';position:absolute;left:5px;top:5px;width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25)}
-.wn{position:absolute;left:84px;right:84px;font:500 27px/1.38 Geist;padding:22px 26px;border-radius:22px;background:#fff1fa;color:#5b2a4c}
+.sw{margin-left:auto;width:96px;height:54px;border-radius:30px;background:#4a464f;position:relative;flex:none}.sw:after{content:'';position:absolute;left:5px;top:5px;width:44px;height:44px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25)}
+.wn{position:absolute;left:84px;right:84px;font:500 27px/1.38 Geist;padding:22px 26px;border-radius:22px;background:#2c1a27;color:#ffc6ee}
 .cv{position:absolute;left:84px;right:84px;top:480px;display:flex;flex-direction:column;gap:18px}
-.cv div{display:flex;flex-direction:column;gap:12px;padding:30px 30px;border-radius:26px;background:#f7f4f0}
-.cv small{display:flex;align-items:center;gap:10px;font:600 22px Geist;color:#6f6a70}.cv small:before{content:'';width:10px;height:10px;border-radius:50%;background:#ff3fbf}
+.cv div{display:flex;flex-direction:column;gap:12px;padding:30px 30px;border-radius:26px;background:#221f25}
+.cv small{display:flex;align-items:center;gap:10px;font:600 22px Geist;color:rgba(247,243,250,.6)}.cv small:before{content:'';width:10px;height:10px;border-radius:50%;background:#ff3fbf}
 .cv span{font:700 42px/1.12 Geist;letter-spacing:-.03em}
-#src{left:84px;right:84px;font:400 21px/1.35 Geist;color:#857f86}
-#ft{left:48px;right:48px;bottom:46px;display:flex;justify-content:space-between;font:500 24px Geist}
-#ft span:last-child{color:#c01f8e}
+#src{left:84px;right:84px;font:400 21px/1.35 Geist;color:rgba(247,243,250,.5)}
+#ft{left:48px;right:48px;bottom:46px;display:flex;justify-content:space-between;font:600 24px Geist;color:#141215}
+#ft span:last-child{color:#fff}
 </style></head><body><div id="p"></div>
 <script type="module">
 import {STORIES} from '/news_data.js';
-import {ICON, AVATAR} from '/nat.js';
+import {ICON as ICON0, AVATAR} from '/nat.js';
+const ICON = Object.fromEntries(Object.entries(ICON0).map(([k, f]) => [k, () => f().replaceAll('#151316', '#f7f3fa').replaceAll('fill="#fff"', 'fill="#221f25"').replaceAll('#d9d4cd', '#4a464f')]));
 const q = new URLSearchParams(location.search), s = STORIES[+q.get('s') || 0], v = q.get('v') || 'main';
 const mk = h => h.replace(/<em>/g, '<mark>').replace(/<\/em>/g, '</mark>');
 const p = document.getElementById('p');
