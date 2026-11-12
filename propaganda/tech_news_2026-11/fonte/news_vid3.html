@@ -1,48 +1,55 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — Tech news (narrado)</title>
 <style>
-html,body{width:1080px;height:1920px;overflow:hidden;background:#ff3fc4}
-#p{position:relative;width:1080px;height:1920px;overflow:hidden;background:#ff3fc4;color:#f7f3fa;font-family:Geist,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0d0c10}
+#p{position:relative;width:1080px;height:1920px;overflow:hidden;background:#0d0c10;color:#f7f3fa;font-family:Geist,sans-serif;-webkit-font-smoothing:antialiased}
 .x{position:absolute}
 #bars{left:56px;right:56px;top:56px;display:flex;gap:10px}
-#bars i{flex:1;height:7px;border-radius:4px;background:rgba(20,18,21,.2);overflow:hidden;position:relative}
-#bars i b{position:absolute;left:0;top:0;bottom:0;width:0;background:#141215;border-radius:4px}
+#bars i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.14);overflow:hidden;position:relative}
+#bars i b{position:absolute;left:0;top:0;bottom:0;width:0;background:#f7f3fa;border-radius:4px}
 #hd{left:56px;right:56px;top:96px;display:flex;align-items:center;gap:20px}
-#hd img{width:84px;height:84px;border-radius:50%;background:#141215;padding:12px}#hd b{color:#141215}
+#hd img{width:84px;height:84px;border-radius:50%;background:#141215;padding:12px}#hd b{color:#f7f3fa}#hd img{box-shadow:0 0 0 3px #ff3fc4}
 #hd b{display:block;font:700 34px Geist;letter-spacing:-.01em}
-#hd span{display:block;font:400 27px Geist;color:rgba(20,18,21,.7);margin-top:2px}
-#hd .dt{margin-left:auto;font:500 26px Geist;color:rgba(20,18,21,.7)}
-#card{left:40px;right:40px;top:224px;height:1500px;border-radius:52px;background:#141215;box-shadow:0 30px 80px rgba(80,0,50,.35)}
+#hd span{display:block;font:400 27px Geist;color:rgba(247,243,250,.55);margin-top:2px}
+#hd .dt{margin-left:auto;font:500 26px Geist;color:rgba(247,243,250,.55)}
+#card{left:40px;right:40px;top:224px;height:1500px;border-radius:52px;background:#17151b;box-shadow:inset 0 0 0 2px rgba(255,255,255,.05),0 30px 80px rgba(0,0,0,.45)}
 #tg{left:96px;top:290px;display:flex;align-items:center;gap:14px;font:600 28px Geist;color:#f7f3fa}
 #tg i{width:14px;height:14px;border-radius:50%;background:#ff3fbf;box-shadow:0 0 0 6px rgba(255,63,196,.25)}
 .hl{left:96px;right:96px;top:360px;font:700 88px/1.05 Geist;letter-spacing:-.04em}
-mark{background:linear-gradient(#ff3fc4,#ff3fc4) no-repeat 0 78%;background-size:0% 40%;color:inherit;padding:0 .05em}
+mark{background:linear-gradient(#ff3fc4,#ff3fc4) no-repeat 0 96%;background-size:0% 7%;color:inherit;padding:0 .05em}
 #ic{left:540px;top:1180px}
 #ic>svg{position:absolute;transform:translate(-50%,-50%)}
 #ol{left:96px;right:96px;display:flex;flex-direction:column;gap:22px}
-#ol div,#st div{position:relative;display:flex;gap:26px;align-items:flex-start;padding:30px 32px 32px;border-radius:30px;background:#221f25;font:500 44px/1.28 Geist;letter-spacing:-.015em}
+#ol div,#st div{position:relative;display:flex;gap:26px;align-items:flex-start;padding:30px 32px 32px;border-radius:30px;background:#211e25;font:500 44px/1.28 Geist;letter-spacing:-.015em}
 #ol div:before,#st div:before{content:'';position:absolute;left:0;top:26px;bottom:26px;width:6px;border-radius:3px;background:#ff3fc4;opacity:var(--on,0)}
-#ol i,#st i{flex:none;font:700 28px Geist;font-style:normal;width:56px;height:56px;border-radius:50%;background:#ff3fc4;color:#141215;display:flex;align-items:center;justify-content:center;margin-top:3px}
+#ol i,#st i{flex:none;font:700 28px Geist;font-style:normal;width:56px;height:56px;border-radius:50%;background:#2e2a33;color:#f7f3fa;display:flex;align-items:center;justify-content:center;margin-top:3px}
 #st{left:96px;right:96px;top:560px;display:flex;flex-direction:column;gap:22px}
 #st div{align-items:center;font-weight:600}
 #st .sw{margin-left:auto;width:120px;height:66px;border-radius:36px;position:relative;flex:none;background:#ff3fbf}
 #st .sw b{position:absolute;left:6px;top:6px;width:54px;height:54px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
-#wn{left:96px;right:96px;top:1260px;font:500 34px/1.38 Geist;padding:28px 32px;border-radius:26px;background:#2c1a27;color:#ffc6ee}
-#src{left:56px;right:56px;top:1752px;font:500 26px/1.35 Geist;color:rgba(20,18,21,.72)}
-#cta{left:56px;right:56px;top:1830px;display:flex;justify-content:space-between;font:600 26px Geist;color:#141215}
-#cta span:last-child{color:#fff}
-#end{left:40px;right:40px;top:224px;height:1500px;border-radius:52px;background:#141215;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#wn{left:96px;right:96px;top:1260px;font:500 34px/1.38 Geist;padding:28px 32px;border-radius:26px;background:#211e25;color:rgba(247,243,250,.75);box-shadow:inset 3px 0 0 #ff3fc4}
+#src{left:56px;right:56px;top:1752px;font:400 26px/1.35 Geist;color:rgba(247,243,250,.42)}
+#cta{left:56px;right:56px;top:1830px;display:flex;justify-content:space-between;font:500 26px Geist;color:rgba(247,243,250,.7)}
+#cta span:last-child{color:#ff6fd2}
+#end{left:40px;right:40px;top:224px;height:1500px;border-radius:52px;background:#17151b;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 #end img{width:210px;height:210px;border-radius:50%;background:#141215;padding:28px;box-shadow:0 0 0 8px #ff3fc4}
 #end h3{font:700 86px/1.05 Geist;letter-spacing:-.04em;margin-top:60px}
 #end p{font:500 38px/1.35 Geist;color:rgba(247,243,250,.65);margin-top:26px}
 #end .bt{margin-top:60px;display:flex;gap:18px}
-#end .bt span{font:700 38px Geist;padding:24px 44px;border-radius:999px;background:#ff3fc4;color:#141215}
-#end .bt span+span{background:transparent;color:#fff;box-shadow:inset 0 0 0 3px #ff3fc4}
+#end .bt span{font:700 38px Geist;padding:24px 44px;border-radius:999px;background:#f7f3fa;color:#141215}
+#end .bt span+span{background:transparent;color:#fff;box-shadow:inset 0 0 0 3px rgba(247,243,250,.3)}
 </style></head><body><div id="p"></div>
 <script type="module">
 import {sfx, ease, prog, lerp, clamp} from '/kit.js';
 import {STORIES} from '/news_data.js';
 import {ICON as ICON0, AVATAR} from '/nat.js';
-const ICON = Object.fromEntries(Object.entries(ICON0).map(([k, f]) => [k, () => f().replaceAll('#151316', '#f7f3fa').replaceAll('fill="#fff"', 'fill="#221f25"').replaceAll('#d9d4cd', '#4a464f')]));
+const DARK = svg => svg.replaceAll('#151316', '#e9e5ee').replaceAll('fill="#fff"', 'fill="#211e25"').replaceAll('#d9d4cd', '#3a3640').replaceAll('fill="#ff4fcf"', 'fill="#2e2a33"');
+const ACCENT = {  // um único detalhe rosa por ícone
+  shield: v => v.replace('<circle cx="150" cy="186" r="10" fill="#e9e5ee"/><rect x="146" y="190" width="8" height="24" rx="4" fill="#e9e5ee"/>', '<circle cx="150" cy="186" r="10" fill="#ff3fc4"/><rect x="146" y="190" width="8" height="24" rx="4" fill="#ff3fc4"/>'),
+  gpu: v => v.replaceAll('r="12" fill="#e9e5ee"', 'r="12" fill="#ff3fc4"'),
+  cal: v => v.replace('font-size="30" fill="#e9e5ee">NOV', 'font-size="30" fill="#ff3fc4">NOV'),
+  cpu: v => v.replace('font-size="30" fill="#e9e5ee">18A-P', 'font-size="30" fill="#ff3fc4">18A-P'),
+};
+const ICON = Object.fromEntries(Object.entries(ICON0).map(([k, f]) => [k, () => ACCENT[k](DARK(f()))]));
 const FONT = `@font-face{font-family:Geist;font-weight:400;src:url(/node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2)}
 @font-face{font-family:Geist;font-weight:500;src:url(/node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2)}
 @font-face{font-family:Geist;font-weight:600;src:url(/node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2)}
@@ -71,7 +78,7 @@ function build() {
 }
 const show = (e, k, dy = 30) => { e.style.opacity = k; e.style.transform = `translateY(${(1 - k) * dy}px)`; e.style.visibility = k > .001 ? 'visible' : 'hidden'; };
 const inout = (t, a, b, d = .45) => ease.out(prog(t, a - .15, a - .15 + d)) * (1 - ease.in(prog(t, b - .35, b)));
-const marks = (root, t, t0) => root.querySelectorAll('mark').forEach(m => m.style.backgroundSize = `${ease.io(prog(t, t0, t0 + .7)) * 100}% 40%`);
+const marks = (root, t, t0) => root.querySelectorAll('mark').forEach(m => m.style.backgroundSize = `${ease.io(prog(t, t0, t0 + .7)) * 100}% 7%`);
 let olTop = 0;
 
 window.renderFrame = t => {
@@ -97,7 +104,7 @@ window.renderFrame = t => {
   ic.firstElementChild.style.transform = `translate(-50%,-50%) scale(${sc}) translateY(${Math.sin(t * 1.6) * 7}px)`;
   if (s.art === 'gpu') ic.querySelectorAll('.fan').forEach(f => f.querySelector('.bl').setAttribute('transform', `rotate(${t * 240} ${f.dataset.x} 110)`));
   if (s.art === 'cal') ic.querySelector('.day').textContent = Math.max(1, Math.round(lerp(1, 19, ease.out(prog(t, S.head.start + .6, S.head.start + 2)))));
-  if (s.art === 'cpu') ic.querySelector('.die').setAttribute('fill', `hsl(318,100%,${lerp(66, 80, (Math.sin(t * 2.6) + 1) / 2)}%)`);
+  if (s.art === 'cpu') ic.querySelector('.die').setAttribute('fill', `hsl(270,8%,${lerp(17, 24, (Math.sin(t * 2.6) + 1) / 2)}%)`);
   // fatos: aparecem quando a voz começa cada um; o que está sendo lido fica em destaque
   const lv = t > S.f0.start - .3 && t < fEnd; ol.style.visibility = lv ? 'visible' : 'hidden';
   [...ol.children].forEach((d, i) => { const g = S['f' + i]; show(d, inout(t, g.start, fEnd), 40);
