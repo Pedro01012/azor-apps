@@ -1,0 +1,25 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>AZOR — banner live</title>
+<style>
+@font-face{font-family:Geist;font-weight:600;src:url(/node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2)}
+@font-face{font-family:Geist;font-weight:700;src:url(/node_modules/@fontsource/geist/files/geist-latin-700-normal.woff2)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:900px;height:50px;overflow:hidden;background:transparent}
+#b{width:900px;height:50px;border-radius:12px;display:flex;align-items:center;gap:14px;padding:0 10px 0 7px;
+  background:linear-gradient(90deg,#17151b,#0d0c10);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);color:#f7f3fa;font-family:Geist;-webkit-font-smoothing:antialiased}
+#b img{width:36px;height:36px;border-radius:9px;flex:none}
+#b .br{font:700 20px Geist;letter-spacing:.14em}
+#b .sep{width:1.5px;height:24px;background:rgba(255,255,255,.14);flex:none}
+#b .it{display:flex;align-items:center;gap:9px;margin-left:6px;font:600 20px Geist;letter-spacing:-.01em;white-space:nowrap}
+#b .it i{width:7px;height:7px;border-radius:50%;background:#ff3fc4;flex:none}
+#b .it b{color:#ff6fd2;font-weight:700}
+#b .cta{margin-left:auto;font:700 19px Geist;padding:8px 16px;border-radius:999px;background:#ff3fc4;color:#120b10;white-space:nowrap;display:flex;align-items:center;gap:7px}
+</style></head><body><div id="b"></div>
+<script type="module">
+const v = new URLSearchParams(location.search).get('v') || 'a';
+const items = v === 'a' ? ['Tweaks para PC', '<b>0</b> delay', '<b>+FPS</b>'] : ['Tweaks para PC', '<b>Menos</b> delay', '<b>+FPS</b>'];
+document.getElementById('b').innerHTML = `<img src="/web/assets/Azor_icon.png"><span class="br">AZOR</span><span class="sep"></span>` +
+  items.map(x => `<span class="it"><i></i><span>${x}</span></span>`).join('') + `<span class="cta">Link na bio</span>`;
+window.renderFrame = () => {};
+window.ready = async () => { await document.fonts.ready; await Promise.all(['600 20px Geist', '700 20px Geist'].map(f => document.fonts.load(f)));
+  await Promise.all([...document.images].map(i => i.decode().catch(() => {}))); return {D: 1}; };
+</script></body></html>
